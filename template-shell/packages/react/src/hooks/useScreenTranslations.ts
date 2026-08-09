@@ -77,8 +77,14 @@ export function useScreenTranslations(
 
   // Track loading state per language to handle language changes. No
   // inst-begin-load marker here: nothing in this state pair signals "load
-  // began" — loading-in-progress is derived as
+  // began" - loading-in-progress is derived as
   // (currentLanguage !== loadedLanguage), see the comment on `isLoaded`.
+  //
+  // `loadedLanguage` is the whole progress record. A separate in-flight flag
+  // would have to be raised from the effect, one render after render already
+  // knows the language moved, and it would stay raised forever whenever a load
+  // is superseded before it settles (en -> fr -> en leaves the fr load
+  // cancelled with nothing left to lower the flag).
   // @cpt-begin:cpt-frontx-state-react-bindings-screen-translation:p1:inst-load-success
   // @cpt-begin:cpt-frontx-state-react-bindings-screen-translation:p1:inst-load-error
   // @cpt-begin:cpt-frontx-state-react-bindings-screen-translation:p1:inst-reload-on-lang-change

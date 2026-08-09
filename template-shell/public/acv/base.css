@@ -1,0 +1,1003 @@
+@layer base, theme, ui;
+
+@layer base{
+
+/* Document
+ * ========================================================================== */
+
+/**
+ * 1. Add border box sizing in all browsers (opinionated).
+ * 2. Backgrounds do not repeat by default (opinionated).
+ */
+
+*,
+::before,
+::after {
+  box-sizing: border-box; /* 1 */
+  background-repeat: no-repeat; /* 2 */
+}
+
+/**
+ * 1. Add text decoration inheritance in all browsers (opinionated).
+ * 2. Add vertical alignment inheritance in all browsers (opinionated).
+ */
+
+::before,
+::after {
+  text-decoration: inherit; /* 1 */
+  vertical-align: inherit; /* 2 */
+}
+
+/**
+ * 1. Use the default cursor in all browsers (opinionated).
+ * 2. Change the line height in all browsers (opinionated).
+ * 3. Breaks words to prevent overflow in all browsers (opinionated).
+ * 4. Use a 4-space tab width in all browsers (opinionated).
+ * 5. Remove the grey highlight on links in iOS (opinionated).
+ * 6. Prevent adjustments of font size after orientation changes in iOS.
+ */
+
+:where(:root) {
+  cursor: default; /* 1 */
+  line-height: 1.5; /* 2 */
+  overflow-wrap: break-word; /* 3 */ /* 4 */
+  tab-size: 4; /* 4 */
+  -webkit-tap-highlight-color: transparent; /* 5 */
+  -webkit-text-size-adjust: 100%; /* 6 */
+}
+
+/* Sections
+ * ========================================================================== */
+
+/**
+ * Remove the margin in all browsers (opinionated).
+ */
+
+:where(body) {
+  margin: 0;
+}
+
+/**
+ * Correct the font size and margin on `h1` elements within `section` and
+ * `article` contexts in Chrome, Edge, Firefox, and Safari.
+ */
+
+:where(h1) {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+/* Grouping content
+ * ========================================================================== */
+
+/**
+ * Remove the margin on nested lists in Chrome, Edge, and Safari.
+ */
+
+:where(dl, ol, ul) :where(dl, ol, ul) {
+  margin: 0;
+}
+
+/**
+ * 1. Correct the inheritance of border color in Firefox.
+ * 2. Add the correct box sizing in Firefox.
+ */
+
+:where(hr) {
+  color: inherit; /* 1 */
+  height: 0; /* 2 */
+}
+
+/**
+ * Remove the list style on navigation lists in all browsers (opinionated).
+ */
+
+:where(nav) :where(ol, ul) {
+  list-style-type: none;
+  padding: 0;
+}
+
+/**
+ * Prevent VoiceOver from ignoring list semantics in Safari (opinionated).
+ */
+
+:where(nav li)::before {
+  content: "\200B";
+  float: left;
+}
+
+/**
+ * 1. Correct the inheritance and scaling of font size in all browsers.
+ * 2. Correct the odd `em` font sizing in all browsers.
+ * 3. Prevent overflow of the container in all browsers (opinionated).
+ */
+
+:where(pre) {
+  font-family: monospace, monospace; /* 1 */
+  font-size: 1em; /* 2 */
+  overflow: auto; /* 3 */
+}
+
+/* Text-level semantics
+ * ========================================================================== */
+
+/**
+ * Add the correct text decoration in Safari.
+ */
+
+:where(abbr[title]) {
+  text-decoration: underline;
+  text-decoration: underline;
+  -webkit-text-decoration: underline dotted;
+          text-decoration: underline dotted;
+}
+
+/**
+ * Add the correct font weight in Chrome, Edge, and Safari.
+ */
+
+:where(b, strong) {
+  font-weight: bolder;
+}
+
+/**
+ * 1. Correct the inheritance and scaling of font size in all browsers.
+ * 2. Correct the odd `em` font sizing in all browsers.
+ */
+
+:where(code, kbd, samp) {
+  font-family: monospace, monospace; /* 1 */
+  font-size: 1em; /* 2 */
+}
+
+/**
+ * Add the correct font size in all browsers.
+ */
+
+:where(small) {
+  font-size: 80%;
+}
+
+/* Embedded content
+ * ========================================================================== */
+
+/*
+ * Change the alignment on media elements in all browsers (opinionated).
+ */
+
+:where(audio, canvas, iframe, img, svg, video) {
+  vertical-align: middle;
+}
+
+/**
+ * Remove the border on iframes in all browsers (opinionated).
+ */
+
+:where(iframe) {
+  border-style: none;
+}
+
+/**
+ * Change the fill color to match the text color in all browsers (opinionated).
+ */
+
+:where(svg:not([fill])) {
+  fill: currentColor;
+}
+
+/* Tabular data
+ * ========================================================================== */
+
+/**
+ * 1. Collapse border spacing in all browsers (opinionated).
+ * 2. Correct table border color inheritance in all Chrome, Edge, and Safari.
+ * 3. Remove text indentation from table contents in Chrome, Edge, and Safari.
+ */
+
+:where(table) {
+  border-collapse: collapse; /* 1 */
+  border-color: inherit; /* 2 */
+  text-indent: 0; /* 3 */
+}
+
+/* Forms
+ * ========================================================================== */
+
+/**
+ * Remove the margin on controls in Safari.
+ */
+
+:where(button, input, select) {
+  margin: 0;
+}
+
+/**
+ * Correct the inability to style buttons in iOS and Safari.
+ */
+
+:where(button, [type="button" i], [type="reset" i], [type="submit" i]) {
+  -webkit-appearance: button;
+}
+
+/**
+ * Change the inconsistent appearance in all browsers (opinionated).
+ */
+
+:where(fieldset) {
+  border: 1px solid #a0a0a0;
+}
+
+/**
+ * Add the correct vertical alignment in Chrome, Edge, and Firefox.
+ */
+
+:where(progress) {
+  vertical-align: baseline;
+}
+
+/**
+ * 1. Remove the margin in Firefox and Safari.
+ * 3. Change the resize direction in all browsers (opinionated).
+ */
+
+:where(textarea) {
+  margin: 0; /* 1 */
+  resize: vertical; /* 3 */
+}
+
+/**
+ * 1. Correct the odd appearance in Chrome, Edge, and Safari.
+ * 2. Correct the outline style in Safari.
+ */
+
+:where([type="search" i]) {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/**
+ * Correct the cursor style of increment and decrement buttons in Safari.
+ */
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/**
+ * Correct the text style of placeholders in Chrome, Edge, and Safari.
+ */
+
+::-webkit-input-placeholder {
+  color: inherit;
+  opacity: 0.54;
+}
+
+/**
+ * Remove the inner padding in Chrome, Edge, and Safari on macOS.
+ */
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/**
+ * 1. Correct the inability to style upload buttons in iOS and Safari.
+ * 2. Change font properties to `inherit` in Safari.
+ */
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/* Interactive
+ * ========================================================================== */
+
+/*
+ * Add the correct styles in Safari.
+ */
+
+:where(dialog) {
+  background-color: white;
+  border: solid;
+  color: black;
+  height: fit-content;
+  left: 0;
+  margin: auto;
+  padding: 1em;
+  position: absolute;
+  right: 0;
+  width: fit-content;
+}
+
+:where(dialog:not([open])) {
+  display: none;
+}
+
+/*
+ * Add the correct display in Safari.
+ */
+
+:where(details > summary:first-of-type) {
+  display: list-item;
+}
+
+/* Accessibility
+ * ========================================================================== */
+
+/**
+ * Change the cursor on busy elements in all browsers (opinionated).
+ */
+
+:where([aria-busy="true" i]) {
+  cursor: progress;
+}
+
+/*
+ * Change the cursor on control elements in all browsers (opinionated).
+ */
+
+:where([aria-controls]) {
+  cursor: pointer;
+}
+
+/*
+ * Change the cursor on disabled, not-editable, or otherwise
+ * inoperable elements in all browsers (opinionated).
+ */
+
+:where([aria-disabled="true" i], [disabled]) {
+  cursor: not-allowed;
+}
+
+/*
+ * Change the display on visually hidden accessible elements
+ * in all browsers (opinionated).
+ */
+
+:where([aria-hidden="false" i][hidden]) {
+  display: initial;
+}
+
+:where([aria-hidden="false" i][hidden]:not(:focus)) {
+  clip: rect(0, 0, 0, 0);
+  position: absolute;
+}
+}
+
+@layer base{
+
+:root {
+  block-size: 100%;
+  color-scheme: var(--acv-color-scheme);
+}
+
+body {
+  font-size: var(--acv-font-size-x-small);
+  /* 14px */
+  line-height: var(--acv-line-height-x-small);
+  background-color: var(--acv-color-surface-primary);
+  block-size: 100%;
+  color: var(--acv-color-glyph-primary);
+  font-family: var(--acv-font-family-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+}
+
+.acv-color-scheme-inverted {
+  background-color: var(--acv-color-surface-primary);
+  color: var(--acv-color-glyph-primary);
+  color-scheme: var(--acv-color-scheme);
+}
+
+h1 {
+  font-size: var(--acv-font-size-xx-large);
+  /* 40px */
+  font-weight: var(--acv-font-weight-semi-strong);
+  line-height: var(--acv-line-height-x-large);
+  /* 48px */
+  margin-block: 0 20px;
+  margin-inline: 0;
+}
+
+h2 {
+  font-size: var(--acv-font-size-x-large);
+  /* 28px */
+  font-weight: var(--acv-font-weight-semi-strong);
+  line-height: var(--acv-line-height-large);
+  /* 36px */
+  margin-block: 0 16px;
+  margin-inline: 0;
+}
+
+h3 {
+  font-size: var(--acv-font-size-medium);
+  /* 20px */
+  font-weight: var(--acv-font-weight-semi-strong);
+  line-height: var(--acv-line-height-regular);
+  /* 28px */
+  margin-block: 0 16px;
+  margin-inline: 0;
+}
+
+h4 {
+  font-size: var(--acv-font-size-regular);
+  /* 18px */
+  font-weight: var(--acv-font-weight-semi-strong);
+  line-height: var(--acv-line-height-small);
+  /* 24px */
+  margin-block: 0 4px;
+  margin-inline: 0;
+}
+
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+}
+
+a {
+  color: currentcolor;
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+}
+
+ul {
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 20px 0;
+}
+
+table {
+  inline-size: 100%;
+}
+
+th {
+  text-align: start;
+}
+
+td,
+th {
+  padding: 4px;
+}
+
+:focus-visible {
+  outline: var(--acv-outline);
+}
+}
+
+@layer base{
+/* stylelint-disable go-prefix/go-prefix */
+:root {
+  /* typography */
+  --go-font-size-h1-text: 44px;
+  --go-line-height-h1-text: 52px;
+  --go-font-size-h2-text: 30px;
+  --go-line-height-h2-text: 38px;
+  --go-font-size-h3-text: 21px;
+  --go-line-height-h3-text: 28px;
+  --go-font-size-h4-text: 17px;
+  --go-line-height-h4-text: 24px;
+  --go-font-size-h5-text: 15px;
+  --go-line-height-h5-text: 24px;
+  --go-font-size-ui-15: 15px;
+  --go-line-height-text-ui-15: 24px;
+  --go-font-size-ui-13: 13px;
+  --go-line-height-text-ui-13: 20px;
+  --go-font-size-ui-11: 11px;
+  --go-line-height-text-ui-11: 16px;
+
+  /* Icons */
+  --go-icon-size-xl: 48px;
+  --go-icon-size-lg: 32px;
+  --go-icon-size-md: 24px;
+  --go-icon-size-sm: 20px;
+  --go-icon-size-xs: 16px;
+  --go-icon-size-xxs: 12px;
+  --go-icon-size-xxxs: 8px;
+  --go-icon-size-text: 1em;
+  --base-icon-size: var(--go-icon-size-md);
+
+  /* Transitions */
+
+  /* https://next.material-ui.com/customization/transitions/#durations */
+  --go-transition-duration-shortest: 150ms;
+  --go-transition-duration-shorter: 200ms;
+  --go-transition-duration-short: 250ms;
+  --go-transition-duration-standard: 300ms; /* most basic recommended timing */
+  --go-transition-duration-complex: 375ms; /* this is to be used in complex animations */
+  --go-transition-duration-entering-screen: 225ms; /* recommended when something is entering screen */
+  --go-transition-duration-leaving-screen: 195ms; /* recommended when something is leaving screen */
+
+  /* https://next.material-ui.com/customization/transitions/#easings */
+
+  /* This is the most common easing curve. */
+  --go-transition-timing-common: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Objects enter the screen at full velocity from off-screen and slowly decelerate to a resting point. */
+  --go-transition-timing-enter: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Objects leave the screen at full velocity. They do not decelerate when off-screen. */
+  --go-transition-timing-leave: cubic-bezier(0.4, 0, 1, 1);
+
+  /* The sharp curve is used by objects that may return to the screen at any time. */
+  --go-transition-timing-sharp: cubic-bezier(0.4, 0, 1, 1);
+  --go-transition-standard: var(--go-transition-timing-common)
+    var(--go-transition-duration-standard);
+  --go-transition-short: var(--go-transition-timing-common) var(--go-transition-duration-short);
+  --go-transition-shortest: var(--go-transition-timing-common)
+    var(--go-transition-duration-shortest);
+
+  /* Shadow */
+  --go-shadow-small: 0 0 8px rgb(0, 0, 0, 0.15);
+  --go-shadow-large: 0 0 20px rgb(0, 0, 0, 0.25);
+
+  /* z-index: https://medium.com/science-journal/z-index-organization-in-css-5913fd4c25c9 */
+
+  /*
+    0000–1999: Elements and Components
+    2000–2999: Element and Component Drop Downs
+    3000–3999: Secondary Navigation
+    4000–4999: Header / Footer
+    5000–5999: Primary Navigation
+    6000–6999: Full Screen Features
+    7000–7999: Special Cases
+    8000–8999: Modals / Dialog Windows
+    9000–9999: Notifications
+    10000: drag&drop in viewer
+   */
+}
+
+:root,
+/* apply for inverted to recalculate color scheme dependant variables */
+.acv-color-scheme-inverted {
+  /* Borders */
+  --go-outline-width: 2px;
+  --go-outline: var(--go-outline-width) solid var(--go-color-framing-focus);
+  --go-border-secondary: 1px solid var(--go-color-line-secondary);
+  --go-border-tertiary: 1px solid var(--go-color-glyph-tertiary);
+  --go-border-primary: 1px solid var(--go-color-line-primary);
+  --go-border-accent: 1px solid var(--go-color-line-accent);
+  --go-border-danger: 1px solid var(--go-color-line-danger);
+}
+}
+
+@layer base{
+
+:root {
+  /* typography */
+  --acv-font-size-heading-1-text: 40px;
+  --acv-line-height-heading-1-text: 48px;
+  --acv-font-size-heading-2-text: 28px;
+  --acv-line-height-heading-2-text: 36px;
+  --acv-font-size-heading-3-text: 24px;
+  --acv-line-height-heading-3-text: 32px;
+  --acv-font-size-heading-4-text: 20px;
+  --acv-line-height-heading-4-text: 28px;
+  --acv-font-size-subheading-1-text: 18px;
+  --acv-line-height-subheading-1-text: 24px;
+  --acv-font-size-subheading-2-text: 16px;
+  --acv-line-height-subheading-2-text: 24px;
+  --acv-font-size-subheading-3-text: 14px;
+  --acv-line-height-subheading-3-text: 20px;
+  --acv-font-size-body-1-text: 16px;
+  --acv-line-height-body-1-text: 24px;
+  --acv-font-size-body-2-text: 14px;
+  --acv-line-height-body-2-text: 20px;
+  --acv-font-size-caption-1-text: 12px;
+  --acv-line-height-caption-1-text: 16px;
+  --acv-font-size-caption-2-text: 10px;
+  --acv-line-height-caption-2-text: 12px;
+
+  /* Font sizes */
+  --acv-font-size-xxx-small: 10px;
+  --acv-font-size-xx-small: 12px;
+  --acv-font-size-x-small: 14px;
+  --acv-font-size-small: 16px;
+  --acv-font-size-regular: 18px;
+  --acv-font-size-medium: 20px;
+  --acv-font-size-large: 24px;
+  --acv-font-size-x-large: 28px;
+  --acv-font-size-xx-large: 40px;
+
+  /* Line height */
+  --acv-line-height-xxx-small: 12px;
+  --acv-line-height-xx-small: 16px;
+  --acv-line-height-x-small: 20px;
+  --acv-line-height-small: 24px;
+  --acv-line-height-regular: 28px;
+  --acv-line-height-medium: 32px;
+  --acv-line-height-large: 36px;
+  --acv-line-height-x-large: 48px;
+
+  /* Font weight */
+  --acv-font-weight-regular: 400;
+  --acv-font-weight-medium: 500;
+  --acv-font-weight-semi-strong: 600;
+  --acv-font-weight-strong: 700;
+
+  /* Border radius */
+  --acv-radius-zero: 0;
+  --acv-radius-small: 4px;
+  --acv-radius-regular: 8px;
+  --acv-radius-medium: 12px;
+  --acv-radius-large: 16px;
+  --acv-radius-x-large: 24px;
+  --acv-radius-circle: 100%;
+
+  /* Spacing */
+  --acv-spacing-zero: 0;
+  --acv-spacing-xx-small: 2px;
+  --acv-spacing-x-small: 4px;
+  --acv-spacing-small: 8px;
+  --acv-spacing-regular: 12px;
+  --acv-spacing-medium: 16px;
+  --acv-spacing-large: 20px;
+  --acv-spacing-x-large: 24px;
+
+  /* Height */
+  --acv-height-x-small: 16px;
+  --acv-height-small: 20px;
+  --acv-height-regular: 24px;
+  --acv-height-medium: 28px;
+  --acv-height-large: 32px;
+  --acv-height-x-large: 36px;
+  --acv-height-xx-large: 40px;
+  --acv-height-xxx-large: 48px;
+
+  /* Icons */
+  --acv-icon-size-xl: 48px;
+  --acv-icon-size-lg: 32px;
+  --acv-icon-size-md: 24px;
+  --acv-icon-size-sm: 20px;
+  --acv-icon-size-xs: 16px;
+  --acv-icon-size-xxs: 12px;
+  --acv-icon-size-xxxs: 8px;
+  --acv-icon-size-text: 1em;
+
+  /* Transitions */
+
+  /* https://next.material-ui.com/customization/transitions/#durations */
+  --acv-transition-duration-shortest: 150ms;
+  --acv-transition-duration-shorter: 200ms;
+  --acv-transition-duration-short: 250ms;
+  --acv-transition-duration-standard: 300ms; /* most basic recommended timing */
+  --acv-transition-duration-complex: 375ms; /* this is to be used in complex animations */
+  --acv-transition-duration-entering-screen: 225ms; /* recommended when something is entering screen */
+  --acv-transition-duration-leaving-screen: 195ms; /* recommended when something is leaving screen */
+
+  /* https://next.material-ui.com/customization/transitions/#easings */
+
+  /* This is the most common easing curve. */
+  --acv-transition-timing-common: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Objects enter the screen at full velocity from off-screen and slowly decelerate to a resting point. */
+  --acv-transition-timing-enter: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Objects leave the screen at full velocity. They do not decelerate when off-screen. */
+  --acv-transition-timing-leave: cubic-bezier(0.4, 0, 1, 1);
+
+  /* The sharp curve is used by objects that may return to the screen at any time. */
+  --acv-transition-timing-sharp: cubic-bezier(0.4, 0, 1, 1);
+  --acv-transition-standard: var(--acv-transition-timing-common)
+    var(--acv-transition-duration-standard);
+  --acv-transition-short: var(--acv-transition-timing-common) var(--acv-transition-duration-short);
+  --acv-transition-shortest: var(--acv-transition-timing-common)
+    var(--acv-transition-duration-shortest);
+}
+
+:root,
+/* apply for inverted to recalculate color scheme dependant variables */
+.acv-color-scheme-inverted {
+  /* Borders */
+  --acv-outline-width: 2px;
+  --acv-outline: var(--acv-outline-width) solid var(--acv-color-state-focus-primary);
+  --acv-border-secondary: 1px solid var(--acv-color-border-secondary);
+  --acv-border-primary: 1px solid var(--acv-color-border-primary);
+  --acv-border-medium: 1px solid var(--acv-color-border-medium);
+  --acv-border-light: 1px solid var(--acv-color-border-light);
+  --acv-border-strong: 1px solid var(--acv-color-border-strong);
+  --acv-border-inverted: 1px solid var(--acv-color-border-inverted);
+  --acv-border-accent: 1px solid var(--acv-color-status-info-medium);
+  --acv-border-danger: 1px solid var(--acv-color-status-danger-medium);
+  --acv-border-tertiary: 1px solid var(--acv-color-glyph-tertiary);
+
+  /* Shadow */
+  --acv-shadow-surface: 0 0 8px var(--acv-color-shadows-surface);
+  --acv-shadow-overlay: 0 0 20px var(--acv-color-shadows-overlay);
+  --acv-shadow-small: 0 0 8px var(--acv-color-shadows-surface);
+  --acv-shadow-regular: 0 0 20px var(--acv-color-shadows-overlay);
+}
+}
+
+@layer base{
+
+/* DO NOT USE THESE VARIABLES DIRECTLY (NO var(--base-*) */
+
+/* YOU CAN JUST SET THEM (YES --go-*: ...) */
+:root {
+  /* Form */
+  --control-height: 28px;
+  --control-max-width: 420px;
+  --control-offset: 2px; /* bottom offset of control error */
+  --markdown-max-width: 720px;
+  --base-message-max-width: none;
+  --base-form-actions-margin: 12px;
+  --base-file-uploader-width: 230px;
+  --base-dropdown-min-width: 140px;
+  --base-circular-progress-bar-stroke: 1px;
+
+  /* GoTree */
+  --base-tree-padding-parent: 8px; /* initial padding left */
+  --base-tree-items-offset: 24px; /* extra padding for items */
+  --base-tree-directory-delta: 24px; /* each directory level add this padding */
+
+  /* GoDialog */
+  --base-dialog-padding-inline: 12px; /* TODO: remove from Platform code usage */
+  --base-dialog-padding-block-start: 12px; /* TODO: remove from Platform code usage */
+
+  /* GoDialogConfirm */
+  --go-dialog-confirm-inline-size: 362px;
+
+  /* GoButton */
+  --base-button-height-md: 28px; /* TODO: remove from Platform code usage */
+
+  /* GoCode */
+  --base-code-padding: 12px; /* TODO: remove from Platform,Studio code usage */
+
+  /* GoAnsi */
+  --base-ansi-padding: 12px; /* TODO: remove from Platform code usage */
+
+  /* GoInput */
+  --base-input-font-size: var(
+    --acv-font-size-x-small
+  ); /* TODO: remove from Studio, Calendar usage */
+  --base-input-line-height: var(--acv-line-height-x-small); /* TODO: remove from Studio usage */
+  --base-input-padding-left: 8px; /* TODO: remove from Studio usage */
+  --base-input-padding-right: 8px; /* TODO: remove from Studio usage */
+  --base-input-border-radius: 0; /* TODO: remove from Calendar usage */
+  --base-input-font-weight: 400; /* TODO: remove from Studio usage */
+  /* stylelint-disable-next-line go-deprecated-variables/textarea-padding-block */
+  --base-input-textarea-padding-block: 4px; /* TODO: remove from Studio usage */
+
+  /* GoPopover */
+  --base-popover-v-padding: 4px; /* TODO: remove from Platform code usage */
+
+  /* GoTableRow */
+  --go-table-row-block-size: initial;
+  --go-table-row-background-color: initial;
+  --go-table-row-cursor: default;
+}
+
+:root,
+/* apply for inverted to recalculate color scheme dependant variables */
+.acv-color-scheme-inverted {
+  --control-background-color: var(
+    --acv-color-surface-primary
+  ); /* background for input/select/etc. */
+  --base-pick-color: var(--acv-color-glyph-primary);
+  --base-code-background-color: var(
+    --go-color-spot-secondary
+  ); /* TODO: remove from Platform,Studio code usage */
+  --base-input-border: var(--acv-border-medium); /* TODO: remove from Studio usage */
+}
+}
+
+@layer base{
+
+.go-icon,
+.base-icon {
+  flex-shrink: 0;
+  block-size: var(--icon-size-height, var(--icon-size, var(--base-icon-size)));
+  color: var(--icon-color, var(--base-icon-color, currentColor));
+  inline-size: var(--icon-size-width, var(--icon-size, var(--base-icon-size)));
+
+  &.xs {
+    --base-icon-size: var(--acv-icon-size-xs);
+  }
+
+  &.sm {
+    --base-icon-size: var(--acv-icon-size-sm);
+  }
+
+  &.md {
+    --base-icon-size: var(--acv-icon-size-md);
+  }
+}
+
+/*
+This is temporary comment in case if this bug will be detected one more time.
+It was reproducible only in Safari browser on svg icon elements.
+
+Initial issue: https://youtrack.constr.dev/issue/ROL-4274
+Previous changes caused new issue: https://youtrack.constr.dev/issue/ROL-5242
+
+:where(.base-icon) {
+  // This selector is needed for fix Safari
+  // Feels like it has incorrect transform-origin when icon inside flex element
+  // Use :where() to low specificity in case someone will set `transform` property on the icon
+  transform: rotate(0);
+}
+*/
+}
+
+@layer base{
+/* Modern token-direct utilities — prefer these in new code. */
+.acv-color-status-info-strong {
+  color: var(--acv-color-status-info-strong);
+}
+
+.acv-color-status-success-strong {
+  color: var(--acv-color-status-success-strong);
+}
+
+.acv-color-status-warning-strong {
+  color: var(--acv-color-status-warning-strong);
+}
+
+.acv-color-status-danger-strong {
+  color: var(--acv-color-status-danger-strong);
+}
+
+.acv-color-glyph-primary {
+  color: var(--acv-color-glyph-primary);
+}
+
+.acv-color-glyph-secondary {
+  color: var(--acv-color-glyph-secondary);
+}
+
+.acv-color-glyph-tertiary {
+  color: var(--acv-color-glyph-tertiary);
+}
+
+.acv-font-weight-medium {
+  font-weight: var(--acv-font-weight-medium);
+}
+
+.acv-font-weight-semi-strong {
+  font-weight: var(--acv-font-weight-semi-strong);
+}
+
+.acv-font-weight-strong {
+  font-weight: var(--acv-font-weight-strong);
+}
+
+.acv-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Deprecated utilities — kept for back-compat. Use `.acv-*` equivalents above. */
+
+/** @deprecated Use `.acv-color-status-info-strong` instead. */
+.go-color-glyph-info,
+.color-glyph-info {
+  color: var(--acv-color-status-info-strong);
+}
+
+/** @deprecated Use `.acv-color-status-info-strong` instead. */
+.go-color-glyph-accent,
+.color-glyph-accent {
+  color: var(--acv-color-status-info-strong);
+}
+
+/** @deprecated Use `.acv-color-status-success-strong` instead. */
+.go-color-glyph-success,
+.color-glyph-success {
+  color: var(--acv-color-status-success-strong);
+}
+
+/** @deprecated Use `.acv-color-status-warning-strong` instead. */
+.go-color-glyph-warning,
+.color-glyph-warning {
+  color: var(--acv-color-status-warning-strong);
+}
+
+/** @deprecated Use `.acv-color-glyph-primary` instead. */
+.go-color-glyph-primary,
+.color-glyph-primary {
+  color: var(--acv-color-glyph-primary);
+}
+
+/** @deprecated Use `.acv-color-glyph-tertiary` instead. */
+.go-color-glyph-tertiary,
+.color-glyph-tertiary,
+.go-color-glyph-tretiary,
+.color-glyph-tretiary {
+  color: var(--acv-color-glyph-tertiary);
+}
+
+/** @deprecated Use `.acv-color-glyph-secondary` instead. */
+.go-color-glyph-secondary,
+.color-glyph-secondary {
+  color: var(--acv-color-glyph-secondary);
+}
+
+/** @deprecated Use `.acv-color-status-danger-strong` instead. */
+.go-color-glyph-danger,
+.color-glyph-danger {
+  color: var(--acv-color-status-danger-strong);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-data-glyph-navy,
+.color-data-glyph-navy {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-data-glyph-navy);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-data-glyph-purple,
+.color-data-glyph-purple {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-data-glyph-purple);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-glyph-jungle,
+.color-glyph-jungle {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-glyph-jungle);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-data-glyph-brick,
+.color-data-glyph-brick {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-data-glyph-brick);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-data-glyph-orange,
+.color-data-glyph-orange {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-data-glyph-orange);
+}
+
+/** @deprecated Use `.acv-color-glyph-tertiary` instead. */
+.go-color-glyph-disabled,
+.color-glyph-disabled {
+  color: var(--acv-color-glyph-tertiary);
+}
+
+/** @deprecated No `.acv-*` replacement — underlying token is deprecated. */
+.go-color-glyph-inverted-warning,
+.color-glyph-inverted-warning {
+  /* stylelint-disable-next-line go-prefix/go-prefix */
+  color: var(--go-color-glyph-inverted-warning);
+}
+
+/** @deprecated Use `.acv-font-weight-medium` instead. */
+.go-font-weight-medium,
+.font-weight-medium {
+  font-weight: 500;
+}
+
+/** @deprecated Use `.acv-font-weight-semi-strong` instead. */
+.go-font-weight-semi-bold,
+.font-weight-semi-bold {
+  font-weight: 600;
+}
+
+/** @deprecated Use `.acv-font-weight-strong` instead. */
+.go-font-weight-bold,
+.font-weight-bold {
+  font-weight: 700;
+}
+
+/** @deprecated Use `.acv-ellipsis` instead. */
+.go-ellipsis,
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+}
