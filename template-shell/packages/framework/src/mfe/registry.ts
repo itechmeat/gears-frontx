@@ -16,16 +16,6 @@
  * @packageDocumentation
  */
 
-import { DefaultMfeRegistryFactory, type MfeRegistryFactory } from '@gears-frontx/mfes';
+import { createMfeRegistryFactory, type MfeRegistryFactory } from '@gears-frontx/mfes';
 
-/**
- * Held to the published `@gears-frontx/mfes@0.3.0-alpha.1` surface this package
- * pins: alpha.1 exports the `DefaultMfeRegistryFactory` class and has no
- * `createMfeRegistryFactory` function, so the function form fails to compile
- * (TS2724) in every scaffolded project that installs the pin.
- *
- * ROLL BACK to `createMfeRegistryFactory()` when the pin moves to
- * `0.3.0-alpha.2` (#535) - that version replaces the class export with the
- * function, so the two forms never compile against the same version.
- */
-export const mfeRegistryFactory: MfeRegistryFactory = new DefaultMfeRegistryFactory();
+export const mfeRegistryFactory: MfeRegistryFactory = createMfeRegistryFactory();
