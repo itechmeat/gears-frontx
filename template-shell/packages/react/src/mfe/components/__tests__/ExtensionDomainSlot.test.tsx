@@ -49,15 +49,10 @@ class FakeRegistry extends MfeRegistry {
     resolveLoadExtActionId: () => 'load_ext',
     resolveMountExtActionId: () => 'mount_ext',
     resolveUnmountExtActionId: () => 'unmount_ext',
-    // Held to the published `@gears-frontx/mfes@0.3.0-alpha.1` surface this
-    // template pins: alpha.1's `TypeSystemPlugin` declares no
-    // `resolveLifecycleStage*Id` members, so naming them here is an excess
-    // property (TS2353) on a clean install of the pin.
-    //
-    // ROLL BACK - restore `resolveLifecycleStageInitId`, `...ActivatedId`,
-    // `...DeactivatedId` and `...DestroyedId` - when the pin moves to
-    // `0.3.0-alpha.2` (#535), where those four are required members and their
-    // absence is the error instead.
+    resolveLifecycleStageInitId: () => 'init',
+    resolveLifecycleStageActivatedId: () => 'activated',
+    resolveLifecycleStageDeactivatedId: () => 'deactivated',
+    resolveLifecycleStageDestroyedId: () => 'destroyed',
   };
 
   private readonly mounsterByDomain = new Map<string, ExtensionMounter>();
