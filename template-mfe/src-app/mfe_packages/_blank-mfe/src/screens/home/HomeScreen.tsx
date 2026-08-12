@@ -250,7 +250,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
         two style bridges in lifecycle.tsx or the providers in KitProviders are
         broken, these render half-styled or throw, in the first screen of a fresh
         project rather than three screens later. AcvTooltip earns its place
-        specifically — it portals its popup into `document.body`, which is what
+        specifically - it portals its popup into `document.body`, which is what
         `mirrorMfeStylesToDocument` exists for.
       */}
       <section className={styles.panel}>

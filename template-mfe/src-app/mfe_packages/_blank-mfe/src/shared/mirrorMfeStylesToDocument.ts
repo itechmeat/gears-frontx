@@ -3,14 +3,14 @@
  * kit components that render outside this MFE's shadow root.
  *
  * `@constructor/react-kit` builds its overlays on Base UI, and every overlay
- * primitive it uses — `Tooltip.Portal`, `Menu.Portal`, `Select.Portal`,
- * `Popover.Portal`, `Dialog.Portal` — is rendered without a `container`
+ * primitive it uses - `Tooltip.Portal`, `Menu.Portal`, `Select.Portal`,
+ * `Popover.Portal`, `Dialog.Portal` - is rendered without a `container`
  * override, so React portals the popup into `document.body`. `MfeHandlerMF`
  * injects the MFE's stylesheet into the shadow root and nowhere else, which
  * leaves those popups in a tree the stylesheet does not reach: measured on
  * AcvTooltip, the popup lands under `BODY` carrying `_popup_1e87a_14` and
  * computes `background-color: rgba(0, 0, 0, 0)`, `border-radius: 0px`,
- * `padding: 0px`, `box-shadow: none` — the class is there, the rules are not.
+ * `padding: 0px`, `box-shadow: none` - the class is there, the rules are not.
  * The design tokens do resolve there, because `@constructor/globals` is linked
  * at document level; it is only the component CSS that is missing.
  *
@@ -57,7 +57,7 @@ export function mirrorMfeStylesToDocument(container: Element | ShadowRoot): void
      * Existing mirrors are compared by their resolved `href` property rather than
      * matched with an attribute selector: a URL is not a valid CSS identifier, so
      * a selector would need CSS.escape, which the test environment's DOM does not
-     * implement. Comparing the property is also the more exact test — it compares
+     * implement. Comparing the property is also the more exact test - it compares
      * resolved URLs, where the attribute could hold either form.
      */
     const alreadyMirrored = Array.from(

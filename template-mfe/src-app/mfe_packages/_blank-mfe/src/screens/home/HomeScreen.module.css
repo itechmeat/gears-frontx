@@ -2,8 +2,8 @@
  * Screen-local layout for the blank MFE.
  *
  * Every value resolves through a `@constructor/globals` token. Those tokens are
- * declared at DOCUMENT level — `index.html` links the design system's two
- * stylesheets — and reach this shadow root by custom-property inheritance, which
+ * declared at DOCUMENT level - `index.html` links the design system's two
+ * stylesheets - and reach this shadow root by custom-property inheritance, which
  * is also why switching the host theme repaints this screen without it
  * re-rendering. Nothing in this package re-declares them on `:host`; see
  * lifecycle.tsx for why a second copy would freeze the screen on one scheme.

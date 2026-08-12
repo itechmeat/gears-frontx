@@ -15,7 +15,7 @@ import type { AcvColorSchemeValue } from '@constructor/react-kit/color-scheme';
  * Written down rather than derived, because there is nothing to derive it
  * from: `ThemeConfig` (@gears-frontx/framework) carries `id`, `name`,
  * `variables` and `default` and no light/dark flag, and the bridge hands a
- * screen the identifier alone — not the theme definition, and not the registry
+ * screen the identifier alone - not the theme definition, and not the registry
  * that holds it. The set therefore has to gain an entry whenever the host
  * registers another dark theme, or that theme's screens paint dark host chrome
  * around a light kit surface.
@@ -26,8 +26,8 @@ const DARK_HOST_THEMES: ReadonlySet<string> = new Set(['dark', 'dracula', 'dracu
  * Map a host theme identifier onto a `@constructor/react-kit` colour scheme.
  *
  * The kit resolves its tokens through one of two classes on
- * `document.documentElement` — `acv-color-scheme-light` or
- * `acv-color-scheme-dark`, written there by `AcvColorScheme` — so a host palette
+ * `document.documentElement` - `acv-color-scheme-light` or
+ * `acv-color-scheme-dark`, written there by `AcvColorScheme` - so a host palette
  * is matched to whichever of the two it is closer to. See
  * {@link DARK_HOST_THEMES} for why the dark side is an enumeration.
  *
@@ -37,7 +37,7 @@ const DARK_HOST_THEMES: ReadonlySet<string> = new Set(['dark', 'dracula', 'dracu
  * set to dark mode.
  *
  * Two schemes is the whole resolution this bridge can offer. A host theme is a
- * full palette, not a light/dark bit — `dracula` maps to the kit's dark scheme
+ * full palette, not a light/dark bit - `dracula` maps to the kit's dark scheme
  * and then renders in the kit's greys rather than Dracula's purples. Closing
  * that gap means unifying the two token grammars, a decision above this
  * template.

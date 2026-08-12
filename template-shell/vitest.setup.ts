@@ -209,7 +209,7 @@ function installPointerEventConstructor(target: Window & typeof globalThis): voi
  *
  * jsdom ships no implementation at all, and a component that reads a media
  * query fails on the missing function rather than on anything the test is
- * about — `@constructor/react-kit`'s colour-scheme provider is the concrete
+ * about - `@constructor/react-kit`'s colour-scheme provider is the concrete
  * case: it queries `(prefers-color-scheme: dark)` while mounting, so a screen
  * built on the kit cannot render in jsdom without this.
  *

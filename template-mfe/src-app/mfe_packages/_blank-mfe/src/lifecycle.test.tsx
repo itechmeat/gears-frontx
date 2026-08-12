@@ -112,7 +112,7 @@ describe('blank-mfe lifecycle', () => {
    * is that `initializeStyles` still RUNS both: each is invisible when it is
    * missing (components render half-styled, overlays render unstyled) rather than
    * failing, so the wiring is the part worth pinning here. It also asserts what
-   * the hook must NOT do — inject a token stylesheet of its own.
+   * the hook must NOT do - inject a token stylesheet of its own.
    */
   it('installs both cascade bridges into the shadow root it renders into', async () => {
     const module = await import('./lifecycle');

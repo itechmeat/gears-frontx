@@ -184,7 +184,7 @@ right in dev), which also toggles mock APIs and language.
 
 ### The Constructor design system
 
-The shell also carries `@constructor/globals` — the token and font layer that
+The shell also carries `@constructor/globals` - the token and font layer that
 `@constructor/react-kit` components resolve their colours, spacing and icon sizes
 from. Microfrontends are its consumers: the tokens are declared on this
 document's `:root` and inherit into every MFE shadow root, so a kit-styled screen
