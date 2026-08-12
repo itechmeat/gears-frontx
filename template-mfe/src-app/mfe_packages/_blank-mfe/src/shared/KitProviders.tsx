@@ -8,7 +8,7 @@
  * - `LocaleProvider` is mandatory. Every kit component runs
  *   `useInternalTranslations()`, which throws
  *   "useTranslation must be used within a LocaleProvider" when the context is
- *   missing — including `AcvButton`, which needs it through `AcvLoader`. A screen
+ *   missing - including `AcvButton`, which needs it through `AcvLoader`. A screen
  *   that renders one kit component therefore cannot render without this.
  * - `AcvColorScheme` owns the light/dark switch. It writes
  *   `acv-color-scheme-light` / `acv-color-scheme-dark` onto
@@ -33,8 +33,8 @@ import { acvColorSchemeFor } from './acvColorScheme';
  * Reads the kit's shipped English bundle directly and interpolates it. This is
  * the smallest thing that satisfies the contract, and it is deliberately NOT
  * wired to the screens' own i18n (`useScreenTranslations`): those two vocabularies
- * are separate — screen copy is authored in this package under
- * `screens/<name>/i18n/`, kit copy ships with the kit — and merging them would put
+ * are separate - screen copy is authored in this package under
+ * `screens/<name>/i18n/`, kit copy ships with the kit - and merging them would put
  * the kit's keys into every screen's 36 translation files.
  *
  * A project that ships more than English replaces the bundle here with the

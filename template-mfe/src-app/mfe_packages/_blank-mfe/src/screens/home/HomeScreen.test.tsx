@@ -184,7 +184,7 @@ describe('HomeScreen', () => {
    *
    * Asserted on `document.documentElement`, because that is where the kit's
    * colour scheme lives: `AcvColorScheme` toggles the two classes there, and the
-   * design system's stylesheet — linked by the HOST document, not by this MFE —
+   * design system's stylesheet - linked by the HOST document, not by this MFE -
    * scopes its token values on them. The readout beside the theme name is the
    * same fact rendered.
    */
