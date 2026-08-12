@@ -182,6 +182,40 @@ Common tokens: `background`, `foreground`, `primary`, `secondary`, `accent`,
 `muted`, `border`. Themes switch live via the **FrontX Studio** panel (bottom-
 right in dev), which also toggles mock APIs and language.
 
+### The Constructor design system
+
+The shell also carries `@constructor/globals` — the token and font layer that
+`@constructor/react-kit` components resolve their colours, spacing and icon sizes
+from. Microfrontends are its consumers: the tokens are declared on this
+document's `:root` and inherit into every MFE shadow root, so a kit-styled screen
+needs nothing installed on its side.
+
+`index.html` links two files that are **generated, not committed**:
+
+```bash
+npm run sync:acv-globals   # copies base.css, the theme, and the fonts into public/acv/
+```
+
+`predev` and `prebuild` run it, so `npm run dev` and `npm run build` are enough;
+`public/acv/` is gitignored. Two things about it are load-bearing and easy to
+undo by accident:
+
+- They must stay plain `<link>` elements. Route the same CSS through a JS or CSS
+  import and the Tailwind pipeline silently drops the icon-sizing rule, so every
+  icon in every kit component renders at 0x0 while the rest of the file survives
+  and hides the cause. `scripts/sync-acv-globals.mjs` carries the measurement.
+- `@constructor/browserslist-config` is a devDependency and is not spare:
+  `@constructor/globals` extends it from its own `browserslist` field without
+  depending on it, so removing it fails the CSS build.
+
+The `@constructor` scope resolves from a private registry. If `npm install`
+reports 404 for `@constructor/globals`, the scope is not configured for your npm
+client:
+
+```bash
+npm config set @constructor:registry <your-registry-url>
+```
+
 ## UI components
 
 App-owned primitives live in `src-app/app/components/ui`:

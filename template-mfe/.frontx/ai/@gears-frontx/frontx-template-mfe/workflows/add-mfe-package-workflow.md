@@ -215,12 +215,19 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    `generate:mfe-manifests` is what makes the new packages discoverable at runtime, so
    tier 2 is mandatory before step 7 even for a single-package run.
 
-   - Drive interactive `@gears-frontx/ui-kit` components in tests with
-     `@testing-library/user-event`, not `fireEvent`. The kit builds Select, Switch and
-     their siblings on Base UI, whose pointer handling jsdom does not satisfy from a
+   - Drive interactive `@constructor/react-kit` components in tests with
+     `@testing-library/user-event`, not `fireEvent`. The kit builds AcvSelect, AcvToggle
+     and their siblings on Base UI, whose pointer handling jsdom does not satisfy from a
      synthetic `fireEvent.click`: the control stays closed or unchanged and the
      assertion fails with nothing to point at. The skeleton ships
      `@testing-library/user-event` in devDependencies for this.
+   - Render a screen inside `shared/KitProviders.tsx`, the way
+     `screens/home/HomeScreen.test.tsx` does. Every kit component calls
+     `useInternalTranslations()` and throws `useTranslation must be used within a
+     LocaleProvider` outside it, so a bare `render(<Screen …/>)` fails on the provider
+     rather than on the thing under test. Wrapping also matches how `lifecycle.tsx`
+     mounts it, which is why the subscription count that suite asserts is the screen's
+     plus the providers' one.
    - Both tiers require step 0's install and build outputs. A tier-1 run against a tree
      that never ran them reports `TS2307` for every ecosystem import, which is a missing
      prerequisite rather than a defect in the new package.
