@@ -6,7 +6,7 @@ This is a template for creating new FrontX Microfrontend packages. It provides a
 - Bridge communication with the host
 - Theme and language property subscriptions
 - MFE-local i18n with 36 language files
-- Components from `@gears-frontx/ui-kit`, styled from its design tokens
+- Components from `@constructor/react-kit`, styled from `@constructor/globals` tokens
 - TypeScript strict mode
 - Module Federation setup
 
@@ -89,8 +89,8 @@ gts.frontx.mfes.ext.extension.v1~acme.crm.ext.customer_details_screen.v1
 Edit `src/screens/home/HomeScreen.tsx`:
 - Rename the component if needed
 - Add your business logic
-- Compose the UI from `@gears-frontx/ui-kit` components, and put screen-local
-  layout in `HomeScreen.module.css` using the kit's tokens (see
+- Compose the controls from `@constructor/react-kit`, and put screen-local
+  layout in `HomeScreen.module.css` using `--acv-*` tokens (see
   [Styling](#styling))
 
 ### 5. Update Translations
@@ -152,12 +152,15 @@ _blank-mfe/
     ├── effects/              # Effect handlers
     ├── slices/               # State slices
     ├── shared/
-    │   ├── useScreenTranslations.ts    # i18n hook
-    │   └── anchorKitThemeOnShadowHost.ts  # ui-kit token re-anchoring
+    │   ├── useScreenTranslations.ts         # i18n hook
+    │   ├── KitProviders.tsx                 # the kit's required context, host theme -> colour scheme
+    │   ├── acvColorScheme.ts                # host theme id -> the kit's light/dark
+    │   ├── demoteUnlayeredShadowStyles.ts   # cascade bridge: let @layer ui win
+    │   └── mirrorMfeStylesToDocument.ts     # cascade bridge: style portalled overlays
     └── screens/
         └── home/
             ├── HomeScreen.tsx        # Screen component
-            ├── HomeScreen.module.css # Screen-local styles on kit tokens
+            ├── HomeScreen.module.css # Screen-local layout on --acv-* tokens
             └── i18n/                 # 36 language files
                 ├── en.json
                 ├── es.json
@@ -174,16 +177,20 @@ All MFE content renders inside a Shadow DOM root, ensuring complete CSS
 isolation from the host application. Three separate things put CSS in there,
 and it helps to know which is which:
 
-1. **This package's own CSS** — the component styles from `@gears-frontx/ui-kit`
-   and `HomeScreen.module.css` — is emitted by the build into this MFE's own
-   stylesheet, listed in its `mf-manifest.json`, and injected as a `<link>`
-   into the shadow root by the host's MFE handler *before* `mount()` runs.
-   Nothing in the package has to arrange this.
+1. **This package's own CSS** — the component styles from
+   `@constructor/react-kit` and `HomeScreen.module.css` — is emitted by the
+   build into this MFE's own stylesheet, listed in its `mf-manifest.json`, and
+   injected as a `<link>` into the shadow root by the host's MFE handler
+   *before* `mount()` runs. Nothing in the package has to arrange this.
 2. **The host document's stylesheets** are cloned into the shadow root by
-   `ThemeAwareReactLifecycle.mount()`, once, at mount.
-3. **The kit's design tokens** are injected by this package's
-   `initializeStyles()` override — see [Styling](#styling) for why they need
-   a step of their own.
+   `ThemeAwareReactLifecycle.mount()`, once, at mount. Some of those clones are
+   harmful here, which is what `initializeStyles()` deals with — see
+   [Styling](#styling).
+3. **The design tokens** are NOT in this list, and that is the point: the shell
+   links `@constructor/globals` at document level, so the tokens are declared on
+   the document's `:root` and inherit through the shadow boundary. This package
+   injects no tokens of its own; a copy on `:host` would shadow the host's and
+   freeze the screen on whichever colour scheme was current at mount.
 
 ### Bridge Communication
 
@@ -201,77 +208,79 @@ Each screen manages its own translations using `useScreenTranslations`:
 
 ### Styling
 
-Components come from `@gears-frontx/ui-kit`, pinned to an exact version. It is
-a dependency, not a folder of copied files — do not vendor primitives into this
-package.
+Controls come from `@constructor/react-kit`, pinned to an exact version, one
+entry per subpath. It is a dependency, not a folder of copied files — do not
+vendor primitives into this package.
 
 ```tsx
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@gears-frontx/ui-kit';
+import { AcvButton } from '@constructor/react-kit/button';
+import { AcvInput } from '@constructor/react-kit/input';
 ```
 
-Each kit component carries its own CSS Module; importing the component pulls
-its styles in with it, and the build ships only the components you imported.
+Each kit component carries its own CSS Module; importing the component pulls its
+styles in with it, and the build ships only the components you imported. The kit
+documents every entry in
+`node_modules/@constructor/react-kit/entries/<entry>/public.md` — read that
+rather than guessing a prop name.
 
-**A kit component's spacing can depend on what its direct children are.**
-`Card` is the case that bites: it spaces its slots with a
-`gap: var(--card-spacing)` declared on the card root, so that gap only ever
-falls between `Card`'s *direct* children. Wrap the slots and it applies to
-nothing.
+**The kit's context is already installed.** `lifecycle.tsx` wraps every screen in
+`shared/KitProviders.tsx`, which provides `AcvColorScheme` and `LocaleProvider`.
+Neither is optional — every kit component calls `useInternalTranslations()` and
+throws outside a `LocaleProvider`, `AcvButton` included via `AcvLoader` — and a
+screen must not add its own. `KitProviders` also subscribes to the host's shared
+theme property and drives the kit's colour scheme from it, collapsing the shell's
+five themes onto the kit's light and dark (`shared/acvColorScheme.ts`). A screen
+that needs to know which one resolved reads `useColorScheme()`; it must not call
+`setColorScheme`.
 
-```tsx
-// Correct — the slots stay direct children of Card, the form lives in a slot.
-<Card>
-  <CardHeader>
-    <CardTitle>Sign in</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <form id="sign-in" onSubmit={handleSubmit}>…</form>
-  </CardContent>
-  <CardFooter>
-    <Button type="submit" form="sign-in">Continue</Button>
-  </CardFooter>
-</Card>
+**The kit ships controls, not containers.** There is no card, panel or skeleton
+component. Build layout in the `*.module.css` beside the screen against
+`@constructor/globals` tokens, the way `HomeScreen.module.css` builds its
+`.panel` out of `--acv-color-surface-secondary`, `--acv-radius-medium` and
+`--acv-spacing-regular`. Token families:
 
-// Wrong — Card has a single child now, and its gap applies to nothing.
-<Card>
-  <form onSubmit={handleSubmit}>
-    <CardHeader>…</CardHeader>
-    <CardContent>…</CardContent>
-    <CardFooter>…</CardFooter>
-  </form>
-</Card>
+```
+--acv-color-{surface,glyph,border,status,decoration}-*
+--acv-spacing-*   --acv-radius-*   --acv-shadow-*   --acv-icon-size-*
+--acv-font-size-* --acv-line-height-* --acv-font-weight-* --acv-height-*
 ```
 
-The wrong shape does not look broken at a glance, which is why it keeps getting
-shipped: the slots' horizontal padding comes from descendant rules
-(`.card .cardContent`) and still lands, so only the vertical rhythm disappears
-and the submit button ends up flush against the last field. The native `form`
-attribute above is what keeps a submit button in `CardFooter` while its fields
-live in `CardContent`; a form whose actions sit inside the form itself needs no
-`CardFooter` at all, which is how `demo-mfe`'s `ProfileDetailsCard` composes
-one. `Card` cannot render as a `<form>` element instead — the kit's card parts
-are plain `div`s with no element-swapping `render` prop.
-
-Screen-local layout goes in a `*.module.css` beside the screen and reads the
-kit's semantic tokens — `var(--space-6)`, `var(--radius-md)`,
-`var(--muted-foreground)`, `var(--text-heading-1-size)`. The full token list is
-`node_modules/@gears-frontx/ui-kit/dist/theme.css`; per-component usage docs are
-in `dist/docs/`.
+The full list is the shell's `public/acv/base.css` and
+`public/acv/themes/constructor/styles.css`, which the shell regenerates from the
+package on every `npm run dev`.
 
 **Do not use Tailwind utility classes here.** The host's compiled Tailwind does
-reach this shadow root, but its colour utilities read the shell's tokens, and
-the kit re-declares the same token names with a different value grammar
-(`#f8fafc` where the shell has `0 0% 100%`). Inside this shadow root a colour
-utility therefore resolves to `hsl(#f8fafc)`, which is invalid and drops out,
-while layout utilities keep working — the worst kind of failure to inherit into
-a copied screen.
+reach this shadow root, but its colour utilities read the shell's tokens, whose
+value grammar differs from the kit's (`0 0% 100%` where the kit has a complete
+colour). A colour utility therefore resolves against names that are not declared
+here, while layout utilities keep working — the worst kind of failure to inherit
+into a copied screen.
 
-That token re-declaration is what `initializeStyles()` in `lifecycle.tsx` sets
-up: the kit declares its tokens on `:root`, which matches nothing inside a
-shadow tree, so the lifecycle rewrites those selectors to `:host` before
-injecting the stylesheet. The screen root then carries `data-theme="light"` or
-`"dark"`, mapped from the host's current theme, which selects the kit's own
-light or dark token set.
+#### The two cascade bridges in `initializeStyles()`
+
+Both exist because the kit ships its component CSS inside `@layer ui`, and both
+are needed for a kit component to render fully styled. Neither needs anything
+from a screen; each is documented in full at its own definition.
+
+`shared/demoteUnlayeredShadowStyles.ts` — a declaration in ANY cascade layer
+loses to an unlayered one at ANY specificity, and the base class puts unlayered
+CSS in the shadow root (the host's compiled Tailwind, cloned; plus its own base
+resets). Measured without this: `AcvButton` computes
+`background-color: rgba(0, 0, 0, 0)` and `padding: 0px` while still taking its
+`border-radius` and `height` from the kit — half-styled, which reads as a
+rendering glitch rather than as a cascade problem. Inline `<style>` blocks are
+wrapped in a `frontx-host` layer; a cloned `<link>` cannot be rewritten, so an
+unlayered one is dropped. Note which kind the host's stylesheet is depends on the
+BUILD — the dev server serves a `<style>`, `vite build` emits a `<link>` — so a
+bridge handling only one of them works in only one mode.
+
+`shared/mirrorMfeStylesToDocument.ts` — every overlay the kit ships (tooltip,
+select, dropdown, popover, dialog, notification) portals its popup into
+`document.body`, which this MFE's stylesheet does not reach, because the handler
+injects it into the shadow root only. This mirrors the same stylesheet URL into
+`document.head`. Safe rather than a leak: every rule in it is a hashed
+CSS-module class, so it can only match elements this MFE rendered, and the file
+is already in the browser cache.
 
 ## Development
 
@@ -317,18 +326,38 @@ If TypeScript cannot resolve `@gears-frontx/*` imports:
 
 ### Style Issues
 
-If a kit component renders unstyled — no fill, no radius, no height — its
-tokens did not reach the shadow root. Check the injected `<style>` in the
-shadow root: it must declare the kit's tokens on `:host`, not on `:root`.
+If a kit component renders HALF-styled — a real height and border-radius but a
+transparent background and no padding — the cascade bridge is not doing its job.
+Something unlayered in the shadow root is outranking `@layer ui`: check that
+`initializeStyles()` still calls `demoteUnlayeredShadowStyles`, and look for a
+`<link>` or `<style>` in the shadow root whose rules are not inside an `@layer`
+— see [Styling](#styling).
 
-If a colour is wrong or missing while spacing and layout are right, something
-is reading the shell's tokens rather than the kit's. A Tailwind colour utility
-in this package is the usual cause — see [Styling](#styling).
+If a component renders unstyled with NO token values at all —
+`var(--acv-*)` resolving to nothing — the design system is not on the host
+document. Check that the shell's `index.html` links `/acv/base.css` and
+`/acv/themes/constructor/styles.css` and that both return 200; the shell
+regenerates them with `npm run sync:acv-globals`, which its `predev`/`prebuild`
+run.
 
-If a `Card`'s parts are crammed together vertically — a footer button flush
-against the last field — while its left and right padding looks right, an
-element wraps the card's slots and swallows the card's gap. Make the slots
-direct children of `Card` again — see [Styling](#styling).
+If icons collapse to 0x0 while everything else looks right, `base.css` reached
+the document through a bundler instead of a plain `<link>`: Tailwind drops the
+icon-sizing rule and nothing else, so the failure hides. This is the shell's
+concern — see its `scripts/sync-acv-globals.mjs`.
+
+If a tooltip, select, dropdown, dialog or notification popup renders unstyled
+while the same component's trigger looks right, the popup portalled into
+`document.body` and the mirror is missing. Check for
+`link[data-frontx-mfe-style-mirror]` in `document.head` — see
+[Styling](#styling).
+
+If a screen throws `useTranslation must be used within a LocaleProvider`, it is
+rendering outside `KitProviders` — in a test that renders the screen directly,
+or in a lifecycle that stopped wrapping it.
+
+If a colour is wrong or missing while spacing and layout are right, something is
+reading the shell's tokens rather than the kit's. A Tailwind colour utility in
+this package is the usual cause — see [Styling](#styling).
 
 If a component's own styles are missing, the CSS is not reaching the shadow
 root at all: confirm the component is imported statically (a lazily imported

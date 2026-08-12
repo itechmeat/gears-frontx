@@ -214,45 +214,97 @@ useEffect(() => bridge.subscribeToProperty(FRONTX_SHARED_PROPERTY_THEME, (p) => 
 }), [bridge]);
 ```
 
-## UI kit components
+## UI components
 
-Imported from `@gears-frontx/ui-kit`. Each takes `className` (merged after the kit's own
-class) and forwards the rest to its element or Base UI primitive; only the props past that
-are listed. Styled markup only - no data table, no form library.
+Imported from `@constructor/react-kit`, one entry per subpath:
+`import { AcvButton } from '@constructor/react-kit/button'`. A bare
+`@constructor/react-kit` import also resolves, and the subpath is preferred - it is
+what keeps an MFE bundle to the components it renders.
+
+**The kit documents itself, and that is the authority, not this file.** Every entry
+ships `node_modules/@constructor/react-kit/entries/<entry>/public.md` (prose plus the
+component's full prop interface) and `public.d.ts` (its exports). Read those before
+writing a component you have not used here; there are ~100 of them and guessing a prop
+name costs a red gate cycle. `ls node_modules/@constructor/react-kit/entries` lists the
+entry names.
+
+The pins are exact and deliberate: `@constructor/react-kit` 0.269.0 renamed its icon
+peer to `@constructor/react-icons`, so the two move together.
+
+### The context is already installed
+
+`lifecycle.tsx` wraps every screen in `shared/KitProviders.tsx`, so a screen imports
+components and adds no provider. Do not add another `AcvColorScheme` or `LocaleProvider`
+around a screen: `LocaleProvider` is what every kit component's
+`useInternalTranslations()` reads, and a second `AcvColorScheme` would fight the host's
+theme for the one colour scheme the document carries.
+
+A screen that needs to READ the resolved scheme uses `useColorScheme()` from
+`@constructor/react-kit/color-scheme`; it must not `setColorScheme`, which
+`KitProviders` drives from the host's shared theme property.
+
+### Verified in this scaffold
+
+Signatures below are read off the installed 0.269.0 declarations. Anything not listed
+here goes through the entry's own `public.md`.
 
 ```
-Button       variant?: 'default'|'destructive'|'outline'|'secondary'|'ghost'|'link'; size?: 'default'|'sm'|'lg'
-             icon?: ReactNode; loading?: boolean; focusableWhenDisabled?: boolean; render?; nativeButton?
-Input        Base UI Input props: type, value/defaultValue, onValueChange(value, eventDetails), disabled
-Field        name?: string; disabled?: boolean; invalid?: boolean; validate?: (value) => string|string[]|null
-             FieldLabel, FieldDescription, FieldError (match?: 'valueMissing'|'typeMismatch'|...)
-Card         size?: 'default'|'sm'; CardHeader/CardTitle/CardDescription/CardAction/CardContent/CardFooter
-Table        label?: string (names the focusable scroll wrapper); density?: 'default'|'compact'
-             TableHeader/TableBody/TableFooter/TableRow/TableHead/TableCell/TableCaption
-Checkbox     checked?/defaultChecked?: boolean; onCheckedChange?: (checked: boolean, eventDetails) => void
-             indeterminate?: boolean; name?: string; disabled?: boolean
-Skeleton     ComponentProps<'div'> only
+AcvButton      @constructor/react-kit/button
+               size?: 'xxl'|'xl'|'l'|'m'|'s'|'xs'; variant?: 'primary'|'secondary'|'tertiary'|'ghost'|'danger'
+               loading?: boolean; icon?: ReactNode; end?: ReactNode; onlyIcon?: boolean; rounded?: boolean
+               selected?: boolean; render?: ReactElement; type defaults to 'button'
+AcvInput       @constructor/react-kit/input
+               value/defaultValue; onValueChange?: (value: string, event) => void; onClear?: () => void
+               size?: 'xxl'|'xl'|'l'|'m'|'s'; type?: 'text'|'password'|'textarea'|'email'|'search'|...
+               clearable?: boolean; error?: boolean; prefix?/suffix?: ReactNode; parsers?; mask?
+               ref exposes focus/blur/clear/reset/select/getElement
+AcvStatusTag   @constructor/react-kit/status-tag
+               variant?; size?; icon?: boolean; iconSlot?: ReactNode
+AcvTooltip     @constructor/react-kit/tooltip
+               trigger: ReactNode (the tooltip wraps it); open?/defaultOpen?/onOpenChange?
+               side?; align?; sideOffset?/alignOffset?: number; arrow?: boolean; size?
+AcvTable       @constructor/react-kit/table
+               size?: AcvTableSize; AcvTableRow (header?: boolean), AcvTableCell
+               rows go inside your own <tbody>
+AcvCheckbox    @constructor/react-kit/checkbox
+               checked?/defaultChecked?; indeterminate?: boolean; disabled?/required?; name?/value?/id?
+useColorScheme @constructor/react-kit/color-scheme
+               { colorScheme, setColorScheme, toggleColorScheme, isColorScheme }
 ```
 
-```tsx
-<Field name="email">
-  <FieldLabel>Email</FieldLabel>
-  <Input type="email" required placeholder="you@company.com" />
-  <FieldError match="valueMissing">Email is required.</FieldError>
-</Field>
-<Checkbox aria-label="Select row" checked={selected} onCheckedChange={setSelected} />
-<Button variant="secondary" size="sm" loading={isPending}>Save</Button>
-<Card><CardHeader><CardTitle>Bridge</CardTitle></CardHeader><CardContent>{body}</CardContent></Card>
-<Table label="Invoices"><TableHeader><TableRow><TableHead>Id</TableHead></TableRow></TableHeader>
-  <TableBody><TableRow><TableCell>{id}</TableCell></TableRow></TableBody></Table>
-```
+`data-testid` and other unknown props forward to the rendered element, which for
+`AcvInput` is the `<input>` itself - so `[data-testid=x]` IS the input, not a wrapper.
 
-`icon` is the only right place for a Button icon; with no children the button goes
-icon-only and needs its own `aria-label`, and `loading` reports through `aria-busy`
-without setting the native `disabled` property, so a `:disabled` selector misses it.
-Card's slots stay DIRECT children - the card's `gap` falls between them, so a `<form>`
-wrapped around them spaces nothing; put the form inside a slot. Skeleton carries no
-loading semantics - `role="status"` and `aria-busy` belong on the region around it.
+### Layout and styling
+
+The kit ships CONTROLS, not containers: there is no card, panel or skeleton component.
+Build layout in the screen's own CSS module against `@constructor/globals` tokens, the
+way `screens/home/HomeScreen.module.css` builds its `.panel` out of
+`--acv-color-surface-secondary`, `--acv-radius-medium` and `--acv-spacing-regular`.
+
+Those tokens are declared on the HOST document's `:root` (the shell's `index.html` links
+the design system) and reach a shadow root by inheritance. So:
+
+- Use `--acv-*` custom properties freely in an MFE stylesheet. They resolve.
+- Never import or re-declare the design system inside an MFE. A copy on `:host` shadows
+  the host's and freezes the screen on whichever scheme was current at mount.
+- No Tailwind utilities in an MFE screen. The host's compiled Tailwind is cloned into the
+  shadow root, so its LAYOUT classes appear to work while its colour classes resolve
+  against token names the kit does not declare - some classes silently doing nothing is
+  worse than none of them working.
+
+Token families: `--acv-color-{surface,glyph,border,status,decoration}-*`,
+`--acv-spacing-*`, `--acv-radius-*`, `--acv-font-size-*`, `--acv-line-height-*`,
+`--acv-font-weight-*`, `--acv-icon-size-*`, `--acv-height-*`, `--acv-shadow-*`. The full
+list is `public/acv/base.css` and `public/acv/themes/constructor/styles.css` in the shell.
+
+### Overlays
+
+Every overlay the kit ships - tooltip, select, dropdown, popover, dialog, notification -
+portals its popup into `document.body`, outside this MFE's shadow root.
+`shared/mirrorMfeStylesToDocument.ts` in the lifecycle is what makes those popups styled;
+it needs nothing from a screen, but a popup rendering unstyled is that bridge failing, not
+the component.
 
 ## Screen skeleton (edit, do not re-derive)
 
@@ -262,7 +314,9 @@ declare at this revision; re-deriving them costs a red gate cycle each.
 ```tsx
 import React, { useState } from 'react';  // the default import is what puts React.FormEvent in scope
 import { apiRegistry, useApiMutation, useApiQuery, useAppSelector } from '@gears-frontx/react';
-import { Button, Card, CardContent, Field, FieldError, FieldLabel, Input } from '@gears-frontx/ui-kit';
+import { AcvButton } from '@constructor/react-kit/button';
+import { AcvInput } from '@constructor/react-kit/input';
+import styles from './HomeScreen.module.css';  // layout + tokens; the kit ships no container
 import { BillingApiService } from '../../api/BillingApiService';
 import type { GetStatusResponse } from '../../api/types';
 import { requestSave } from '../../actions/homeActions';
@@ -301,20 +355,22 @@ export const HomeScreen = () => {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <form onSubmit={onSubmit}>
-          <Field name="name">
-            <FieldLabel>Name</FieldLabel>
-            <Input required value={name} onValueChange={setName} data-testid="screen-name-input" />
-            {/* Without `match` a FieldError shows for any invalid state. */}
-            <FieldError match="valueMissing">Name is required.</FieldError>
-          </Field>
-          <Button type="submit" disabled={isPending} data-testid="screen-submit">Save</Button>
-        </form>
-        <p data-testid="screen-status">{status ?? data?.message}</p>
-      </CardContent>
-    </Card>
+    // A <section> styled from --acv-* tokens, because the kit ships no card. The kit's
+    // context is already around this screen - see "The context is already installed".
+    <section className={styles.panel}>
+      <form onSubmit={onSubmit}>
+        <label className={styles.term} htmlFor="name">Name</label>
+        <AcvInput
+          id="name"
+          required
+          value={name}
+          onValueChange={setName}
+          data-testid="screen-name-input"
+        />
+        <AcvButton type="submit" loading={isPending} data-testid="screen-submit">Save</AcvButton>
+      </form>
+      <p data-testid="screen-status">{status ?? data?.message}</p>
+    </section>
   );
 };
 ```
