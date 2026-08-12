@@ -1,116 +1,155 @@
 /*
  * Screen-local layout for the blank MFE.
  *
- * Colour, spacing and type resolve through @gears-frontx/ui-kit tokens, which
- * the lifecycle re-anchors onto this shadow root's host (see lifecycle.tsx).
- * The placeholder dimensions at the end of this file are the one exception and
- * say why at their own declaration.
+ * Every value resolves through a `@constructor/globals` token. Those tokens are
+ * declared at DOCUMENT level — `index.html` links the design system's two
+ * stylesheets — and reach this shadow root by custom-property inheritance, which
+ * is also why switching the host theme repaints this screen without it
+ * re-rendering. Nothing in this package re-declares them on `:host`; see
+ * lifecycle.tsx for why a second copy would freeze the screen on one scheme.
  *
  * No Tailwind utility appears in this screen, deliberately. The host's compiled
  * Tailwind does reach here — ThemeAwareReactLifecycle clones the document's
  * stylesheets into the shadow root — but its colour utilities read the shell's
- * HSL-triplet tokens through the same names the kit re-declares as complete
- * colours, so `text-muted-foreground` would resolve to `hsl(oklch(...))` and be
- * dropped. Layout utilities would still work, which is the trap: a scaffold
- * every new screen is copied from must not be one where some classes silently
- * do nothing.
+ * own HSL-triplet tokens, a different grammar from the kit's complete colours,
+ * so `text-muted-foreground` resolves against names that are not declared here.
+ * Layout utilities would still work, which is the trap: a scaffold every new
+ * screen is copied from must not be one where some classes silently do nothing.
  */
 
 .screen {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-8);
+  gap: var(--acv-spacing-large);
+  padding: var(--acv-spacing-x-large);
+  color: var(--acv-color-glyph-primary);
+  font-family: var(--acv-font-family-default);
 }
 
 .intro {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--acv-spacing-xx-small);
 }
 
 .title {
-  font-size: var(--text-heading-1-size);
-  font-weight: var(--text-heading-1-weight);
-  letter-spacing: var(--text-heading-1-tracking);
-  line-height: var(--text-heading-1-line-height);
+  margin: 0;
+  font-size: var(--acv-font-size-heading-2-text);
+  font-weight: var(--acv-font-weight-strong);
+  line-height: var(--acv-line-height-heading-2-text);
 }
 
 .description {
-  color: var(--muted-foreground);
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-line-height);
+  margin: 0;
+  color: var(--acv-color-glyph-secondary);
+  font-size: var(--acv-font-size-body-1-text);
+  line-height: var(--acv-line-height-body-1-text);
 }
 
 /*
- * The heading element exists for the document outline — the kit's CardTitle
- * renders a plain div and contributes nothing to it — so its type comes from
- * the CardTitle it sits in, and this rule only has to stop the UA stylesheet's
- * own h2 size and margins from overriding what it inherits. The space below it
- * is Card's gap between its slots, which is why no margin is declared here.
+ * The panel the kit does not ship. Three declarations against the design
+ * system's surface, radius and spacing tokens, which is the whole of what a card
+ * component would have contributed here.
  */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acv-spacing-regular);
+  padding: var(--acv-spacing-regular);
+  border-radius: var(--acv-radius-medium);
+  background-color: var(--acv-color-surface-secondary);
+}
+
 .sectionTitle {
-  font: inherit;
   margin: 0;
+  font-size: var(--acv-font-size-subheading-2-text);
+  font-weight: var(--acv-font-weight-semi-strong);
+  line-height: var(--acv-line-height-subheading-2-text);
 }
 
 .definitions {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--acv-spacing-xx-small);
+  margin: 0;
 }
 
 .term {
-  font-size: var(--text-label-size);
-  font-weight: var(--text-label-weight);
+  font-size: var(--acv-font-size-caption-1-text);
+  font-weight: var(--acv-font-weight-medium);
+  line-height: var(--acv-line-height-caption-1-text);
 }
 
 .value {
-  color: var(--muted-foreground);
-  font-family: var(--font-mono);
-  font-size: var(--text-mono-size);
-  line-height: var(--text-mono-line-height);
+  display: flex;
+  gap: var(--acv-spacing-x-small);
+  align-items: center;
+  margin: 0;
+  min-height: var(--acv-line-height-body-2-text);
+  color: var(--acv-color-glyph-secondary);
+  font-size: var(--acv-font-size-body-2-text);
+  line-height: var(--acv-line-height-body-2-text);
+}
+
+.controls {
+  display: flex;
+  gap: var(--acv-spacing-x-small);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter {
+  max-width: 20rem;
 }
 
 .error {
-  color: var(--destructive);
-  font-size: var(--text-body-size);
+  margin: 0;
+  color: var(--acv-color-status-danger-strong);
+  font-size: var(--acv-font-size-body-2-text);
+  line-height: var(--acv-line-height-body-2-text);
 }
 
 .payload {
-  background-color: var(--code-background);
-  border-radius: var(--radius-md);
-  color: var(--code-foreground);
-  font-family: var(--font-mono);
-  font-size: var(--text-mono-size);
-  line-height: var(--text-mono-line-height);
+  margin: 0;
+  padding: var(--acv-spacing-small);
+  border-radius: var(--acv-radius-regular);
+  background-color: var(--acv-color-surface-tertiary);
+  color: var(--acv-color-glyph-primary);
+  font-size: var(--acv-font-size-small);
+  line-height: var(--acv-line-height-small);
   overflow-x: auto;
-  padding: var(--space-4);
 }
 
 .placeholders {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--acv-spacing-x-small);
 }
 
 /*
- * Kit Skeleton bakes in no dimension by design — the consumer sizes each
- * instance. These four shape the placeholder roughly like the content it
- * stands in for, so the literals below are silhouettes of that content rather
- * than values a token could carry: there is no kit token for "as wide as a
- * heading" or "as tall as a JSON payload".
+ * Loading placeholders. The kit ships no skeleton component, and these are
+ * silhouettes of the content they stand in for rather than values a token could
+ * carry: there is no token for "as wide as a heading" or "as tall as a JSON
+ * payload". Their colour and radius do come from tokens.
  */
+.placeholderTitle,
+.placeholderLine,
+.placeholderLineShort,
+.placeholderBlock {
+  border-radius: var(--acv-radius-small);
+  background-color: var(--acv-color-surface-tertiary);
+}
+
 .placeholderTitle {
-  height: var(--control-height-lg);
+  height: var(--acv-height-large);
   width: 16rem;
 }
 
 .placeholderLine {
-  height: var(--space-4);
+  height: var(--acv-spacing-regular);
 }
 
 .placeholderLineShort {
-  height: var(--space-4);
+  height: var(--acv-spacing-regular);
   width: 75%;
 }
 

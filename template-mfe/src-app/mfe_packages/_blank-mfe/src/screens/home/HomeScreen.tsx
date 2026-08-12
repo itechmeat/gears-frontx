@@ -6,9 +6,12 @@ import {
   useApiQuery,
   apiRegistry,
 } from '@gears-frontx/react';
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@gears-frontx/ui-kit';
+import { AcvButton } from '@constructor/react-kit/button';
+import { AcvInput } from '@constructor/react-kit/input';
+import { AcvStatusTag } from '@constructor/react-kit/status-tag';
+import { AcvTooltip } from '@constructor/react-kit/tooltip';
+import { useColorScheme } from '@constructor/react-kit/color-scheme';
 import { useScreenTranslations } from '../../shared/useScreenTranslations';
-import { kitThemeScopeFor } from '../../shared/kitThemeScope';
 import { _BlankApiService } from '../../api/_BlankApiService';
 import styles from './HomeScreen.module.css';
 
@@ -41,7 +44,12 @@ interface HomeScreenProps {
  * - Theme property subscription
  * - Language property subscription
  * - MFE-local i18n with dynamic translation loading
- * - Components from @gears-frontx/ui-kit, styled from its design tokens
+ * - Components from `@constructor/react-kit`, styled from `@constructor/globals`
+ *   tokens
+ *
+ * The kit's context is installed once by `lifecycle.tsx` (see
+ * `shared/KitProviders.tsx`), so a screen imports kit components and needs no
+ * provider of its own.
  *
  * To use this template:
  * 1. Copy the entire _blank-mfe directory to a new name
@@ -54,7 +62,7 @@ interface HomeScreenProps {
 export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   // Initial value read directly from the bridge's lazy useState initializer (runs once,
-  // synchronously, during the first render) instead of via setState in a mount effect —
+  // synchronously, during the first render) instead of via setState in a mount effect -
   // this avoids an extra render and the set-state-in-effect anti-pattern. The effect
   // below only subscribes for subsequent property changes.
   const [theme, setTheme] = useState<string>(() =>
@@ -65,13 +73,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
   );
   // The lazy initializers above run only on mount; if the host swaps the bridge
   // instance, re-read its current properties during render ("adjusting state
-  // during render") — the subscription effect only delivers future changes.
+  // during render") - the subscription effect only delivers future changes.
   const [prevBridge, setPrevBridge] = useState(bridge);
   if (prevBridge !== bridge) {
     setPrevBridge(bridge);
     setTheme(readBridgeProperty(bridge, FRONTX_SHARED_PROPERTY_THEME, 'default'));
     setLanguage(readBridgeProperty(bridge, FRONTX_SHARED_PROPERTY_LANGUAGE, 'en'));
   }
+  const [filter, setFilter] = useState('');
+
+  /*
+   * Read-only here. The colour scheme is DRIVEN by KitProviders from the host's
+   * theme property; this screen only reports which of the two the host's theme
+   * resolved to, so that a scaffolded app shows the theme bridge working.
+   */
+  const { colorScheme } = useColorScheme();
 
   // @cpt-begin:implement-endpoint-descriptors:p4:inst-blank-home-query
   const service = apiRegistry.getService(_BlankApiService);
@@ -121,8 +137,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
     }
   }, [language]);
 
-  const kitThemeScope = kitThemeScopeFor(theme);
-
   /*
    * The `data-testid` attributes below are verification API, not decoration.
    * A screen renders inside a shadow root, so selectors issued from outside it
@@ -134,57 +148,54 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
    * region, and rename the id with the control rather than dropping it.
    */
 
-  // Show skeleton while translations are loading
+  // Show placeholders while translations are loading
   if (loading) {
     return (
-      // A Skeleton carries no loading semantics of its own; the region announces them.
+      // A placeholder carries no loading semantics of its own; the region announces them.
       <div
         ref={containerRef}
         className={styles.screen}
-        data-theme={kitThemeScope}
         data-testid="screen-root"
         role="status"
         aria-busy="true"
       >
         <div className={styles.placeholders} data-testid="screen-loading">
-          <Skeleton className={styles.placeholderTitle} />
-          <Skeleton className={styles.placeholderLine} />
+          <div className={styles.placeholderTitle} />
+          <div className={styles.placeholderLine} />
         </div>
-        <Card>
-          <CardContent>
-            <div className={styles.placeholders}>
-              <Skeleton className={styles.placeholderLine} />
-              <Skeleton className={styles.placeholderLine} />
-              <Skeleton className={styles.placeholderLineShort} />
-            </div>
-          </CardContent>
-        </Card>
+        <section className={styles.panel}>
+          <div className={styles.placeholders}>
+            <div className={styles.placeholderLine} />
+            <div className={styles.placeholderLine} />
+            <div className={styles.placeholderLineShort} />
+          </div>
+        </section>
       </div>
     );
   }
 
-  let statusCardBody: React.ReactNode;
+  let statusBody: React.ReactNode;
   if (isStatusLoading) {
-    statusCardBody = (
+    statusBody = (
       <div
         role="status"
         aria-busy="true"
         className={styles.placeholders}
         data-testid="screen-status-loading"
       >
-        <Skeleton className={styles.placeholderLine} />
-        <Skeleton className={styles.placeholderLineShort} />
-        <Skeleton className={styles.placeholderBlock} />
+        <div className={styles.placeholderLine} />
+        <div className={styles.placeholderLineShort} />
+        <div className={styles.placeholderBlock} />
       </div>
     );
   } else if (isStatusError) {
-    statusCardBody = (
+    statusBody = (
       <p className={styles.error} data-testid="screen-status-error">
         {statusError?.message}
       </p>
     );
   } else {
-    statusCardBody = (
+    statusBody = (
       <pre className={styles.payload} data-testid="screen-status-payload">
         {JSON.stringify(statusData, null, 2)}
       </pre>
@@ -192,12 +203,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={styles.screen}
-      data-theme={kitThemeScope}
-      data-testid="screen-root"
-    >
+    <div ref={containerRef} className={styles.screen} data-testid="screen-root">
       <div className={styles.intro}>
         <h1 className={styles.title} data-testid="screen-title">
           {t('title')}
@@ -206,55 +212,102 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ bridge }) => {
       </div>
 
       {/*
-        Card spaces its slots with `gap: var(--card-spacing)` declared on the
-        card root, so that rhythm only ever falls between Card's DIRECT
-        children — the slots below stay directly under <Card>. A wrapper around
-        them (`<Card><form>…slots…</form></Card>`, the shape a form screen
-        invites) leaves the card a single child and the gap applies to nothing,
-        while the slots' horizontal padding still lands because the kit sets it
-        through descendant rules (`.card .cardContent`) — half-correct spacing
-        reads as a small visual glitch rather than as the composition mistake
-        it is. A form goes inside a slot; README "Styling" carries the shape.
+        A plain <section> rather than a kit container component: the kit ships no
+        card, and a panel is three declarations of surface, radius and padding
+        against `@constructor/globals` tokens (see HomeScreen.module.css). Reach
+        for `@constructor/react-kit` for CONTROLS, and for the tokens for layout.
       */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <h2 className={styles.sectionTitle}>{t('bridge_info')}</h2>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className={styles.definitions}>
-            <div>
-              <dt className={styles.term}>{t('domain_id')}</dt>
-              <dd className={styles.value} data-testid="screen-domain-id">
-                {bridge.domainId}
-              </dd>
-            </div>
-            <div>
-              <dt className={styles.term}>{t('instance_id')}</dt>
-              <dd className={styles.value} data-testid="screen-instance-id">
-                {bridge.instanceId}
-              </dd>
-            </div>
-            <div>
-              <dt className={styles.term}>{t('current_theme')}</dt>
-              <dd className={styles.value} data-testid="screen-theme">
-                {theme}
-              </dd>
-            </div>
-            <div>
-              <dt className={styles.term}>{t('current_language')}</dt>
-              <dd className={styles.value} data-testid="screen-language">
-                {language}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+      <section className={styles.panel}>
+        <h2 className={styles.sectionTitle}>{t('bridge_info')}</h2>
+        <dl className={styles.definitions}>
+          <div>
+            <dt className={styles.term}>{t('domain_id')}</dt>
+            <dd className={styles.value} data-testid="screen-domain-id">
+              {bridge.domainId}
+            </dd>
+          </div>
+          <div>
+            <dt className={styles.term}>{t('instance_id')}</dt>
+            <dd className={styles.value} data-testid="screen-instance-id">
+              {bridge.instanceId}
+            </dd>
+          </div>
+          <div>
+            <dt className={styles.term}>{t('current_theme')}</dt>
+            <dd className={styles.value}>
+              <span data-testid="screen-theme">{theme}</span>
+              {/*
+                The kit resolves every colour through one of two schemes, so this
+                tag is the visible proof that the host's theme reached it.
+              */}
+              <AcvStatusTag
+                variant={colorScheme === 'dark' ? 'info' : 'success'}
+                size="s"
+                data-testid="screen-color-scheme"
+              >
+                {colorScheme}
+              </AcvStatusTag>
+            </dd>
+          </div>
+          <div>
+            <dt className={styles.term}>{t('current_language')}</dt>
+            <dd className={styles.value} data-testid="screen-language">
+              {language}
+            </dd>
+          </div>
+        </dl>
+      </section>
 
-      <Card>
-        <CardContent data-testid="screen-status">{statusCardBody}</CardContent>
-      </Card>
+      {/*
+        Kit controls, kept in the scaffold as a live check of the wiring: if the
+        two style bridges in lifecycle.tsx or the providers in KitProviders are
+        broken, these render half-styled or throw, in the first screen of a fresh
+        project rather than three screens later. AcvTooltip earns its place
+        specifically — it portals its popup into `document.body`, which is what
+        `mirrorMfeStylesToDocument` exists for.
+      */}
+      <section className={styles.panel}>
+        <h2 className={styles.sectionTitle}>{t('kit_controls')}</h2>
+        <div className={styles.controls}>
+          {/*
+            `type="text"`, not `"search"`: a search input renders the browser's own
+            ::-webkit-search-cancel-button, which sits right beside the kit's
+            `clearable` control and shows the user two clear buttons.
+          */}
+          <AcvInput
+            type="text"
+            size="m"
+            clearable
+            value={filter}
+            placeholder={t('filter_placeholder')}
+            onValueChange={setFilter}
+            className={styles.filter}
+            data-testid="screen-filter"
+          />
+          <AcvTooltip
+            trigger={
+              <AcvButton
+                variant="secondary"
+                size="m"
+                disabled={filter.length === 0}
+                onClick={() => setFilter('')}
+                data-testid="screen-filter-clear"
+              >
+                {t('clear')}
+              </AcvButton>
+            }
+          >
+            <span data-testid="screen-filter-clear-tooltip">{t('clear_hint')}</span>
+          </AcvTooltip>
+        </div>
+        <p className={styles.value} data-testid="screen-filter-echo">
+          {filter}
+        </p>
+      </section>
+
+      <section className={styles.panel} data-testid="screen-status">
+        {statusBody}
+      </section>
     </div>
   );
 };
