@@ -28,7 +28,10 @@
   "scripts": {
     "build:mfes": "npx tsx scripts/build-mfes.ts",
     "generate:mfe-manifests": "npx tsx scripts/generate-mfe-manifests.ts",
+    "sync:acv-globals": "node scripts/sync-acv-globals.mjs",
+    "predev": "npm run sync:acv-globals",
     "dev": "npm run build:packages && npm run build:mfes && npm run generate:mfe-manifests && vite",
+    "predev:all": "npm run sync:acv-globals",
     "dev:all": "npx tsx scripts/dev-all.ts",
     "preview": "vite preview",
     "build:package": "tsup",
@@ -40,6 +43,7 @@
     "build:packages:studio": "npm run build --workspace=@gears-frontx/studio",
     "prebuild:packages": "npm run build:package",
     "build:packages": "npm run build:packages:auth && npm run build:packages:state && npm run build:packages:i18n && npm run build:packages:framework && npm run build:packages:react && npm run build:packages:studio",
+    "prebuild": "npm run sync:acv-globals",
     "build": "npm run build:packages && npm run build:mfes && npm run generate:mfe-manifests && vite build",
     "type-check:package": "tsc --noEmit",
     "type-check:package:test": "tsc -p tsconfig.test.json",
@@ -64,6 +68,7 @@
     "test:unit:watch": "vitest --watch"
   },
   "dependencies": {
+    "@constructor/globals": "0.1.16",
     "@gears-frontx/api": "0.3.0-alpha.1",
     "@gears-frontx/gts-plugin": "0.3.0-alpha.2",
     "@gears-frontx/mfes": "0.3.0-alpha.2",
@@ -108,6 +113,7 @@
     }
   },
   "devDependencies": {
+    "@constructor/browserslist-config": "1.4.0",
     "@eslint/js": "9.27.0",
     "@globaltypesystem/gts-ts": "^0.3.0",
     "@module-federation/vite": "^1.14.2",
