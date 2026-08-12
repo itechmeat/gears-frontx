@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FrontX</title>
+    <!--
+      Constructor design system (@constructor/globals), at document level so its
+      tokens inherit into every MFE shadow root.
+
+      Plain <link> elements on purpose, never a CSS or JS import: the app's
+      PostCSS pipeline runs Tailwind over anything Vite processes, and Tailwind
+      silently drops the icon-sizing rule, collapsing every kit icon to 0x0.
+      `scripts/sync-acv-globals.mjs` carries the measurement; it also produces
+      these two files under public/acv/ and runs from predev/prebuild.
+    -->
+    <link rel="stylesheet" href="/acv/base.css" />
+    <link rel="stylesheet" href="/acv/themes/constructor/styles.css" />
   </head>
   <body>
     <div id="root"></div>
