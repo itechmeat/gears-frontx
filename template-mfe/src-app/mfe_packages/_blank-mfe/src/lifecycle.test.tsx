@@ -107,20 +107,38 @@ describe('blank-mfe lifecycle', () => {
     ).toBeTruthy();
   });
 
-  // `:root` matches no node in a shadow tree, so the kit's tokens only reach its
-  // components once every selector position naming it names the host instead.
-  it('re-anchors the ui-kit design tokens onto the shadow host it renders into', async () => {
+  /*
+   * The two style bridges are covered on their own in shared/. What this asserts
+   * is that `initializeStyles` still RUNS both: each is invisible when it is
+   * missing (components render half-styled, overlays render unstyled) rather than
+   * failing, so the wiring is the part worth pinning here. It also asserts what
+   * the hook must NOT do — inject a token stylesheet of its own.
+   */
+  it('installs both cascade bridges into the shadow root it renders into', async () => {
     const module = await import('./lifecycle');
     const initializeStyles = Reflect.get(module.default, 'initializeStyles') as (
       container: ShadowRoot
     ) => void;
     const shadowRoot = document.createElement('div').attachShadow({ mode: 'open' });
+    const hostClone = document.createElement('style');
+    hostClone.textContent = 'button { background-color: transparent }';
+    shadowRoot.appendChild(hostClone);
+    const runtimeStyle = document.createElement('link');
+    runtimeStyle.id = '__frontx-mfe-runtime-style-blank';
+    runtimeStyle.rel = 'stylesheet';
+    runtimeStyle.href = 'https://mfe.test/assets/blank.css';
+    shadowRoot.appendChild(runtimeStyle);
 
     initializeStyles.call(module.default, shadowRoot);
 
-    const injectedCss = shadowRoot.querySelector('style')?.textContent ?? '';
-    expect(injectedCss).toContain(':host {');
-    expect(injectedCss).not.toMatch(/^\s*:root\b/m);
+    expect(hostClone.textContent).toContain('@layer frontx-host {');
+    expect(
+      document.head.querySelector(
+        'link[data-frontx-mfe-style-mirror][href="https://mfe.test/assets/blank.css"]'
+      )
+    ).toBeTruthy();
+    // The design tokens come from the host document, never from a second copy here.
+    expect(shadowRoot.querySelectorAll('style')).toHaveLength(1);
   });
 
   it('inherits base mount behavior from ThemeAwareReactLifecycle', async () => {
