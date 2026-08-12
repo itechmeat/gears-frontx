@@ -14,8 +14,9 @@
 //
 // The file carries two responsibilities. At load it installs the browser
 // globals jsdom leaves missing but component code legitimately expects (Web
-// Storage, `PointerEvent`), so every jsdom suite starts from the same platform
-// surface instead of each test file shimming what it happens to trip over.
+// Storage, `PointerEvent`, `matchMedia`), so every jsdom suite starts from the
+// same platform surface instead of each test file shimming what it happens to
+// trip over.
 //
 // The afterEach block below then clears every shared slot that tests in this
 // repo have been observed to mutate: timers, mocks, DOM storage/cookies,
@@ -203,6 +204,47 @@ function installPointerEventConstructor(target: Window & typeof globalThis): voi
   });
 }
 
+/**
+ * Install a `window.matchMedia` that reports "no match" for every query.
+ *
+ * jsdom ships no implementation at all, and a component that reads a media
+ * query fails on the missing function rather than on anything the test is
+ * about — `@constructor/react-kit`'s colour-scheme provider is the concrete
+ * case: it queries `(prefers-color-scheme: dark)` while mounting, so a screen
+ * built on the kit cannot render in jsdom without this.
+ *
+ * `matches: false` is the right default rather than a limitation. A test that
+ * cares about a media query has to state which one and set it up itself; a
+ * shim that guessed would decide colour scheme, reduced motion and breakpoint
+ * for every suite that never mentioned them.
+ *
+ * The listener methods are no-ops that satisfy both the current
+ * `addEventListener` API and the deprecated `addListener` one, because library
+ * code subscribes through whichever it was written against and an absent
+ * method throws.
+ */
+function installMatchMedia(target: Window & typeof globalThis): void {
+  if (typeof target.matchMedia === 'function') {
+    return;
+  }
+
+  Object.defineProperty(target, 'matchMedia', {
+    value: (query: string): MediaQueryList =>
+      ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList,
+    writable: true,
+    configurable: true,
+  });
+}
+
 function safeClearWebStorage(storage: Storage | null | undefined): void {
   if (!storage) {
     return;
@@ -300,6 +342,7 @@ export function runSharedTestCleanup(): void {
 if ('window' in globalThis) {
   ensureUsableWebStorage(globalThis.window);
   installPointerEventConstructor(globalThis.window);
+  installMatchMedia(globalThis.window);
 }
 
 afterEach(() => {
