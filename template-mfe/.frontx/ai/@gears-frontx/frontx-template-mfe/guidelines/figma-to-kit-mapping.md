@@ -88,6 +88,11 @@ believed the design contained.
 
 ## 2. A name match is a hypothesis; the `public.md` line is the decision
 
+Check the `figma-node-index` reference artifact in this same bundle first: a matching
+`fileKey` plus `node-id` closes an instance's identity immediately, because the kit's own
+Storybook declared that link. It covers about a sixth of the kit's entries, so a miss there
+says nothing and the lookup below carries the rest.
+
 Name correspondence between the Figma design system and the kit is expected and is the
 primary lookup - start there, always. Then read that entry's
 `node_modules/@constructor/react-kit/entries/<entry>/public.md` BEFORE committing to it.
