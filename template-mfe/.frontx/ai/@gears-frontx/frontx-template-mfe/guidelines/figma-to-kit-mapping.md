@@ -10,6 +10,18 @@ Import shape, the "the kit documents itself" rule, and the token/CSS-module styl
 live in the `ecosystem-api-quick-reference` reference artifact in this same bundle; this
 guideline does not restate them.
 
+**Two authorities, and the split does not move per run:**
+
+- **The kit is authoritative for tokens and identity** - colours, design tokens, which
+  component an instance is, and the component's own internal paddings and intrinsic
+  metrics. A mockup can be stale relative to the installed kit; where they differ, the kit
+  renders and the difference is DISCLOSED, not corrected.
+- **The design is authoritative for screen geometry** - which size variant, the air between
+  and around regions, and the proportions of the layout. Those belong to the screen, and a
+  mismatch in any of them is a DEFECT to fix before done.
+
+Every rule below is one of those two sides applied to a concrete step.
+
 ## 0. The product's global chrome is out of scope - always
 
 Two parts of any design frame are NEVER implemented, NEVER compared against, and NEVER
@@ -64,8 +76,9 @@ sections the way `verification-coverage.md` accumulates rows;
 - **Visual evidence** is what the design SHOWS for that instance, read off the screenshot
   and the node data: shape and corner treatment, fill, presence or absence of an icon,
   the anatomy of the control (how many slots, what sits in each, which affordances).
-- **What closed the row** is the `public.md` line (rule 2), plus the sub-region
-  configuration for a composite (rule 4) - which parts are on, which are off.
+- **What closed the row** is the `public.md` line (rule 2), the size pair where the component
+  has variants (measured design box, variant chosen, what that variant renders - rule 2), and
+  the sub-region configuration for a composite (rule 4) - which parts are on, which are off.
 
 A list that exists only in reasoning cannot be checked by the next reader, or by the run
 itself after the fourth component. Whatever the enumeration misses is what gets invented
@@ -101,6 +114,34 @@ tag carrying an icon where the design shows the plain Tag pill is wrong even whe
 looks close. Catch it here, at the mapping step, where it costs one line of reading.
 Caught after the build it costs the JSX, every metric transcribed around it, and another
 verification pass.
+
+### Colour, tokens and a component's intrinsics come from the kit as-is
+
+The design system keeps moving and mockups lag it, so a mockup's paint is evidence about the
+design's intent, never an instruction to the theme. Where the two differ, the kit renders.
+Concretely: an action colour the design shows that no kit variant produces is NOT bridged at
+app level - no override token, no local restyle of a kit component, nothing added to the
+theme to chase a mockup. Take the nearest variant the kit ships, use it as-is, and disclose
+the delta (rule 5's disclosure list; rule 6 closes it as kit-authoritative). The same holds
+for what a component owns inside its own box - internal padding, intrinsic heights, border
+treatment: it arrives with the component, and the screen does not reach in to repaint a
+mockup's pixel.
+
+### Size variants are chosen by measurement, never by name
+
+Where a component ships size variants, the design's measured box decides which one:
+
+1. measure that instance's box in the export - the actual number, not the impression;
+2. learn what each variant RENDERS (its `public.md`, or one DOM measure of the rendered
+   control);
+3. take the variant whose rendered box is NEAREST the measured one;
+4. record the pair in the mapping row - design measured value, variant chosen, what that
+   variant renders.
+
+Eyeballing the letters is forbidden: a 32px control in the design asks for the variant that
+renders 32, and 28 or 40 are both wrong however right `m` or `l` felt. Any residual
+difference after picking the nearest variant is a kit intrinsic - disclose it, do not
+restyle the component to close it.
 
 ## 3. Choose semantics over shape
 
@@ -163,6 +204,17 @@ usable as Tailwind classes in an MFE screen). `flex-[1_0_0]` on a column is an
 instruction, not decoration: leave that column flexible so it absorbs the slack. Pinning
 it to a fixed width is a different layout that only matches at one viewport.
 
+### The air is the screen's job
+
+The kit ships components; the space between and around them is the screen's own CSS glue,
+and it is transcribed from the design exactly like any other metric - inter-region gaps,
+container paddings, the content area's edge gutters. Two regions never touch unless the
+design shows them touching, and no region runs to the content area's edge unless the design
+puts it there. This is the design's side of the split, so every one of these is a defect
+when it diverges, never a disclosure. (Illustration, from one run: a filter bar glued to the
+data area, no side gutters, and a control track stretched until it dominated the title row -
+three failures of air, with no wrong component among them.)
+
 Every border, separator and background in the implementation must be traceable to a node
 in the export. Do not invent dividers. A row separator added because the rows "need"
 one is the defect that survives review longest, because it looks deliberate.
@@ -174,6 +226,14 @@ loading or error variant - so each of those is a decision the run made, and a de
 named in the report can be corrected in a sentence. The same choice left unnamed reads as
 the design's own, and the next reader has no way to tell which visuals came from the
 mockup and which the run invented.
+
+**What the disclosure list holds, and what it must never absorb.** It holds the export's
+silences above, and the kit-authoritative deltas of rule 2 - a colour no kit variant renders,
+an intrinsic the component owns, a residual size difference left after picking the nearest
+variant. Those are disclosed and shipped as the kit renders them. It never holds geometry: a
+size variant off by a step, a missing gutter, two regions touching, a region out of
+proportion, an element in the wrong place. Those are defects, fixed before the screen is
+done, and writing one into a disclosure list is how a wrong screen ships with paperwork.
 
 ## 6. Verify as a written two-way diff, one region at a time
 
@@ -197,14 +257,23 @@ design in the app's) before the first region, not after the last one.
 **The comparison produces a written verdict, one row per region**, recorded with the
 screen's entry in `<project>/.frontx/verification-coverage.md` (workflow step 7's file):
 
-| Region | In the design, missing in the build | In the build, absent from the design | Metrics checked (design vs built) |
-| --- | --- | --- | --- |
+| Region | In the design, missing in the build | In the build, absent from the design | Metrics and proportions (design vs built) | Verdict |
+| --- | --- | --- | --- | --- |
 
 - Both middle columns are filled, always. The second one is the one runs skip, and it is
   where rule 4's leaked defaults and rule 5's invented elements show up - a diff run in one
   direction only reports nothing when the build has MORE than the design.
 - The metrics column carries numbers, not adjectives: the two or three box values spot
-  checked in that region (a padding, a height, a gap), as design value vs built value.
+  checked in that region (a padding, a height, a gap), as design value vs built value, AND
+  two or three region-level PROPORTIONS - a control track's height against its row's height,
+  a region gap against a row height, a region's width against the container's. Proportions
+  catch what absolute pixels let a run argue about: a region rendered gigantic can pass value
+  by value and still be wrong at a glance, and a ratio makes that undeniable.
+- Every difference gets a CLASS in the verdict column, and the class says what happens next.
+  A geometry difference (size variant, gap, gutter, proportion, placement) is a defect to fix
+  before the screen is done. A kit-authoritative difference - a colour or an intrinsic the kit
+  renders its own way (rule 2) - is recorded as "kit-authoritative, disclosed" and closed
+  there. An unclassified difference is still open, whatever else the row says.
 - A region whose metrics cell is EMPTY stays in the table with the cell empty. That is a
   visible gap, and it is the honest record of a metric nobody measured; deleting the row or
   writing "looks right" turns an unmeasured region into an apparently verified one.
