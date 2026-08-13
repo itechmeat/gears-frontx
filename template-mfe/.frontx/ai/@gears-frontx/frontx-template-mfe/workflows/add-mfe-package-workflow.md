@@ -118,6 +118,18 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    - Update `remoteEntry` to `http://localhost:{port}/assets/remoteEntry.js`.
 
 5. **Implement the screen**
+
+   **Gate - when the screen comes from a design, this step does not begin until the design
+   mapping exists as a file.** Write the `figma-to-kit-mapping` table (that guideline's
+   rule 1) to `<project>/.frontx/design-mapping.md` - one section per screen, appended, the
+   way step 7's `verification-coverage.md` accumulates rows - BEFORE the first line of JSX.
+   Every row carries its visual evidence from the design and what closed it; a composite's
+   row also records which sub-regions are on and which are off. No file, no JSX: a mapping
+   kept in the run's reasoning is the one that gets skipped, and the regions above the main
+   data area are where a skipped mapping does its damage - they hold the most instances and
+   the fewest constraints, so every unmapped one becomes an invented one. A run that reaches
+   JSX with no such file has skipped this gate, not deferred it.
+
    - Rename/replace `src/screens/home/HomeScreen.tsx` with the real screen.
    - When the screen is a login / sign-in / authorization form, reproduce the
      `login-form-reference` reference artifact in this same bundle instead of designing one:
@@ -125,13 +137,13 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
      contract, i18n keys, mock and test pattern. Deviate only where the task explicitly
      asks for something else.
    - When the screen comes from a design - a `design/` folder in the app container, or a
-     Figma file when there is none - run the `figma-to-kit-mapping` guideline in this same
-     bundle before writing any JSX: enumerate the design's component instances, decide each
-     one against the kit entry's own `public.md`, and verify the result against the design
-     image region by region, naming every gap the export left the run to decide. Its rule 0
-     is absolute: the product's global chrome - left navigation sidebar, surrounding shell
-     frame - is never implemented and never compared; the screen is the page content area
-     only.
+     Figma file when there is none - follow the `figma-to-kit-mapping` guideline in this same
+     bundle end to end: the mapping gate above, then a component chosen by what each region
+     does, configured to the design rather than to its own defaults (any element the
+     component renders by default and the design does not show gets turned off), and finally
+     the per-region diff of step 7. Its rule 0 is absolute: the product's global chrome -
+     left navigation sidebar, surrounding shell frame - is never implemented and never
+     compared; the screen is the page content area only.
    - Author the screen's real copy in the ONE locale file whose name matches the
      language of the product phrase driving this run - `en.json` for an English phrase,
      `ru.json` for a Russian one (rename the i18n directory alongside the screen), then
@@ -271,6 +283,15 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    5. Record the outcome in `<project>/.frontx/verification-coverage.md`: one row per
       screen and theme, naming what was opened and what was observed. A screen with no
       row there counts as unverified regardless of what was on the display.
+   6. For a screen built from a design, add its per-region diff to that same entry, in the
+      shape `figma-to-kit-mapping` rule 6 gives: one row per region of the design's target
+      region, with what the design shows and the build lacks, what the build shows and the
+      design does not, and two or three box metrics as design value vs built value. Both
+      difference columns are filled - the "extra in the build" one is what catches a
+      component default nobody turned off - and a region whose metrics cell stays empty
+      keeps its row, because an empty cell is a measurement nobody took and has to look
+      like one. The comparison runs at the design's native viewport in the design's own
+      colour scheme, against the target-region crop when the design source ships one.
 
    Wherever those steps shell out to a node-based CLI and parse its output, set
    `NODE_NO_WARNINGS=1` and filter stderr rather than taking the last line - node's
