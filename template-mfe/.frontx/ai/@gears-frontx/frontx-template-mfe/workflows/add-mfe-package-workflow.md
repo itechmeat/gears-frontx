@@ -123,8 +123,10 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
      Figma file when there is none - run the `figma-to-kit-mapping` guideline in this same
      bundle before writing any JSX: enumerate the design's component instances, decide each
      one against the kit entry's own `public.md`, and verify the result against the design
-     screenshot region by region, naming every region excluded and every gap the export
-     left the run to decide.
+     image region by region, naming every gap the export left the run to decide. Its rule 0
+     is absolute: the product's global chrome - left navigation sidebar, surrounding shell
+     frame - is never implemented and never compared; the screen is the page content area
+     only.
    - Author the screen's real copy in the ONE locale file whose name matches the
      language of the product phrase driving this run - `en.json` for an English phrase,
      `ru.json` for a Russian one (rename the i18n directory alongside the screen), then

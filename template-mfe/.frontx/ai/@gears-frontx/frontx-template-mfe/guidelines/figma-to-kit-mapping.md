@@ -10,6 +10,35 @@ Import shape, the "the kit documents itself" rule, and the token/CSS-module styl
 live in the `ecosystem-api-quick-reference` reference artifact in this same bundle; this
 guideline does not restate them.
 
+## 0. The product's global chrome is out of scope - always
+
+Two parts of any design frame are NEVER implemented, NEVER compared against, and NEVER
+counted in geometry beyond subtracting the space they take:
+
+- the left navigation sidebar;
+- the surrounding product / OneCloud shell frame - the top-level app wrapper the design
+  frame embeds the page into.
+
+Ignore them entirely. The console's own shell provides navigation, so reproducing either
+inside a screen is a defect rather than extra fidelity, and comparing against them
+manufactures differences no implementation can ever close. This is a STANDING rule, not a
+per-run judgement: it needs no decision, no justification, and no mention in the run
+output. Rule 5's named-exclusions requirement exists for anything a run skips BEYOND this
+chrome, and never for this chrome.
+
+**What IS in scope is the page content area - and that is the whole implementable region:**
+
+1. the page title row - title, view tabs, primary action button;
+2. the filter / search bar;
+3. the data area (the table);
+4. the pagination bar.
+
+When the design source (rule 1) ships a target-region image - a crop of exactly that
+in-scope region, e.g. `design/<screen>/target-region.png` - that crop IS the fidelity
+scope. It settles what is in and out with nothing left to interpret, and it is the primary
+comparison artifact for rule 5. Full-frame screenshots then serve for context only: they
+show where the region sits inside the product, not what to build.
+
 ## 1. Enumerate before you write
 
 Read the design out of the app container's own `design/` folder whenever it has one. A
@@ -75,10 +104,11 @@ not even hold up visually:
 
 ## 4. Carry the box metrics across, add nothing, disclose every gap
 
-Derive the content container's geometry from the design frame itself - the frame's native
-size minus the chrome regions the console does not reproduce (rule 5 names them). Guessing
-that width from a browser window instead lands every transcribed metric in the wrong box,
-and each one then reads as an individually wrong number rather than as one wrong container.
+Derive the content container's geometry from the TARGET REGION, not from the whole frame:
+the target-region crop's own dimensions when the design source ships one, otherwise the
+frame's native size minus the space rule 0's chrome occupies. Guessing that width from a
+browser window instead lands every transcribed metric in the wrong box, and each one then
+reads as an individually wrong number rather than as one wrong container.
 
 Transcribe `min-h`, padding, `gap` and `flex-[1_0_0]` from the design context into the
 screen's CSS module (translate them - a design context's utility class names are not
@@ -100,22 +130,23 @@ mockup and which the run invented.
 
 ## 5. Verify against the design screenshot, region by region
 
-Before declaring the screen done, fetch the design's screenshot and walk the
-implementation against it one region at a time - a whole-screen glance passes over exactly
-the details this guideline exists for.
+Before declaring the screen done, walk the implementation against the design image one
+region at a time - a whole-screen glance passes over exactly the details this guideline
+exists for. The image is the target-region crop when the design source ships one; the
+full-frame screenshot otherwise.
 
-The scope is EVERYTHING the screen transfers from the design: every region of the design
-frame the screen implements, not the table alone. Page title and its counters, toolbar,
-filter bar, header row, sample rows including each state variant, pagination bar, footer -
-each one gets its own comparison. The only admitted exclusions are product chrome the
-console deliberately does not reproduce, such as the product's own sidebar or shell frame,
-and every exclusion must be NAMED in the run output. An unnamed exclusion is
-indistinguishable from a region nobody looked at, which is how the forgotten ones ship.
+The scope is rule 0's target region, ENTIRE - not the table alone. Title row (title, view
+tabs, primary action), filter / search bar, the table's header row, its sample rows
+including each state variant, and the pagination bar each get their own comparison. Rule
+0's chrome is not compared at all and needs no mention; anything ELSE a run skips must be
+NAMED in the run output, because an unnamed skip is indistinguishable from a region nobody
+looked at, which is how the forgotten ones ship.
 
-Compare at the design's native viewport and in the design's own colour scheme. A dark app
-held against a light design frame yields a comparison where every difference has an easy
-explanation, so no real difference is ever found - put the app on the design's scheme (or
-render the design in the app's) before the first region, not after the last one.
+Compare at the design's native viewport - sized so the app's content area matches the
+target region's own dimensions - and in the design's own colour scheme. A dark app held
+against a light design yields a comparison where every difference has an easy explanation,
+so no real difference is ever found: put the app on the design's scheme (or render the
+design in the app's) before the first region, not after the last one.
 
 The screenshot is not optional confirmation of the export, it carries what the export
 does not: icon glyphs ship as opaque asset URLs, and per-row content resolves only from
