@@ -36,6 +36,11 @@
       "id": "ecosystem-api-quick-reference",
       "category": "reference_artifacts",
       "path": "reference-artifacts/ecosystem-api-quick-reference.md"
+    },
+    {
+      "id": "login-form-reference",
+      "category": "reference_artifacts",
+      "path": "reference-artifacts/login-form-reference.md"
     }
   ]
 }

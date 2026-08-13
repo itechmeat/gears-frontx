@@ -119,6 +119,11 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
 
 5. **Implement the screen**
    - Rename/replace `src/screens/home/HomeScreen.tsx` with the real screen.
+   - When the screen is a login / sign-in / authorization form, reproduce the
+     `login-form-reference` reference artifact in this same bundle instead of designing one:
+     it carries the canonical component and stylesheet verbatim, plus the composition
+     contract, i18n keys, mock and test pattern. Deviate only where the task explicitly
+     asks for something else.
    - When the screen comes from a design - a `design/` folder in the app container, or a
      Figma file when there is none - run the `figma-to-kit-mapping` guideline in this same
      bundle before writing any JSX: enumerate the design's component instances, decide each
