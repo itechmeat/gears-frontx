@@ -261,7 +261,10 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    ```bash
    npm run dev:all
    ```
-   - Open the app, confirm the new screen mounts, and confirm zero console errors.
+   - Open the app, confirm the new screen mounts, and confirm zero console errors. Read the
+     WARNINGS too: `[useScreenTranslations] Missing translation key` means a `t()` call ran
+     inside the translation load window, which renders raw keys and is a defect even though
+     nothing failed - the quick reference's translation section has the two-rule fix.
 
    Then run the browser verification a realized screen gets during scaffolding. It is
    written out here rather than referenced, because a brownfield run - a screen added

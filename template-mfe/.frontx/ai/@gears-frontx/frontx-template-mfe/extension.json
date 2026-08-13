@@ -36,6 +36,11 @@
       "id": "login-form-reference",
       "category": "reference_artifacts",
       "path": "reference-artifacts/login-form-reference.md"
+    },
+    {
+      "id": "figma-node-index",
+      "category": "reference_artifacts",
+      "path": "reference-artifacts/figma-node-index.md"
     }
   ]
 }

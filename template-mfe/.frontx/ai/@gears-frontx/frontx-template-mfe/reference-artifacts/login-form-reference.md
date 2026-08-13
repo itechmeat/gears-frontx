@@ -43,7 +43,10 @@ inherited from the host document, no Tailwind in an MFE - are in the
   spacing tokens). Status colours come from `--acv-color-status-{success,danger}-strong`.
 - **Translations load through `useScreenTranslations(languageModules, bridge)`** over
   `import.meta.glob('./i18n/*.json')`, and the `loading` branch renders a token-styled
-  placeholder block, not a spinner or `null`.
+  placeholder block, not a spinner or `null`. That branch returns BEFORE the first `t()`
+  call, which is what keeps raw keys and missing-key warnings off the screen; a screen with
+  translated collections derives them with `useMemo(..., [t])` and never in a `useState`
+  initializer (quick reference, translation section).
 - **Nine i18n keys, named for their role**: `title`, `description`, `login_label`,
   `login_placeholder`, `password_label`, `password_placeholder`, `submit`, `success`,
   `error_generic`. Author them in the locale the product speaks, then propagate that one

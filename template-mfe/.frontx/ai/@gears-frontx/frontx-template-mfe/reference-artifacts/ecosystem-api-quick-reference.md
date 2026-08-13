@@ -190,6 +190,41 @@ expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true');
 expect(screen.getByLabelText<HTMLInputElement>('first_name_label').value).toBe('Grace');  // not toHaveValue()
 ```
 
+## Screen translations: nothing calls `t()` during the load window
+
+`useScreenTranslations(languageModules, bridge)` returns `{ t, loading }`. It starts
+`loading: true` with an EMPTY translation map, loads the locale module asynchronously, and
+only then flips `loading` to `false`. Inside the window, `t(key)` finds nothing, logs
+`[useScreenTranslations] Missing translation key: <key>` and returns the KEY as its value -
+no throw, no red gate, just raw keys on screen and a warning per call. Two rules keep a
+screen out of it:
+
+**1. Gate every `t()`-dependent render path on `loading`.** Return the placeholder branch
+first and read `t()` only after it - one early return covers the whole screen:
+
+```tsx
+const { t, loading } = useScreenTranslations(languageModules, bridge);
+if (loading) return <div className={styles.screen} role="status" aria-busy="true" />;
+```
+
+**2. Derive translated collections with `useMemo(..., [t])`, never a `useState`
+initializer.** `t` is a `useCallback` keyed on the loaded map, so its identity CHANGES when
+translations arrive - a `useMemo` on `[t]` recomputes then, while a `useState` initializer
+runs once, during the load window, and freezes whatever it captured:
+
+```tsx
+// Wrong: computed once, before translations exist - these labels stay raw keys forever.
+const [filters] = useState(() => [{ id: 'all', label: t('filter_all') }]);
+
+// Right: recomputed when `t` changes identity as the locale module lands.
+const filters = useMemo(() => [{ id: 'all', label: t('filter_all') }], [t]);
+```
+
+Module scope is the same defect one level worse: a `const` array built at import time has no
+`t` at all. Two scaffolding runs lost a verification walk to this class - one shipped a
+filter bar of raw keys, the other logged ~20 missing-key warnings per mount - and both read
+as "translations broken" while the loader was working correctly.
+
 ## Bridge: theme and language
 
 ```ts
