@@ -286,12 +286,16 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    6. For a screen built from a design, add its per-region diff to that same entry, in the
       shape `figma-to-kit-mapping` rule 6 gives: one row per region of the design's target
       region, with what the design shows and the build lacks, what the build shows and the
-      design does not, and two or three box metrics as design value vs built value. Both
-      difference columns are filled - the "extra in the build" one is what catches a
-      component default nobody turned off - and a region whose metrics cell stays empty
-      keeps its row, because an empty cell is a measurement nobody took and has to look
-      like one. The comparison runs at the design's native viewport in the design's own
-      colour scheme, against the target-region crop when the design source ships one.
+      design does not, two or three box metrics plus two or three region-level proportions as
+      design value vs built value, and a verdict per difference. Both difference columns are
+      filled - the "extra in the build" one is what catches a component default nobody turned
+      off - and a region whose metrics cell stays empty keeps its row, because an empty cell
+      is a measurement nobody took and has to look like one. The verdict is what decides
+      whether the screen is done: a geometry difference (size variant, gap, gutter,
+      proportion, placement) is a defect to fix first, while a colour or intrinsic the kit
+      renders its own way is closed as kit-authoritative and disclosed. The comparison runs at
+      the design's native viewport in the design's own colour scheme, against the
+      target-region crop when the design source ships one.
 
    Wherever those steps shell out to a node-based CLI and parse its output, set
    `NODE_NO_WARNINGS=1` and filter stderr rather than taking the last line - node's
