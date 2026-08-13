@@ -23,6 +23,11 @@
       "path": "guidelines/navigation-contribution.md"
     },
     {
+      "id": "figma-to-kit-mapping",
+      "category": "guidelines",
+      "path": "guidelines/figma-to-kit-mapping.md"
+    },
+    {
       "id": "gts-id-patterns-reference",
       "category": "reference_artifacts",
       "path": "reference-artifacts/gts-id-patterns-reference.json"
