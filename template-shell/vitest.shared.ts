@@ -71,8 +71,21 @@ export const VITE_RESOLVE_DEDUPE: readonly string[] = [
   '@gears-frontx/framework',
 ];
 
-/** Vitest `server.deps.inline` — see {@link VITE_RESOLVE_DEDUPE} (pnpm + vi.doMock). */
-export const VITEST_SERVER_DEPS_INLINE: readonly string[] = ['@gears-frontx/react', '@gears-frontx/framework'];
+/**
+ * Vitest `server.deps.inline`.
+ *
+ * The `@gears-frontx/*` entries are there for the pnpm + `vi.doMock` reason in
+ * {@link VITE_RESOLVE_DEDUPE}. `@constructor/react-kit` is there for a
+ * different one: the kit ships one CSS Module per component and imports it from
+ * the component's own JS, which an externalised dependency cannot do under
+ * Node - every suite that renders a kit component fails on the `.css` import
+ * until the package is transformed by Vite.
+ */
+export const VITEST_SERVER_DEPS_INLINE: readonly string[] = [
+  '@gears-frontx/react',
+  '@gears-frontx/framework',
+  '@constructor/react-kit',
+];
 
 /**
  * Monorepo-wide coverage thresholds, enforced whenever a config is executed

@@ -69,6 +69,8 @@
   },
   "dependencies": {
     "@constructor/globals": "0.1.16",
+    "@constructor/react-icons": "1.1.0",
+    "@constructor/react-kit": "0.269.0",
     "@gears-frontx/api": "0.3.0-alpha.1",
     "@gears-frontx/gts-plugin": "0.3.0-alpha.2",
     "@gears-frontx/mfes": "0.3.0-alpha.2",

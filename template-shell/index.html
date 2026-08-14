@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FrontX</title>
     <!--
+      Cascade-layer order for the whole document, declared before any stylesheet
+      loads so it is this line that fixes it rather than whichever sheet the
+      bundler happened to emit first.
+
+      `base` and `theme` are @constructor/globals' own layers, `ui` is the one
+      every @constructor/react-kit component sheet writes into, and the three
+      `tw-*` layers are where `src-app/app/globals.css` puts Tailwind. Preflight
+      sits at the bottom, so it can no longer strip the kit's own styling (its
+      `button { background-color: transparent }` is the measured case), while
+      Tailwind utilities stay at the top and keep working in the shell chrome
+      and the Studio panel.
+    -->
+    <style>
+      @layer tw-base, base, theme, ui, tw-components, tw-utilities;
+    </style>
+    <!--
       Constructor design system (@constructor/globals), at document level so its
       tokens inherit into every MFE shadow root.
 
