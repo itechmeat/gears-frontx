@@ -110,20 +110,23 @@
   transition: opacity var(--shell-nav-duration);
 }
 
-.logoMark {
-  block-size: 24px;
-  flex-shrink: 0;
-  inline-size: 24px;
-}
-
 /*
- * `contain: size` keeps the wordmark from reflowing the row while the aside's
- * width animates.
+ * The Constructor wordmark, sized the way Cloud sizes it: a 136px box the mark
+ * is contain-fitted into, shrinking with the box on a narrow bar and never
+ * growing past its designed width in a wide aside.
+ *
+ * `--icon-size-*` are the design system's own knobs. Every icon the packages
+ * ship carries the `go-icon` class, and `@constructor/globals` sizes that class
+ * from `--icon-size-width` / `--icon-size-height`, falling back to
+ * `--base-icon-size` - a 16px-ish glyph box that would squash a 136x12
+ * wordmark. Setting both here is what takes the mark out of the glyph scale,
+ * as Cloud does for the same asset.
  */
-.logoText {
-  block-size: 20px;
-  contain: size;
-  inline-size: 72px;
+.logoImage {
+  --icon-size-width: 100%;
+  --icon-size-height: auto;
+
+  max-inline-size: 136px;
 }
 
 /*
@@ -133,9 +136,10 @@
  * persisted - so every collapsed-state rule has to be scoped to the breakpoint
  * or it hides something that has room for itself.
  *
- * The whole logo goes, not just the wordmark, which is what Cloud does too: the
- * collapsed rail is 40px of content and the collapse control already fills it,
- * so a mark left behind is clipped to a sliver and drawn under that control.
+ * The whole logo goes, which is what Cloud does too - it fades `.logo` itself
+ * rather than swapping in a compact mark. The collapsed rail is 40px of content
+ * and the collapse control already fills it, so anything left behind would be
+ * clipped and drawn under that control.
  */
 @media (min-width: 720px) {
   .navCollapsed .logo {

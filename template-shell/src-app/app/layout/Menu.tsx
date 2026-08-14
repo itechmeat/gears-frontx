@@ -35,10 +35,9 @@ import { IconBars } from '@constructor/react-icons/bars';
 import { IconXmark } from '@constructor/react-icons/xmark';
 import { IconLayoutSideContentLeft } from '@constructor/react-icons/layout';
 import { Icon } from '@iconify/react';
+import { IconLogoConstructorFullColorWhite } from '@constructor/react-icons/logo';
 import { mountScreenExtension } from '@/app/mfe/screenRouting';
 import { cn } from '@/app/lib/utils';
-import { FrontXLogoIcon } from '@/app/icons/FrontXLogoIcon';
-import { FrontXLogoTextIcon } from '@/app/icons/FrontXLogoTextIcon';
 import { NavigationButton } from './NavigationButton';
 import styles from './layout.module.css';
 
@@ -176,9 +175,24 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
         onClick={() => onNavOpenChange?.(!navOpen)}
       />
 
+      {/*
+        The Constructor wordmark, the same asset Cloud falls back to when a
+        tenant has no logo of its own (`IconLogoConstructorFullColorWhite`, from
+        the icon package rather than copied into the app). The white variant is
+        the right one in both colour schemes: it sits on
+        `--acv-color-nav-primary`, which is dark navy in each, and matches
+        `--acv-color-nav-secondary`, which is white in each.
+
+        A plain <span>, not a link: the shell has no home route to send anyone
+        to, and a control that navigates nowhere is worse than a mark that never
+        claimed to.
+      */}
       <span className={styles.logo}>
-        <FrontXLogoIcon className={styles.logoMark} />
-        <FrontXLogoTextIcon className={styles.logoText} />
+        <IconLogoConstructorFullColorWhite
+          className={styles.logoImage}
+          role="img"
+          aria-label="Constructor"
+        />
       </span>
 
       <NavigationButton
