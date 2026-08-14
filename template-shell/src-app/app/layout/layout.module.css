@@ -144,6 +144,25 @@
   }
 }
 
+/*
+ * The top bar outranks the page column in the stacking order.
+ *
+ * Geometry alone already keeps them apart, but geometry is what failed here
+ * once: the column is the later sibling, so anything that makes it overshoot
+ * its row paints over the bar and silently eats the only navigation control a
+ * narrow viewport has. A stacking context on the bar's three children makes
+ * that unreachable-by-construction - an overshooting panel now slides under
+ * them, which is what it should do anyway.
+ */
+@media (max-width: 719px) {
+  .burger,
+  .logo,
+  .actions {
+    position: relative;
+    z-index: 1;
+  }
+}
+
 /* ── Navigation button (Cloud's MainNavigationButton) ────────────────────── */
 
 .navButton {
@@ -248,13 +267,13 @@
 .items {
   display: flex;
   overflow: hidden auto;
-  align-self: start;
+  align-self: stretch;
   flex-direction: column;
   gap: var(--acv-spacing-xx-small);
   grid-area: content;
   grid-column: 1 / -1;
   margin: 0;
-  min-block-size: 100%;
+  min-block-size: 0;
   padding-block: var(--acv-spacing-x-small);
   padding-inline: var(--acv-spacing-regular);
   scrollbar-width: none;
@@ -444,13 +463,31 @@
 
 /* ── Content column ──────────────────────────────────────────────────────── */
 
+/*
+ * The page column fills its grid row by stretching into it, never by a
+ * percentage height.
+ *
+ * `align-self: end` plus `min-block-size: 100%` looked equivalent and was not:
+ * a percentage block size on a grid item resolves against the grid area, the
+ * area here is a `1fr` row whose size depends on its items, and that cycle
+ * makes the result a function of the layout pass. Measured on a 500x800
+ * viewport it came out 764px inside a 736px row, and a bottom-aligned item
+ * 28px too tall grows upwards - straight over the 64px top bar. Other passes
+ * resolved it against the whole shell, which put the panel at y=0 and swallowed
+ * the bar completely. Either way the burger stopped taking taps while still
+ * reporting a correct rect, so a scripted `el.click()` went on passing.
+ *
+ * Stretching has no percentage to resolve: the column is exactly the row, and
+ * `translateY(100%)` still slides it by its own height to uncover the screen
+ * list behind it, which is the Cloud mechanic this arrangement copies.
+ */
 .content {
   display: flex;
-  align-self: end;
+  align-self: stretch;
   flex-direction: column;
   flex-grow: 1;
   grid-area: content;
-  min-block-size: 100%;
+  min-block-size: 0;
   min-inline-size: 0;
   transform: translateY(0);
   transition: transform var(--acv-transition-standard);
@@ -462,8 +499,6 @@
 
 @media (min-width: 720px) {
   .content {
-    align-self: auto;
-    min-block-size: 0;
     transform: none;
   }
 }
