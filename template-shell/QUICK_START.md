@@ -35,10 +35,12 @@ src-app/
 ├── app/                     # Host application
 │   ├── App.tsx / main.tsx   # Boot: providers, registries, MFE bootstrap
 │   ├── components/ui/        # App-owned UI primitives (shadcn)
+│   ├── kit/                  # @constructor/react-kit context (colour scheme, locale)
 │   ├── layout/               # CoreLayout: Menu, header, footer, screen container
+│   │                         #   + layout.module.css, the chrome's --acv-* styles
 │   ├── mfe/                  # bootstrap.ts + generated-mfe-manifests.json
-│   ├── themes/               # Theme tokens and registries
-│   └── globals.css           # Tailwind entry + theme CSS variables
+│   ├── themes/               # The constructor theme's light and dark schemes
+│   └── globals.css           # Tailwind entry (in cascade layers) + variable fallbacks
 └── mfe_packages/             # Microfrontends (from `frontx-template-mfe`; empty in a shell-only seed)
     ├── demo-mfe/             # Hello World, Profile, Theme, UIKit, Widgets Host
     ├── _blank-mfe/           # Minimal MFE — copy this to start a new one
@@ -133,11 +135,22 @@ guideline for the exact shape a new package must have.
 ## Layout & navigation
 
 The template ships a complete `CoreLayout` (menu, header, footer, sidebar, and
-the screen container). You compose *into* it:
+the screen container), arranged the way the Constructor Cloud shell is: a
+navigation aside on the `--acv-color-nav-*` field, with the page as a rounded
+surface panel floating on it. You compose *into* it:
 
-- **Menu** is populated from screen extensions (`presentation.label`/`icon`/`order`).
+- **Menu** is the navigation aside - brand mark, collapse toggle, and the screen
+  list, populated from screen extensions (`presentation.label`/`icon`/`order`).
+  Below 720px the same markup folds into a 64px top bar and the screen list
+  moves behind a burger; one CSS grid in `layout/layout.module.css` decides
+  which, so nothing is rendered twice.
+- **Header** is the identity block (who is signed in). It is not a bar across
+  the page: `Layout` passes it to `Menu`, and the grid places it at the bottom
+  of the aside on desktop and in the top bar on mobile.
 - **Screen container** mounts one screen at a time (exclusive mount strategy).
 - **Sidebar / popup / overlay** are optional domains an MFE can target the same way.
+- **Footer** renders only when it has children - an empty bar on the navigation
+  field is chrome carrying nothing.
 - **URL** tracks the mounted screen through `presentation.route`: a menu click
   pushes that route, and on load or back/forward the shell mounts the screen the
   path names, so deep links are shareable. A path no screen claims mounts the
@@ -168,8 +181,14 @@ Hooks such as `useMountedExtensions`, `useTheme`, `useTranslation`, and
 
 ## Styling
 
-Tailwind CSS with CSS-variable theme tokens (defined in
-`src-app/app/globals.css`):
+Two grammars, with a clear division of labour:
+
+- **`--acv-*` tokens** from `@constructor/globals` are the design system. The
+  shell chrome (`src-app/app/layout/layout.module.css`) is written entirely in
+  them, as a CSS Module, and so is anything built from
+  `@constructor/react-kit`.
+- **Tailwind + the shadcn variable names** cover the app-owned primitives under
+  `src-app/app/components/ui` and the Studio panel:
 
 ```tsx
 <div className="bg-background text-foreground">
@@ -178,17 +197,42 @@ Tailwind CSS with CSS-variable theme tokens (defined in
 </div>
 ```
 
-Common tokens: `background`, `foreground`, `primary`, `secondary`, `accent`,
-`muted`, `border`. Themes switch live via the **FrontX Studio** panel (bottom-
-right in dev), which also toggles mock APIs and language.
+Common Tailwind tokens: `background`, `foreground`, `primary`, `secondary`,
+`accent`, `muted`, `border`. They are not a second palette - `src-app/app/themes/`
+fills them from the Constructor values, with the `--acv-*` token each one
+mirrors named beside it.
 
-### The Constructor design system
+Both live in named cascade layers, ordered by `index.html`:
+`tw-base, base, theme, ui, tw-components, tw-utilities`. Tailwind's Preflight
+sits at the bottom so it cannot strip the kit's own component styling, and
+Tailwind utilities stay at the top so a utility class still wins where the shell
+writes one.
 
-The shell also carries `@constructor/globals` - the token and font layer that
-`@constructor/react-kit` components resolve their colours, spacing and icon sizes
-from. Microfrontends are its consumers: the tokens are declared on this
-document's `:root` and inherit into every MFE shadow root, so a kit-styled screen
-needs nothing installed on its side.
+### Themes
+
+The shell registers the `constructor` brand theme in its two colour schemes -
+**Constructor Light** (`light`, the default) and **Constructor Dark** (`dark`) -
+and they switch live via the **FrontX Studio** panel (bottom-right in dev),
+which also toggles mock APIs and language.
+
+Selecting a theme selects a scheme: `src-app/app/kit/KitProviders.tsx` writes
+`acv-color-scheme-light` / `acv-color-scheme-dark` onto `<html>`, and the brand
+stylesheet resolves every `--acv-*` token through that class. Because the class
+is on the document, the switch inherits into every MFE shadow root.
+
+A microfrontend receives the theme **id** over the bridge and maps it to a kit
+colour scheme on its own side (`_blank-mfe/src/shared/acvColorScheme.ts`).
+Registering a third theme therefore means adding it to `src-app/app/themes/` and
+to those MFE-side maps; renaming `light` or `dark` breaks them silently.
+
+### Where the design system comes from
+
+`@constructor/globals` is the token and font layer (Inter and JetBrains Mono
+included) that both the shell chrome and every `@constructor/react-kit`
+component resolve their colours, spacing and icon sizes from. Microfrontends are
+its consumers too: the tokens are declared on this document's `:root` and
+inherit into every MFE shadow root, so a kit-styled screen needs nothing
+installed on its side.
 
 `index.html` links two files that are **generated, not committed**:
 
@@ -261,7 +305,9 @@ npm run test:unit         # unit tests (package + app + workspace MFEs)
    don't hand-wire navigation.
 3. **Type everything** — no `any`, explicit return types, proper generics.
 4. **Prefer events** — emit events for state changes; use selectors for reads.
-5. **Use theme tokens** — avoid hard-coded colors; style with Tailwind utilities.
+5. **Use design tokens** — never a hard-coded colour. Chrome and kit-based UI
+   take `--acv-*` from `@constructor/globals`; app primitives use the Tailwind
+   token classes, which are filled from the same values.
 
 ## Getting help
 

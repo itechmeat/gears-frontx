@@ -228,8 +228,11 @@ rather than guessing a prop name.
 Neither is optional - every kit component calls `useInternalTranslations()` and
 throws outside a `LocaleProvider`, `AcvButton` included via `AcvLoader` - and a
 screen must not add its own. `KitProviders` also subscribes to the host's shared
-theme property and drives the kit's colour scheme from it, collapsing the shell's
-five themes onto the kit's light and dark (`shared/acvColorScheme.ts`). A screen
+theme property and drives the kit's colour scheme from it, mapping every theme
+the shell registers onto the kit's light and dark (`shared/acvColorScheme.ts`).
+The standard shell registers two, `light` and `dark`; the set in that file names
+the ids that resolve to dark, so a project that adds a dark theme of its own adds
+it there. A screen
 that needs to know which one resolved reads `useColorScheme()`; it must not call
 `setColorScheme`.
 

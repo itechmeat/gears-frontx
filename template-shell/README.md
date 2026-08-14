@@ -32,9 +32,12 @@ working starting point; what you build on top is yours.
 - **Solution packages** (`packages/`) — `react`, `framework`, `state`, `i18n`,
   `studio`, `auth`: the application-layer libraries the FrontX ecosystem
   deliberately does not bundle.
-- **Theming, i18n, and a dev Studio** — CSS-variable theme tokens, translation
-  scaffolding, and an in-app FrontX Studio panel for toggling mock APIs, themes,
-  and language during development.
+- **The Constructor design system** — the shell chrome is the Constructor Cloud
+  arrangement (navigation aside, page as a floating surface panel), built from
+  `@constructor/globals` tokens and `@constructor/react-kit` components.
+- **Theming, i18n, and a dev Studio** — the `constructor` theme in its light and
+  dark schemes, translation scaffolding, and an in-app FrontX Studio panel for
+  toggling mock APIs, themes, and language during development.
 
 ## Who it's for
 
@@ -136,10 +139,11 @@ my-app/
 ├── src-app/                 # Host application
 │   ├── app/                 # Shell: App, providers, wiring
 │   │   ├── components/ui/   # App-owned UI primitives (shadcn)
+│   │   ├── kit/             # @constructor/react-kit context (colour scheme, locale)
 │   │   ├── layout/          # CoreLayout: menu, header, footer, screen slot
 │   │   ├── mfe/             # MFE bootstrap + generated manifests
-│   │   ├── themes/          # Theme tokens and registries
-│   │   └── globals.css      # Tailwind entry + theme CSS variables
+│   │   ├── themes/          # The constructor theme's light and dark schemes
+│   │   └── globals.css      # Tailwind entry (in cascade layers) + fallbacks
 │   └── mfe_packages/        # Microfrontends (empty until `frontx add frontx-template-mfe`)
 ├── src/                     # Shared solution lib (api, build, gts)
 ├── packages/                # Solution packages: react, framework, state, i18n, studio, auth
@@ -169,7 +173,9 @@ my-app/
 ## Tech stack
 
 - **React** + **TypeScript** + **Vite** with **Module Federation** for MFEs
-- **Tailwind CSS** with CSS-variable theme tokens (shadcn/ui primitives)
+- **`@constructor/globals` tokens** and **`@constructor/react-kit`** for the
+  shell chrome; **Tailwind CSS** with the shadcn variable names for app-owned
+  primitives and the Studio panel
 - Built on the FrontX ecosystem: `@gears-frontx/mfes` (runtime),
   `@gears-frontx/gts-plugin` (type system), `@gears-frontx/api` (API layer)
 
