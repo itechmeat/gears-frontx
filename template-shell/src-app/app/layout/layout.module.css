@@ -95,17 +95,6 @@
   }
 }
 
-.burger {
-  grid-area: burger;
-  margin-inline-start: var(--acv-spacing-medium);
-}
-
-@media (min-width: 720px) {
-  .burger {
-    display: none;
-  }
-}
-
 .logo {
   display: flex;
   overflow: hidden;
@@ -140,18 +129,6 @@
 .navCollapsed .logoText {
   opacity: 0;
   pointer-events: none;
-}
-
-.collapse {
-  display: none;
-  grid-area: collapse;
-}
-
-@media (min-width: 720px) {
-  .collapse {
-    display: flex;
-    justify-self: center;
-  }
 }
 
 /* ── Navigation button (Cloud's MainNavigationButton) ────────────────────── */
@@ -218,6 +195,37 @@
   }
 }
 
+/*
+ * Placement of the two nav controls. These follow the button's own rules on
+ * purpose: `.navButton` sets `display: flex`, a media query adds no
+ * specificity, and both are single-class selectors - so whichever is written
+ * last wins, and `display: none` has to be the later one.
+ */
+
+.burger {
+  display: none;
+  grid-area: burger;
+  margin-inline-start: var(--acv-spacing-medium);
+}
+
+.collapse {
+  display: none;
+  grid-area: collapse;
+}
+
+@media (max-width: 719px) {
+  .burger {
+    display: flex;
+  }
+}
+
+@media (min-width: 720px) {
+  .collapse {
+    display: flex;
+    justify-self: center;
+  }
+}
+
 /* ── Screen list ─────────────────────────────────────────────────────────── */
 
 /*
@@ -254,7 +262,6 @@
 @media (min-width: 720px) {
   .items {
     grid-area: items;
-    grid-column: auto;
     padding-inline: var(--acv-spacing-x-small);
     transition: padding-inline var(--shell-nav-duration);
     visibility: visible;
