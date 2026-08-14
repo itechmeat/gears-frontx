@@ -114,6 +114,22 @@ describe('Menu', () => {
     expect(screen.getByText(tasks.presentation.label)).toBeTruthy();
   });
 
+  // The narrow-viewport screen list is revealed by sliding the page panel away,
+  // so the flag lives in Layout and the aside only asks for it. These two cases
+  // pin the asking - a burger that toggled its own state would leave the page
+  // covering the list it just opened.
+  it('asks to open the screen list from the burger and to close it on navigation', async () => {
+    const { Menu, MENU_BURGER_TESTID } = await import('./Menu');
+    const onNavOpenChange = vi.fn();
+    render(<Menu navOpen={false} onNavOpenChange={onNavOpenChange} />);
+
+    await userEvent.click(screen.getByTestId(MENU_BURGER_TESTID));
+    expect(onNavOpenChange).toHaveBeenLastCalledWith(true);
+
+    await userEvent.click(await screen.findByTestId(`menu-item-${tasks.id}`));
+    expect(onNavOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
   it('shows the empty state once the grace window passes with nothing registered', async () => {
     const { Menu, EMPTY_STATE_GRACE_MS } = await import('./Menu');
     app.mfeRegistry.getExtensionsForDomain.mockReturnValue([]);

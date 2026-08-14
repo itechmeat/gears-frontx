@@ -27,3 +27,6 @@ export type { PopupProps } from './Popup';
 
 export { Overlay } from './Overlay';
 export type { OverlayProps } from './Overlay';
+
+export { NavigationButton } from './NavigationButton';
+export type { NavigationButtonProps } from './NavigationButton';

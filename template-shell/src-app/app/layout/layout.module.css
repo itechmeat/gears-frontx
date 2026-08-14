@@ -1,0 +1,570 @@
+/*
+ * Shell chrome, built entirely on `@constructor/globals` tokens.
+ *
+ * The structure mirrors the Constructor Cloud shell: a navigation aside on a
+ * `--acv-color-nav-primary` field, and the page as a rounded
+ * `--acv-color-surface-primary` panel floating on it. Below 720px the aside
+ * folds into a 64px top bar (burger, logo, actions) and its item list becomes
+ * an overlay the page slides down to reveal - the same single grid driving both
+ * arrangements, so nothing is rendered twice.
+ *
+ * Written as a CSS Module rather than Tailwind utilities because every value
+ * here is an `--acv-*` token. Expressing them as utilities would mean widening
+ * the Tailwind theme with a parallel copy of the design system, which is the
+ * duplication this rewrite removes. Tailwind still covers the shadcn
+ * components under `components/ui/` and the Studio panel.
+ */
+
+/*
+ * Cloud's `tablet-s`. Below it the shell is a top bar plus an overlay; at and
+ * above it, a persistent sidebar. Repeated literally in each media query
+ * because custom properties cannot be used in a media condition.
+ */
+
+.shell {
+  --shell-topbar-height: 64px;
+  --shell-nav-width: 240px;
+  --shell-nav-width-collapsed: 64px;
+  --shell-nav-duration: var(--acv-transition-duration-short);
+  --shell-gutter: 4px;
+  --shell-control-size: 40px;
+
+  display: grid;
+  align-items: center;
+  background-color: var(--acv-color-nav-primary);
+  block-size: 100%;
+  grid-template-areas:
+    'burger logo actions'
+    'content content content';
+  grid-template-columns: min-content 1fr min-content;
+  grid-template-rows: var(--shell-topbar-height) 1fr;
+  inline-size: 100%;
+  min-block-size: 0;
+}
+
+/*
+ * The item overlay is revealed by sliding the page down over the row it
+ * occupies, so the shell has to clip whatever leaves the viewport.
+ */
+.shellNavOpen {
+  overflow: hidden;
+}
+
+@media (min-width: 720px) {
+  .shell {
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+  }
+}
+
+/* ── Navigation aside ────────────────────────────────────────────────────── */
+
+/*
+ * `display: contents` on mobile: the aside's own children (burger, logo, items,
+ * actions) become direct participants of the shell grid above, which is how one
+ * markup tree yields a top bar on mobile and a sidebar on desktop.
+ */
+.nav {
+  display: contents;
+  color: var(--acv-color-nav-secondary);
+  white-space: nowrap;
+}
+
+@media (min-width: 720px) {
+  .nav {
+    display: grid;
+    align-items: center;
+    flex-shrink: 0;
+    grid-template:
+      min-content 1fr min-content /
+      1fr auto;
+    grid-template-areas:
+      'logo collapse'
+      'items items'
+      'actions actions';
+    inline-size: var(--shell-nav-width);
+    padding-block: var(--acv-spacing-medium);
+    padding-inline: var(--acv-spacing-regular);
+    row-gap: var(--acv-spacing-regular);
+    transition: inline-size var(--shell-nav-duration);
+  }
+
+  .navCollapsed {
+    inline-size: var(--shell-nav-width-collapsed);
+  }
+}
+
+.burger {
+  grid-area: burger;
+  margin-inline-start: var(--acv-spacing-medium);
+}
+
+@media (min-width: 720px) {
+  .burger {
+    display: none;
+  }
+}
+
+.logo {
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  block-size: 100%;
+  color: var(--acv-color-nav-secondary);
+  gap: var(--acv-spacing-small);
+  grid-area: logo;
+  min-inline-size: 0;
+  padding-inline: var(--acv-spacing-small);
+  text-decoration: none;
+}
+
+.logoMark {
+  block-size: 24px;
+  flex-shrink: 0;
+  inline-size: 24px;
+}
+
+/*
+ * The wordmark is what disappears when the aside collapses; the mark stays.
+ * `contain: size` keeps the shrinking text from reflowing the row mid-transition.
+ */
+.logoText {
+  block-size: 20px;
+  contain: size;
+  inline-size: 72px;
+  opacity: 1;
+  transition: opacity var(--shell-nav-duration);
+}
+
+.navCollapsed .logoText {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.collapse {
+  display: none;
+  grid-area: collapse;
+}
+
+@media (min-width: 720px) {
+  .collapse {
+    display: flex;
+    justify-self: center;
+  }
+}
+
+/* ── Navigation button (Cloud's MainNavigationButton) ────────────────────── */
+
+.navButton {
+  --base-icon-size: var(--acv-icon-size-xs);
+
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  flex-shrink: 0;
+  background-color: var(--acv-color-nav-button);
+  block-size: var(--shell-control-size);
+  border: 0;
+  border-radius: var(--acv-radius-medium);
+  color: var(--acv-color-nav-secondary);
+  cursor: pointer;
+  min-inline-size: var(--shell-control-size);
+  padding-block: var(--acv-spacing-xx-small);
+  padding-inline: var(--acv-spacing-small);
+  transition: background-color var(--shell-nav-duration);
+}
+
+.navButton:hover {
+  background-color: var(--acv-color-nav-hover);
+}
+
+.navButton:active,
+.navButtonActive {
+  background-color: var(--acv-color-nav-active);
+}
+
+.navButton:focus-visible {
+  outline: 2px solid var(--acv-color-state-focus-primary);
+  outline-offset: 2px;
+}
+
+.navButtonIcon {
+  display: flex;
+  justify-content: center;
+  inline-size: 24px;
+}
+
+.navButtonLabel {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .navButtonLabel {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    contain: size;
+    flex-grow: 1;
+    margin-inline-start: var(--acv-spacing-small);
+    transition:
+      margin-inline-start var(--shell-nav-duration),
+      opacity var(--shell-nav-duration);
+  }
+
+  .navCollapsed .navButtonLabel {
+    margin-inline-start: 0;
+    opacity: 0;
+  }
+}
+
+/* ── Screen list ─────────────────────────────────────────────────────────── */
+
+/*
+ * Mobile: the list occupies the row the page slides off, so it is only seen
+ * while the burger is open. Desktop: the scrolling middle band of the sidebar.
+ */
+.items {
+  display: flex;
+  overflow: hidden auto;
+  align-self: start;
+  flex-direction: column;
+  gap: var(--acv-spacing-xx-small);
+  grid-area: content;
+  grid-column: 1 / -1;
+  margin: 0;
+  min-block-size: 100%;
+  padding-block: var(--acv-spacing-x-small);
+  padding-inline: var(--acv-spacing-regular);
+  scrollbar-width: none;
+  /*
+   * Below the breakpoint the page panel is parked on top of this row rather
+   * than in front of it, so a closed list is merely covered - still focusable,
+   * still read out. `visibility` takes it out of the tab order too; the reveal
+   * is the panel sliding away, never this property animating, so flipping it
+   * instantly costs nothing.
+   */
+  visibility: hidden;
+}
+
+.shellNavOpen .items {
+  visibility: visible;
+}
+
+@media (min-width: 720px) {
+  .items {
+    grid-area: items;
+    grid-column: auto;
+    padding-inline: var(--acv-spacing-x-small);
+    transition: padding-inline var(--shell-nav-duration);
+    visibility: visible;
+  }
+}
+
+/*
+ * The kit's item paints its own hover, active state and collapsed label fade
+ * from `--c-navigation-item-*` and `[data-collapsed]`, both of which
+ * `AcvMainNavigationItem` and `AcvMainNavigation` already wire to the nav
+ * tokens. Nothing about the item's appearance is restated here.
+ */
+.item {
+  cursor: pointer;
+}
+
+/*
+ * Screen icons come from the MFE manifests as Iconify names, so they render at
+ * the 1em Iconify default rather than at the kit's icon size. Pin them to the
+ * slot the kit reserved, so a manifest cannot change the row height.
+ */
+.itemIcon {
+  block-size: var(--acv-icon-size-xs);
+  inline-size: var(--acv-icon-size-xs);
+}
+
+.itemButton {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  inline-size: 100%;
+  text-align: start;
+}
+
+.emptyState {
+  color: var(--acv-color-nav-tertiary);
+  font-size: var(--acv-font-size-xx-small);
+  line-height: var(--acv-line-height-xx-small);
+  padding-block: var(--acv-spacing-medium);
+  padding-inline: var(--acv-spacing-regular);
+  white-space: normal;
+}
+
+.emptyState code {
+  background-color: var(--acv-color-nav-button);
+  border-radius: var(--acv-radius-small);
+  font-family: 'JetBrains Mono', monospace;
+  padding-block: 1px;
+  padding-inline: var(--acv-spacing-xx-small);
+}
+
+/* ── Actions (user identity) ─────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--acv-spacing-small);
+  grid-area: actions;
+  margin-inline-end: var(--acv-spacing-medium);
+  min-inline-size: 0;
+}
+
+@media (min-width: 720px) {
+  .actions {
+    margin-inline-end: 0;
+  }
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  background-color: var(--acv-color-nav-button);
+  block-size: var(--shell-control-size);
+  border-radius: var(--acv-radius-medium);
+  color: var(--acv-color-nav-secondary);
+  gap: var(--acv-spacing-small);
+  min-inline-size: var(--shell-control-size);
+  overflow: hidden;
+  padding-inline: var(--acv-spacing-small);
+}
+
+.userAvatarImage {
+  block-size: 100%;
+  border-radius: inherit;
+  inline-size: 100%;
+  object-fit: cover;
+}
+
+.userName {
+  display: none;
+  font-size: var(--acv-font-size-xx-small);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 720px) {
+  .userName {
+    display: block;
+  }
+
+  .navCollapsed .userName {
+    display: none;
+  }
+}
+
+/*
+ * Loading placeholders. `--acv-color-nav-hover` reads as a lighter step of the
+ * button it fills, which is what a skeleton has to be on the navy field.
+ */
+.userSkeleton {
+  animation: shell-pulse 1.6s ease-in-out infinite;
+  background-color: var(--acv-color-nav-hover);
+  block-size: 24px;
+  border-radius: var(--acv-radius-circle);
+  inline-size: 24px;
+}
+
+.userSkeletonText {
+  animation: shell-pulse 1.6s ease-in-out infinite;
+  background-color: var(--acv-color-nav-hover);
+  block-size: 10px;
+  border-radius: var(--acv-radius-small);
+  display: none;
+  inline-size: 72px;
+}
+
+@media (min-width: 720px) {
+  .userSkeletonText {
+    display: block;
+  }
+
+  .navCollapsed .userSkeletonText {
+    display: none;
+  }
+}
+
+@keyframes shell-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  .userSkeleton,
+  .userSkeletonText {
+    animation: none;
+  }
+}
+
+/* ── Content column ──────────────────────────────────────────────────────── */
+
+.content {
+  display: flex;
+  align-self: end;
+  flex-direction: column;
+  flex-grow: 1;
+  grid-area: content;
+  min-block-size: 100%;
+  min-inline-size: 0;
+  transform: translateY(0);
+  transition: transform var(--acv-transition-standard);
+}
+
+.shellNavOpen .content {
+  transform: translateY(100%);
+}
+
+@media (min-width: 720px) {
+  .content {
+    align-self: auto;
+    min-block-size: 0;
+    transform: none;
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  .content {
+    transition: none;
+  }
+}
+
+.panels {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  gap: var(--shell-gutter);
+  min-block-size: 0;
+  min-inline-size: 0;
+}
+
+/*
+ * The page panel. Only the top corners are rounded on mobile, where the panel
+ * runs to the bottom edge; on desktop it is a floating card with a 4px gutter,
+ * exactly as Cloud draws it.
+ */
+.page {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background-color: var(--acv-color-surface-primary);
+  border-radius: var(--acv-radius-large) var(--acv-radius-large) 0 0;
+  color: var(--acv-color-glyph-primary);
+  flex-direction: column;
+  flex-grow: 1;
+  min-block-size: 0;
+  min-inline-size: 0;
+  transition: border-radius var(--acv-transition-standard);
+}
+
+@media (min-width: 720px) {
+  .page {
+    border-radius: var(--acv-radius-regular);
+    margin-block: var(--shell-gutter);
+    margin-inline-end: var(--shell-gutter);
+  }
+}
+
+/* Right-hand contextual panel: a second card beside the page. */
+.aside {
+  display: flex;
+  overflow: hidden;
+  background-color: var(--acv-color-surface-primary);
+  border-radius: var(--acv-radius-large) var(--acv-radius-large) 0 0;
+  color: var(--acv-color-glyph-primary);
+  flex-direction: column;
+  flex-shrink: 0;
+  inline-size: 320px;
+  transition: inline-size var(--acv-transition-standard);
+}
+
+.asideCollapsed {
+  inline-size: 0;
+}
+
+@media (min-width: 720px) {
+  .aside {
+    border-radius: var(--acv-radius-regular);
+    margin-block: var(--shell-gutter);
+    margin-inline-end: var(--shell-gutter);
+  }
+}
+
+.asideBody {
+  overflow-y: auto;
+  block-size: 100%;
+  padding: var(--acv-spacing-medium);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  background-color: var(--acv-color-surface-secondary);
+  block-size: var(--shell-control-size);
+  border-radius: var(--acv-radius-regular);
+  color: var(--acv-color-glyph-secondary);
+  flex-shrink: 0;
+  font-size: var(--acv-font-size-xx-small);
+  justify-content: space-between;
+  margin-block-end: var(--shell-gutter);
+  margin-inline-end: var(--shell-gutter);
+  padding-inline: var(--acv-spacing-medium);
+}
+
+/* ── Overlays ────────────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  background-color: var(--acv-color-overlay-primary);
+  inset: 0;
+  justify-content: center;
+  z-index: 50;
+}
+
+.popup {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  inset: 0;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popupBackdrop {
+  position: absolute;
+  backdrop-filter: blur(4px);
+  background-color: var(--acv-color-overlay-primary);
+  inset: 0;
+}
+
+.popupDialog {
+  position: relative;
+  background-color: var(--acv-color-surface-primary);
+  border: 1px solid var(--acv-color-border-primary);
+  border-radius: var(--acv-radius-medium);
+  box-shadow: var(--shadow-lg);
+  color: var(--acv-color-glyph-primary);
+  inline-size: 100%;
+  max-inline-size: 512px;
+  padding: var(--acv-spacing-x-large);
+  z-index: 1001;
+}
+
+.popupTitle {
+  font-size: var(--acv-font-size-subheading-2-text);
+  font-weight: var(--acv-font-weight-semi-strong);
+  margin-block: 0 var(--acv-spacing-medium);
+}

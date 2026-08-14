@@ -1,8 +1,15 @@
 /**
  * Menu Component
  *
- * Side navigation menu displaying MFE extensions with presentation metadata.
- * Uses local shadcn/ui Sidebar components for proper styling and collapsible behavior.
+ * The Constructor navigation aside: brand mark, collapse toggle, the list of
+ * MFE screens, and whatever actions the layout passes as children (the user
+ * block, by default).
+ *
+ * Its markup is one tree serving two arrangements. Below 720px the aside is
+ * `display: contents`, so its children land directly in the shell grid as a
+ * 64px top bar (burger, logo, actions) with the screen list hidden behind the
+ * burger; at and above 720px the aside becomes the 240px sidebar itself. See
+ * `layout.module.css` - the grid areas are what move, never the components.
  *
  * A click mounts the screen and pushes its `presentation.route`, so the URL
  * tracks the mounted screen and the resulting link is shareable;
@@ -19,21 +26,32 @@ import {
   type MenuState,
   type ScreenExtension,
 } from '@gears-frontx/react';
-import { mountScreenExtension } from '@/app/mfe/screenRouting';
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuIcon,
-  SidebarHeader,
-} from '@/app/components/ui/sidebar';
+  AcvMainNavigation,
+  AcvMainNavigationItem,
+  AcvMainNavigationItems,
+} from '@constructor/react-kit/main-navigation';
+import { IconBars } from '@constructor/react-icons/bars';
+import { IconXmark } from '@constructor/react-icons/xmark';
+import { IconLayoutSideContentLeft } from '@constructor/react-icons/layout';
 import { Icon } from '@iconify/react';
+import { mountScreenExtension } from '@/app/mfe/screenRouting';
+import { cn } from '@/app/lib/utils';
 import { FrontXLogoIcon } from '@/app/icons/FrontXLogoIcon';
 import { FrontXLogoTextIcon } from '@/app/icons/FrontXLogoTextIcon';
+import { NavigationButton } from './NavigationButton';
+import styles from './layout.module.css';
 
 export interface MenuProps {
+  /**
+   * Whether the narrow-viewport screen list is revealed.
+   *
+   * Owned by `Layout` rather than by this component: the reveal is the page
+   * panel sliding down, and that panel is Layout's child, not the aside's.
+   */
+  navOpen?: boolean;
+  /** Called with the state the burger is asking for. */
+  onNavOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
 }
 
@@ -68,7 +86,13 @@ export const EMPTY_STATE_GRACE_MS = 2000;
  */
 export const menuItemTestId = (extensionId: string): string => `menu-item-${extensionId}`;
 
-export const Menu: React.FC<MenuProps> = ({ children }) => {
+/** Test id of the burger that opens the screen list on narrow viewports. */
+export const MENU_BURGER_TESTID = 'menu-burger';
+
+/** Test id of the control that collapses the aside to icons. */
+export const MENU_COLLAPSE_TESTID = 'menu-collapse';
+
+export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, children }) => {
   const menuState = useAppSelector((state) => state['layout/menu'] as MenuState | undefined);
   const app = useFrontX();
   const { mfeRegistry } = app;
@@ -120,6 +144,10 @@ export const Menu: React.FC<MenuProps> = ({ children }) => {
   const handleMenuItemClick = useCallback(
     async (extension: ScreenExtension) => {
       if (!mfeRegistry) return;
+      // Closing here rather than in an effect on the mounted screen: the
+      // overlay covers the page it is about to reveal, and a user who taps a
+      // screen has already decided, whether or not the mount succeeds.
+      onNavOpenChange?.(false);
       // The URL is pushed before the mount so a screen that fails to mount still
       // leaves the address bar on the screen the user asked for, and so the entry
       // exists before any code the screen runs can push its own.
@@ -131,55 +159,70 @@ export const Menu: React.FC<MenuProps> = ({ children }) => {
       }
       await mountScreenExtension(mfeRegistry, extension.id);
     },
-    [mfeRegistry]
+    [mfeRegistry, onNavOpenChange]
   );
 
   return (
-    <Sidebar collapsed={collapsed}>
-      {/* Logo/Brand area with collapse button */}
-      <SidebarHeader
-        logo={<FrontXLogoIcon />}
-        logoText={!collapsed ? <FrontXLogoTextIcon /> : undefined}
-        collapsed={collapsed}
+    <AcvMainNavigation
+      className={cn(styles.nav, collapsed && styles.navCollapsed)}
+      collapsed={collapsed}
+    >
+      <NavigationButton
+        className={styles.burger}
+        data-testid={MENU_BURGER_TESTID}
+        icon={navOpen ? <IconXmark /> : <IconBars />}
+        aria-expanded={navOpen}
+        aria-label={navOpen ? 'Close menu' : 'Open menu'}
+        onClick={() => onNavOpenChange?.(!navOpen)}
+      />
+
+      <span className={styles.logo}>
+        <FrontXLogoIcon className={styles.logoMark} />
+        <FrontXLogoTextIcon className={styles.logoText} />
+      </span>
+
+      <NavigationButton
+        className={styles.collapse}
+        data-testid={MENU_COLLAPSE_TESTID}
+        icon={<IconLayoutSideContentLeft />}
+        aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
         onClick={handleToggleCollapse}
       />
 
-      {/* Menu items */}
-      <SidebarContent>
-        <SidebarMenu>
-          {extensions.map((ext) => {
-            const isActive = ext.id === mountedId;
-            const pres = ext.presentation;
-            return (
-              <SidebarMenuItem key={ext.id}>
-                <SidebarMenuButton
+      <AcvMainNavigationItems className={styles.items}>
+        {extensions.map((ext) => {
+          const pres = ext.presentation;
+          return (
+            <AcvMainNavigationItem
+              key={ext.id}
+              className={styles.item}
+              active={ext.id === mountedId}
+              icon={pres.icon ? <Icon icon={pres.icon} className={styles.itemIcon} /> : undefined}
+              render={
+                <button
+                  type="button"
+                  className={styles.itemButton}
                   data-testid={menuItemTestId(ext.id)}
-                  isActive={isActive}
+                  title={collapsed ? pres.label : undefined}
                   onClick={() => handleMenuItemClick(ext)}
-                  tooltip={collapsed ? pres.label : undefined}
-                >
-                  {pres.icon && (
-                    <SidebarMenuIcon>
-                      <Icon icon={pres.icon} className="w-4 h-4" />
-                    </SidebarMenuIcon>
-                  )}
-                  <span>{pres.label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+                />
+              }
+            >
+              {pres.label}
+            </AcvMainNavigationItem>
+          );
+        })}
 
-          {/* Until discovery settles the menu stays blank rather than guessing. */}
-          {extensions.length === 0 && discoverySettled && (
-            <div className="px-3 py-4 text-sm text-muted-foreground">
-              No screens yet. Add an MFE package by copying the <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">_blank-mfe</code> reference scaffold in <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">mfe_packages/</code>, then delete <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">templateExample</code> from the copy&rsquo;s <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">mfe.json</code> so it reaches this menu.
-            </div>
-          )}
-        </SidebarMenu>
-      </SidebarContent>
+        {/* Until discovery settles the menu stays blank rather than guessing. */}
+        {extensions.length === 0 && discoverySettled && (
+          <li className={styles.emptyState}>
+            No screens yet. Add an MFE package by copying the <code>_blank-mfe</code> reference scaffold in <code>mfe_packages/</code>, then delete <code>templateExample</code> from the copy&rsquo;s <code>mfe.json</code> so it reaches this menu.
+          </li>
+        )}
+      </AcvMainNavigationItems>
 
       {children}
-    </Sidebar>
+    </AcvMainNavigation>
   );
 };
 

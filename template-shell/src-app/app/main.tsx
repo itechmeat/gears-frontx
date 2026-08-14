@@ -9,12 +9,10 @@ import '@/app/events/bootstrapEvents'; // Register app-level events (type augmen
 import { registerBootstrapEffects } from '@/app/effects/bootstrapEffects'; // Register app-level effects
 import App from './App';
 
-// Import all themes
-import { DEFAULT_THEME_ID, defaultTheme } from '@/app/themes/default';
-import { darkTheme } from '@/app/themes/dark';
-import { lightTheme } from '@/app/themes/light';
-import { draculaTheme } from '@/app/themes/dracula';
-import { draculaLargeTheme } from '@/app/themes/dracula-large';
+// The `constructor` brand theme in its two colour schemes; the tokens
+// themselves are linked as a stylesheet by index.html.
+import { DEFAULT_THEME_ID, frontxThemes } from '@/app/themes';
+import { KitProviders } from '@/app/kit/KitProviders';
 
 // Register application-specific GTS schemas before constructing the FrontX app.
 // These derived schemas encode application-level constraints (valid theme names,
@@ -42,12 +40,11 @@ const app = createFrontXApp({
 // Register app-level effects (pass store dispatch)
 registerBootstrapEffects(app.store.dispatch);
 
-// Register all themes (default theme has default:true, activates automatically)
-app.themeRegistry.register(defaultTheme);
-app.themeRegistry.register(lightTheme);
-app.themeRegistry.register(darkTheme);
-app.themeRegistry.register(draculaTheme);
-app.themeRegistry.register(draculaLargeTheme);
+// Register the themes in the order the Studio dropdown lists them; the light
+// scheme carries default:true and activates on registration.
+for (const theme of frontxThemes) {
+  app.themeRegistry.register(theme);
+}
 
 // Apply default theme explicitly
 app.themeRegistry.apply(DEFAULT_THEME_ID);
@@ -69,8 +66,15 @@ app.themeRegistry.apply(DEFAULT_THEME_ID);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <FrontXProvider app={app}>
-      <App />
-      <Toaster />
+      {/*
+        Inside FrontXProvider, because the kit's colour scheme is driven from
+        the theme registry; outside App, so the chrome and every dialog the
+        shell portals into document.body share one kit context.
+      */}
+      <KitProviders>
+        <App />
+        <Toaster />
+      </KitProviders>
     </FrontXProvider>
   </StrictMode>
 );

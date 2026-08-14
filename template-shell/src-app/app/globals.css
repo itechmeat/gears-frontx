@@ -1,57 +1,102 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/**
- * Theme CSS variables
- * Default values for initial load; overridden dynamically by themeRegistry.apply()
+/*
+ * Tailwind is emitted into named cascade layers rather than unlayered.
+ *
+ * `index.html` declares the order `tw-base, base, theme, ui, tw-components,
+ * tw-utilities` before anything else loads. Unlayered CSS outranks every layer
+ * regardless of specificity, so leaving Tailwind unlayered put Preflight above
+ * `@constructor/globals` (`@layer base`, `@layer theme`) and above every
+ * `@constructor/react-kit` component sheet (`@layer ui`) - Preflight's
+ * `button { background-color: transparent }` alone is enough to strip the
+ * background off every kit control. Putting Preflight in `tw-base` at the
+ * bottom fixes that while `tw-utilities` stays on top, so a Tailwind utility
+ * class still wins wherever the shell writes one.
+ *
+ * The same defect is what `ThemeAwareReactLifecycle` works around inside MFE
+ * shadow roots by cloning host styles to the front; this is the document-level
+ * half of it.
  */
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --error: 0 84.2% 60.2%;
-    --warning: 38 92% 50%;
-    --success: 142 76% 36%;
-    --info: 199 89% 48%;
-    --radius-sm: 0.125rem;
-    --radius-md: 0.25rem;
-    --radius-lg: 0.5rem;
-    --radius-xl: 1rem;
+@layer tw-base {
+  @tailwind base;
+
+  /*
+   * The shadcn default border colour, kept beside Preflight in the same layer.
+   * It is a `*` selector, so leaving it unlayered would repaint the borders of
+   * every kit component that draws its own.
+   */
+  * {
+    border-color: hsl(var(--border));
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  html {
-    @apply overflow-hidden;
-  }
-  body {
-    @apply bg-background text-foreground overflow-hidden m-0;
-  }
-  #root {
-    @apply h-screen w-screen;
-  }
+@layer tw-components {
+  @tailwind components;
+}
+
+@layer tw-utilities {
+  @tailwind utilities;
+}
+
+/*
+ * Fallback values for the shadcn variable grammar, used for the frames between
+ * first paint and `themeRegistry.apply()`. They mirror the Constructor light
+ * scheme in `app/themes/light.ts`; the runtime rule that replaces them is
+ * unlayered and therefore always wins. The `--acv-*` tokens they shadow arrive
+ * from the stylesheets `index.html` links, so nothing here re-declares those.
+ */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 6.7%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 6.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 6.7%;
+  --primary: 218.6 68.3% 16.1%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 192 12.2% 92%;
+  --secondary-foreground: 0 0% 6.7%;
+  --muted: 240 6.7% 97.1%;
+  --muted-foreground: 0 0% 41.6%;
+  --accent: 220 8.6% 93.1%;
+  --accent-foreground: 0 0% 6.7%;
+  --destructive: 347.1 92.7% 43.1%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 225 6.2% 87.5%;
+  --input: 225 6.2% 87.5%;
+  --ring: 203 100% 44.5%;
+  --error: 347.1 92.7% 43.1%;
+  --warning: 31.3 100% 35.7%;
+  --success: 160.2 59.5% 32.9%;
+  --info: 219.1 66.5% 54.3%;
+  --radius-sm: var(--acv-radius-small);
+  --radius-md: var(--acv-radius-regular);
+  --radius-lg: var(--acv-radius-medium);
+  --radius-xl: var(--acv-radius-large);
+}
+
+/*
+ * App chrome, deliberately unlayered so it outranks both Preflight and the
+ * design system's own `body` rule. The document itself is painted in the
+ * navigation colour: the shell's outermost element is the navigation field, and
+ * an overscroll past the page panel should reveal that field rather than a
+ * white gap.
+ */
+html {
+  block-size: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--acv-color-nav-primary);
+  block-size: 100%;
+  color: var(--acv-color-glyph-primary);
+  margin: 0;
+  overflow: hidden;
+}
+
+#root {
+  block-size: 100%;
+  inline-size: 100%;
 }
 
 /* Sonner toast styles */
