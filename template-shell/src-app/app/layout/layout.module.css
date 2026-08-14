@@ -104,8 +104,10 @@
   gap: var(--acv-spacing-small);
   grid-area: logo;
   min-inline-size: 0;
+  opacity: 1;
   padding-inline: var(--acv-spacing-small);
   text-decoration: none;
+  transition: opacity var(--shell-nav-duration);
 }
 
 .logoMark {
@@ -115,20 +117,31 @@
 }
 
 /*
- * The wordmark is what disappears when the aside collapses; the mark stays.
- * `contain: size` keeps the shrinking text from reflowing the row mid-transition.
+ * `contain: size` keeps the wordmark from reflowing the row while the aside's
+ * width animates.
  */
 .logoText {
   block-size: 20px;
   contain: size;
   inline-size: 72px;
-  opacity: 1;
-  transition: opacity var(--shell-nav-duration);
 }
 
-.navCollapsed .logoText {
-  opacity: 0;
-  pointer-events: none;
+/*
+ * Collapsing is a desktop-only state: below the breakpoint the aside is the
+ * full-width top bar and its overlay, where `collapsed` describes nothing on
+ * screen. The flag still arrives from the store at every width - it is
+ * persisted - so every collapsed-state rule has to be scoped to the breakpoint
+ * or it hides something that has room for itself.
+ *
+ * The whole logo goes, not just the wordmark, which is what Cloud does too: the
+ * collapsed rail is 40px of content and the collapse control already fills it,
+ * so a mark left behind is clipped to a sliver and drawn under that control.
+ */
+@media (min-width: 720px) {
+  .navCollapsed .logo {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 /* ── Navigation button (Cloud's MainNavigationButton) ────────────────────── */
@@ -314,6 +327,21 @@
   font-family: 'JetBrains Mono', monospace;
   padding-block: 1px;
   padding-inline: var(--acv-spacing-xx-small);
+}
+
+/*
+ * A 64px icon rail has no room for prose. Every other text in the aside fades
+ * or is dropped when it collapses; this one is removed outright rather than
+ * faded, because it is a wrapping paragraph - left in the flow at 40px of
+ * usable width it reflows to one character a line and grows the list past the
+ * viewport (measured at 928px tall in a 900px window). Removal also matches
+ * what the rail says: the empty state is guidance, and guidance belongs to the
+ * expanded aside.
+ */
+@media (min-width: 720px) {
+  .navCollapsed .emptyState {
+    display: none;
+  }
 }
 
 /* ── Actions (user identity) ─────────────────────────────────────────────── */
