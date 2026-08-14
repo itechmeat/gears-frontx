@@ -35,6 +35,7 @@ import { IconBars } from '@constructor/react-icons/bars';
 import { IconXmark } from '@constructor/react-icons/xmark';
 import { IconLayoutSideContentLeft } from '@constructor/react-icons/layout';
 import { Icon } from '@iconify/react';
+import { AcvTooltip } from '@constructor/react-kit/tooltip';
 import { IconLogoConstructorFullColorWhite } from '@constructor/react-icons/logo';
 import { mountScreenExtension } from '@/app/mfe/screenRouting';
 import { cn } from '@/app/lib/utils';
@@ -90,6 +91,15 @@ export const MENU_BURGER_TESTID = 'menu-burger';
 
 /** Test id of the control that collapses the aside to icons. */
 export const MENU_COLLAPSE_TESTID = 'menu-collapse';
+
+/**
+ * Gap between a collapsed item and the tooltip naming it, in pixels.
+ *
+ * Cloud's value for the same tooltip. Stated here rather than inline because it
+ * is the one number the kit does not default correctly for this case - its own
+ * default is 8px.
+ */
+const TOOLTIP_SIDE_OFFSET = 10;
 
 export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, children }) => {
   const menuState = useAppSelector((state) => state['layout/menu'] as MenuState | undefined);
@@ -206,9 +216,8 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
       <AcvMainNavigationItems className={styles.items}>
         {extensions.map((ext) => {
           const pres = ext.presentation;
-          return (
+          const item = (
             <AcvMainNavigationItem
-              key={ext.id}
               className={styles.item}
               active={ext.id === mountedId}
               icon={pres.icon ? <Icon icon={pres.icon} className={styles.itemIcon} /> : undefined}
@@ -217,13 +226,38 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
                   type="button"
                   className={styles.itemButton}
                   data-testid={menuItemTestId(ext.id)}
-                  title={collapsed ? pres.label : undefined}
                   onClick={() => handleMenuItemClick(ext)}
                 />
               }
             >
               {pres.label}
             </AcvMainNavigationItem>
+          );
+
+          /*
+           * Collapsed, the row is a 16px glyph and the label beside it has
+           * faded to nothing, so the tooltip is the only thing that still names
+           * the screen. Expanded, the name is already on the row and a tooltip
+           * repeating it would be noise - hence `disabled`, which is the kit's
+           * way of keeping the trigger mounted and inert rather than swapping
+           * the tree on every collapse.
+           *
+           * `inline-end` rather than a physical side so the tooltip follows the
+           * rail to the other edge in RTL. The kit's popup already carries the
+           * fade and 6px entrance this wants, and portals itself out of the
+           * rail, which a 64px column with `overflow: hidden` could not show.
+           */
+          return (
+            <AcvTooltip
+              key={ext.id}
+              disabled={!collapsed}
+              side="inline-end"
+              sideOffset={TOOLTIP_SIDE_OFFSET}
+              size="autosize"
+              trigger={<AcvTooltip.Trigger render={item} />}
+            >
+              {pres.label}
+            </AcvTooltip>
           );
         })}
 

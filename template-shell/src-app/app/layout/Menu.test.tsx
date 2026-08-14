@@ -5,10 +5,13 @@ import type { ScreenExtension } from '@gears-frontx/react';
 
 const mockUseFrontX = vi.fn();
 const mockUseMountedExtensions = vi.fn();
+// Stands in for the whole `layout/*` slice family. Only `layout/menu` is read
+// by this component, so the tooltip cases drive `collapsed` through it.
+const mockUseAppSelector = vi.fn();
 
 vi.mock('@gears-frontx/react', async (importOriginal) => ({
   ...(await importOriginal<Record<string, never>>()),
-  useAppSelector: () => undefined,
+  useAppSelector: () => mockUseAppSelector(),
   useFrontX: () => mockUseFrontX(),
   useMountedExtensions: () => mockUseMountedExtensions(),
 }));
@@ -52,6 +55,7 @@ describe('Menu', () => {
     };
     mockUseFrontX.mockReturnValue(app);
     mockUseMountedExtensions.mockReturnValue([]);
+    mockUseAppSelector.mockReturnValue(undefined);
     window.history.pushState(null, '', '/');
   });
 
@@ -128,6 +132,39 @@ describe('Menu', () => {
 
     await userEvent.click(await screen.findByTestId(`menu-item-${tasks.id}`));
     expect(onNavOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  // Collapsed, the row is a glyph and the label beside it has faded out, so the
+  // tooltip is the only thing left naming the screen. Expanded, the name is
+  // already on the row, and a tooltip repeating it would be noise. Both halves
+  // are asserted because the interesting part is the condition, not the popup.
+  describe('collapsed-rail tooltips', () => {
+    const hoverFirstItem = async () => {
+      await userEvent.hover(await screen.findByTestId(`menu-item-${tasks.id}`));
+    };
+
+    it('names the screen on hover while the aside is collapsed', async () => {
+      mockUseAppSelector.mockReturnValue({ collapsed: true });
+      const { Menu } = await import('./Menu');
+      render(<Menu />);
+
+      await hoverFirstItem();
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip.textContent).toContain(tasks.presentation.label);
+    });
+
+    it('stays silent on hover while the aside is expanded', async () => {
+      mockUseAppSelector.mockReturnValue({ collapsed: false });
+      const { Menu } = await import('./Menu');
+      render(<Menu />);
+
+      await hoverFirstItem();
+
+      await expect
+        .poll(() => screen.queryByRole('tooltip'), { timeout: 1000 })
+        .toBeNull();
+    });
   });
 
   it('shows the empty state once the grace window passes with nothing registered', async () => {

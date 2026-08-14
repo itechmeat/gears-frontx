@@ -99,6 +99,22 @@ body {
   inline-size: 100%;
 }
 
+/*
+ * Reduced motion for the kit's tooltip.
+ *
+ * `@constructor/react-kit` gives its popup a 6px entrance slide through
+ * `--_tooltip-animation-offset`, declared on the popup element itself, so the
+ * value cannot be overridden by inheritance from an ancestor - and the popup is
+ * portalled into <body>, out of reach of the layout stylesheet anyway. It is
+ * addressed here by the role it publishes, from outside `@layer ui` so an
+ * unlayered rule wins. Only the travel goes; the fade stays.
+ */
+@media screen and (prefers-reduced-motion: reduce) {
+  [role='tooltip'] {
+    --_tooltip-animation-offset: 0px;
+  }
+}
+
 /* Sonner toast styles */
 [data-sonner-toaster] [data-sonner-toast] {
   --normal-bg: hsl(var(--popover));

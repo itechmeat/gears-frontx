@@ -245,6 +245,39 @@ function installMatchMedia(target: Window & typeof globalThis): void {
   });
 }
 
+/**
+ * Install a no-op `ResizeObserver`.
+ *
+ * jsdom ships no implementation, and the anchored overlays in
+ * `@constructor/react-kit` construct one while positioning themselves - the
+ * kit's tooltip is the concrete case, so a collapsed navigation item cannot be
+ * hovered in a test without this. The constructor throwing is what a suite
+ * sees, several frames away from anything the test is about.
+ *
+ * A no-op is the honest shim rather than a limitation. jsdom performs no
+ * layout, so every entry this observer could report would be a box of zeros;
+ * emitting them would tell the observer's owner that the element resized to
+ * nothing, which is worse than never reporting at all. A test that needs real
+ * geometry needs a real browser.
+ */
+function installResizeObserver(target: Window & typeof globalThis): void {
+  if (typeof target.ResizeObserver === 'function') {
+    return;
+  }
+
+  class ResizeObserverShim implements ResizeObserver {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+
+  Object.defineProperty(target, 'ResizeObserver', {
+    value: ResizeObserverShim,
+    writable: true,
+    configurable: true,
+  });
+}
+
 function safeClearWebStorage(storage: Storage | null | undefined): void {
   if (!storage) {
     return;
@@ -343,6 +376,7 @@ if ('window' in globalThis) {
   ensureUsableWebStorage(globalThis.window);
   installPointerEventConstructor(globalThis.window);
   installMatchMedia(globalThis.window);
+  installResizeObserver(globalThis.window);
 }
 
 afterEach(() => {
