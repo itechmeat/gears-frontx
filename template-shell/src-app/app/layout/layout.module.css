@@ -25,7 +25,20 @@
   --shell-topbar-height: 64px;
   --shell-nav-width: 240px;
   --shell-nav-width-collapsed: 64px;
+  /*
+   * One source for the collapse choreography, the way Cloud keeps a single
+   * `--go-navigation-transition-duration` on its navigation root. Everything
+   * that moves when the rail collapses reads these three, so the parts cannot
+   * drift out of step - and they start together, with no delay or stagger.
+   *
+   * The overshoot curve is deliberately not the common one and is used for the
+   * rail's width alone; it is what gives the collapse its slight settle. Text,
+   * fades and colours run on `ease`, which is the design system's own default
+   * for these and what the kit's item styles already use.
+   */
   --shell-nav-duration: var(--acv-transition-duration-short);
+  --shell-nav-easing: var(--acv-transition-timing-common);
+  --shell-nav-width-easing: cubic-bezier(0.325, 0.385, 0.225, 1.215);
   --shell-gutter: 4px;
   --shell-control-size: 40px;
 
@@ -86,8 +99,8 @@
     inline-size: var(--shell-nav-width);
     padding-block: var(--acv-spacing-medium);
     padding-inline: var(--acv-spacing-regular);
-    row-gap: var(--acv-spacing-regular);
-    transition: inline-size var(--shell-nav-duration);
+    row-gap: var(--acv-spacing-medium);
+    transition: inline-size var(--shell-nav-duration) var(--shell-nav-width-easing);
   }
 
   .navCollapsed {
@@ -107,7 +120,7 @@
   opacity: 1;
   padding-inline: var(--acv-spacing-small);
   text-decoration: none;
-  transition: opacity var(--shell-nav-duration);
+  transition: opacity var(--shell-nav-duration) var(--shell-nav-easing);
 }
 
 /*
@@ -185,7 +198,7 @@
   min-inline-size: var(--shell-control-size);
   padding-block: var(--acv-spacing-xx-small);
   padding-inline: var(--acv-spacing-small);
-  transition: background-color var(--shell-nav-duration);
+  transition: background-color var(--shell-nav-duration) var(--shell-nav-easing);
 }
 
 .navButton:hover {
@@ -208,23 +221,27 @@
   inline-size: 24px;
 }
 
+/*
+ * A label collapses, it does not disappear: it stays mounted and animates
+ * opacity and its 8px start margin to nothing, so the text is still there for
+ * assistive technology and the row has something to animate rather than a
+ * frame-perfect swap. `contain: size` stops the shrinking text reflowing the
+ * row mid-transition.
+ */
 .navButtonLabel {
-  display: none;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  contain: size;
+  flex-grow: 1;
+  margin-inline-start: var(--acv-spacing-small);
+  opacity: 1;
+  transition:
+    margin-inline-start var(--shell-nav-duration) ease,
+    opacity var(--shell-nav-duration) ease;
 }
 
 @media (min-width: 720px) {
-  .navButtonLabel {
-    display: flex;
-    align-items: center;
-    align-self: stretch;
-    contain: size;
-    flex-grow: 1;
-    margin-inline-start: var(--acv-spacing-small);
-    transition:
-      margin-inline-start var(--shell-nav-duration),
-      opacity var(--shell-nav-duration);
-  }
-
   .navCollapsed .navButtonLabel {
     margin-inline-start: 0;
     opacity: 0;
@@ -259,6 +276,9 @@
   .collapse {
     display: flex;
     justify-self: center;
+    transition:
+      background-color var(--shell-nav-duration) var(--shell-nav-easing),
+      margin-inline var(--shell-nav-duration) var(--shell-nav-easing);
   }
 }
 
@@ -299,18 +319,25 @@
   .items {
     grid-area: items;
     padding-inline: var(--acv-spacing-x-small);
-    transition: padding-inline var(--shell-nav-duration);
+    transition: padding-inline var(--shell-nav-duration) var(--shell-nav-easing);
     visibility: visible;
   }
 }
 
 /*
- * The kit's item paints its own hover, active state and collapsed label fade
- * from `--c-navigation-item-*` and `[data-collapsed]`, both of which
- * `AcvMainNavigationItem` and `AcvMainNavigation` already wire to the nav
- * tokens. Nothing about the item's appearance is restated here.
+ * The kit's item paints its own hover, active state, 4x16 brand marker and
+ * collapsed label fade from `--c-navigation-item-*` and `[data-collapsed]`,
+ * both of which `AcvMainNavigationItem` and `AcvMainNavigation` already wire to
+ * the nav tokens. Nothing about the item's appearance is restated here.
+ *
+ * What is set is the kit's own timing knob. Every one of those transitions
+ * reads `--_navigation-transition-duration` and falls back to 200ms; pointing
+ * it at our 250ms is what puts the item text, the row background and the marker
+ * on the same beat as the rail's width instead of finishing 50ms early.
  */
 .item {
+  --_navigation-transition-duration: var(--shell-nav-duration);
+
   cursor: pointer;
 }
 
@@ -391,7 +418,6 @@
   block-size: var(--shell-control-size);
   border-radius: var(--acv-radius-medium);
   color: var(--acv-color-nav-secondary);
-  gap: var(--acv-spacing-small);
   min-inline-size: var(--shell-control-size);
   overflow: hidden;
   padding-inline: var(--acv-spacing-small);
@@ -404,11 +430,27 @@
   object-fit: cover;
 }
 
+/*
+ * Collapses like an item label rather than being switched off: opacity, the
+ * 8px start margin and the width all animate to nothing on the shared beat, so
+ * the 40px button closes around the avatar instead of snapping to it. The name
+ * stays in the DOM throughout.
+ *
+ * `max-inline-size` carries the width because the pill has to give the space
+ * back - a name left at full width with opacity 0 would hold the button open.
+ */
 .userName {
   display: none;
   font-size: var(--acv-font-size-xx-small);
+  margin-inline-start: var(--acv-spacing-small);
+  max-inline-size: 120px;
+  opacity: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition:
+    margin-inline-start var(--shell-nav-duration) ease,
+    max-inline-size var(--shell-nav-duration) ease,
+    opacity var(--shell-nav-duration) ease;
 }
 
 @media (min-width: 720px) {
@@ -417,7 +459,9 @@
   }
 
   .navCollapsed .userName {
-    display: none;
+    margin-inline-start: 0;
+    max-inline-size: 0;
+    opacity: 0;
   }
 }
 
@@ -440,6 +484,7 @@
   border-radius: var(--acv-radius-small);
   display: none;
   inline-size: 72px;
+  margin-inline-start: var(--acv-spacing-small);
 }
 
 @media (min-width: 720px) {
@@ -494,7 +539,7 @@
   min-block-size: 0;
   min-inline-size: 0;
   transform: translateY(0);
-  transition: transform var(--acv-transition-standard);
+  transition: transform var(--acv-transition-duration-standard) var(--acv-transition-timing-common);
 }
 
 .shellNavOpen .content {
@@ -507,6 +552,17 @@
   }
 }
 
+/*
+ * Reduced motion takes away the travel, not the change of state.
+ *
+ * The panel still has to end up off-screen - the slide is the mechanism that
+ * uncovers the screen list, not decoration - so the transform stays and only
+ * its transition goes, landing the panel in place instead of gliding it there.
+ * Every opacity transition in this file is left alone: a fade carries no
+ * motion, and removing it would replace a soft change with a flicker. The
+ * tooltip's own 6px entrance is dropped in `globals.css`, where the kit's
+ * portalled popup can be reached.
+ */
 @media screen and (prefers-reduced-motion: reduce) {
   .content {
     transition: none;
@@ -538,7 +594,7 @@
   flex-grow: 1;
   min-block-size: 0;
   min-inline-size: 0;
-  transition: border-radius var(--acv-transition-standard);
+  transition: border-radius var(--acv-transition-duration-standard) var(--acv-transition-timing-common);
 }
 
 @media (min-width: 720px) {
@@ -559,7 +615,7 @@
   flex-direction: column;
   flex-shrink: 0;
   inline-size: 320px;
-  transition: inline-size var(--acv-transition-standard);
+  transition: inline-size var(--acv-transition-duration-standard) var(--acv-transition-timing-common);
 }
 
 .asideCollapsed {
