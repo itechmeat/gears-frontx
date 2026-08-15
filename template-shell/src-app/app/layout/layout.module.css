@@ -377,6 +377,69 @@
 }
 
 /*
+ * A section contributes only its heading: the 12px before it and the 24px the
+ * heading itself occupies are the whole of the space between two groups, and
+ * both are the kit's own. The one value the kit sets differently is the
+ * heading's weight - it uses semi-strong, the design uses medium.
+ *
+ * The heading is reached as the section's first element child rather than by
+ * class, because the kit's class names are content-hashed (`_sectionTitle_5k3g7_118`)
+ * and would change under us on any kit release. The structure it renders -
+ * heading, then the `<ul>` of rows - is the component's published shape, which
+ * the hash is not.
+ *
+ * Nothing here paints a rule between groups: this design separates them by
+ * space alone. The kit still turns the same heading into a divider once the
+ * rail collapses, which is what the 64px rail asks for and the only place a
+ * line appears.
+ */
+.section > :first-child {
+  --_navigation-transition-duration: var(--shell-nav-duration);
+
+  font-weight: var(--acv-font-weight-medium);
+  /*
+   * Pinned to 24px rather than left to grow from its contents, because the
+   * divider the kit paints when the rail collapses is a `border-block-start` -
+   * and a border on an auto-height box adds its 1px to the box even while it is
+   * transparent. Unpinned, every heading was 25px and each group after it sat a
+   * pixel lower than the last. With an explicit size the border is absorbed
+   * (Preflight puts everything in `border-box`), so the heading measures 24px
+   * expanded and collapsed alike and the groups stay on the design's grid.
+   */
+  block-size: calc(var(--acv-line-height-xx-small) + var(--acv-spacing-small));
+  /*
+   * ...and the same border still has to sit somewhere inside that 24px, so it
+   * is taken out of the space above the text rather than off the text's own
+   * line box. Left alone it pushed every heading half a pixel down from where
+   * the design puts it. The bottom keeps the full 4px, which is what makes the
+   * pair 3 + 1 + 16 + 4.
+   */
+  padding-block-start: calc(var(--acv-spacing-x-small) - 1px);
+}
+
+/*
+ * Collapsed, that same heading is the divider, and the design draws it shorter
+ * than the rows it separates: 24px inside the rail's 32px column, so it reads as
+ * a rule between groups rather than as an empty row. Measured off the design's
+ * 64px rail - the line covers 14 of the 18 pixels the rows cover, which is 24 of
+ * 32 once scaled back up.
+ *
+ * The inset is animated with everything else, so the line grows out of the
+ * heading's width instead of appearing at its final length.
+ */
+@media (min-width: 720px) {
+  .section > :first-child {
+    transition:
+      border-block-start-color var(--shell-nav-duration) var(--shell-nav-easing),
+      margin-inline var(--shell-nav-duration) var(--shell-nav-easing);
+  }
+
+  .navCollapsed .section > :first-child {
+    margin-inline: var(--acv-spacing-x-small);
+  }
+}
+
+/*
  * Screen icons come from the MFE manifests as Iconify names, so they render at
  * the 1em Iconify default rather than at the kit's icon size. Pin them to the
  * slot the kit reserved, so a manifest cannot change the row height.

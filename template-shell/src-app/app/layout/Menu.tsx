@@ -16,7 +16,7 @@
  * `mfe/MfeScreenContainer.tsx` reads that URL back on load and on back/forward.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   useAppSelector,
   useFrontX,
@@ -24,12 +24,14 @@ import {
   eventBus,
   FRONTX_SCREEN_DOMAIN,
   type MenuState,
+  type ExtensionPresentation,
   type ScreenExtension,
 } from '@gears-frontx/react';
 import {
   AcvMainNavigation,
   AcvMainNavigationItem,
   AcvMainNavigationItems,
+  AcvMainNavigationSection,
 } from '@constructor/react-kit/main-navigation';
 import { IconBars } from '@constructor/react-icons/bars';
 import { IconXmark } from '@constructor/react-icons/xmark';
@@ -101,6 +103,73 @@ export const MENU_COLLAPSE_TESTID = 'menu-collapse';
  */
 const TOOLTIP_SIDE_OFFSET = 10;
 
+/**
+ * The section heading a screen asks to appear under, or `undefined` for a screen
+ * that belongs in the unheaded group at the top of the list.
+ *
+ * Read defensively, because `section` is not part of `ExtensionPresentation`
+ * yet: the published contract carries `label`, `icon`, `route` and `order`, and
+ * adding a fifth field to it is a change to the MFE-to-host contract that the
+ * architect owns, not something a stylesheet fix should smuggle in. The GTS
+ * schema does accept the extra key today - verified against the running
+ * registry - so a manifest can already supply it and this shell can already
+ * honour it. Until the contract declares it, the value is narrowed from
+ * `unknown` rather than asserted, so a manifest that sends a number or an
+ * object degrades to "no section" instead of rendering `[object Object]` as a
+ * heading.
+ */
+export function screenSection(presentation: ExtensionPresentation): string | undefined {
+  if (!('section' in presentation)) return undefined;
+  const { section } = presentation;
+  if (typeof section !== 'string') return undefined;
+  const trimmed = section.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/** A run of screens drawn under one heading; `title` is absent for the lead group. */
+export interface ScreenGroup {
+  title?: string;
+  screens: ScreenExtension[];
+}
+
+/**
+ * Splits ordered screens into the lead group and the headed sections after it.
+ *
+ * Order is the sole authority on sequence, including for the sections
+ * themselves: a section takes the position of its first screen, so a manifest
+ * orders the whole menu through one field instead of through a second,
+ * invisible ordering of the headings. Screens that share a section but are not
+ * adjacent in the order therefore still land together, under the heading where
+ * the first of them fell.
+ *
+ * Screens with no section always lead, because a heading introduces what
+ * follows it - an unheaded screen printed after one would read as belonging to
+ * it. That matches the design, where Dashboard through Model sit above the
+ * first heading.
+ */
+export function groupScreens(screens: readonly ScreenExtension[]): ScreenGroup[] {
+  const lead: ScreenGroup = { screens: [] };
+  const sections = new Map<string, ScreenGroup>();
+  const ordered: ScreenGroup[] = [];
+
+  for (const screen of screens) {
+    const title = screenSection(screen.presentation);
+    if (title === undefined) {
+      lead.screens.push(screen);
+      continue;
+    }
+    let group = sections.get(title);
+    if (!group) {
+      group = { title, screens: [] };
+      sections.set(title, group);
+      ordered.push(group);
+    }
+    group.screens.push(screen);
+  }
+
+  return lead.screens.length > 0 ? [lead, ...ordered] : ordered;
+}
+
 export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, children }) => {
   const menuState = useAppSelector((state) => state['layout/menu'] as MenuState | undefined);
   const app = useFrontX();
@@ -150,6 +219,8 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
     eventBus.emit('layout/menu/collapsed', { collapsed: !collapsed });
   };
 
+  const groups = useMemo(() => groupScreens(extensions), [extensions]);
+
   const handleMenuItemClick = useCallback(
     async (extension: ScreenExtension) => {
       if (!mfeRegistry) return;
@@ -170,6 +241,52 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
     },
     [mfeRegistry, onNavOpenChange]
   );
+
+  const renderScreen = (ext: ScreenExtension) => {
+    const pres = ext.presentation;
+    const item = (
+      <AcvMainNavigationItem
+        className={styles.item}
+        active={ext.id === mountedId}
+        icon={pres.icon ? <Icon icon={pres.icon} className={styles.itemIcon} /> : undefined}
+        render={
+          <button
+            type="button"
+            className={styles.itemButton}
+            data-testid={menuItemTestId(ext.id)}
+            onClick={() => handleMenuItemClick(ext)}
+          />
+        }
+      >
+        {pres.label}
+      </AcvMainNavigationItem>
+    );
+
+    /*
+     * Collapsed, the row is a 16px glyph and the label beside it has faded to
+     * nothing, so the tooltip is the only thing that still names the screen.
+     * Expanded, the name is already on the row and a tooltip repeating it would
+     * be noise - hence `disabled`, which is the kit's way of keeping the trigger
+     * mounted and inert rather than swapping the tree on every collapse.
+     *
+     * `inline-end` rather than a physical side so the tooltip follows the rail
+     * to the other edge in RTL. The kit's popup already carries the fade and 6px
+     * entrance this wants, and portals itself out of the rail, which a 64px
+     * column with `overflow: hidden` could not show.
+     */
+    return (
+      <AcvTooltip
+        key={ext.id}
+        disabled={!collapsed}
+        side="inline-end"
+        sideOffset={TOOLTIP_SIDE_OFFSET}
+        size="autosize"
+        trigger={<AcvTooltip.Trigger render={item} />}
+      >
+        {pres.label}
+      </AcvTooltip>
+    );
+  };
 
   return (
     <AcvMainNavigation
@@ -214,52 +331,26 @@ export const Menu: React.FC<MenuProps> = ({ navOpen = false, onNavOpenChange, ch
       />
 
       <AcvMainNavigationItems className={styles.items}>
-        {extensions.map((ext) => {
-          const pres = ext.presentation;
-          const item = (
-            <AcvMainNavigationItem
-              className={styles.item}
-              active={ext.id === mountedId}
-              icon={pres.icon ? <Icon icon={pres.icon} className={styles.itemIcon} /> : undefined}
-              render={
-                <button
-                  type="button"
-                  className={styles.itemButton}
-                  data-testid={menuItemTestId(ext.id)}
-                  onClick={() => handleMenuItemClick(ext)}
-                />
-              }
-            >
-              {pres.label}
-            </AcvMainNavigationItem>
-          );
-
-          /*
-           * Collapsed, the row is a 16px glyph and the label beside it has
-           * faded to nothing, so the tooltip is the only thing that still names
-           * the screen. Expanded, the name is already on the row and a tooltip
-           * repeating it would be noise - hence `disabled`, which is the kit's
-           * way of keeping the trigger mounted and inert rather than swapping
-           * the tree on every collapse.
-           *
-           * `inline-end` rather than a physical side so the tooltip follows the
-           * rail to the other edge in RTL. The kit's popup already carries the
-           * fade and 6px entrance this wants, and portals itself out of the
-           * rail, which a 64px column with `overflow: hidden` could not show.
-           */
-          return (
-            <AcvTooltip
-              key={ext.id}
-              disabled={!collapsed}
-              side="inline-end"
-              sideOffset={TOOLTIP_SIDE_OFFSET}
-              size="autosize"
-              trigger={<AcvTooltip.Trigger render={item} />}
-            >
-              {pres.label}
-            </AcvTooltip>
-          );
-        })}
+        {groups.map((group) =>
+          group.title === undefined ? (
+            <React.Fragment key="lead">{group.screens.map(renderScreen)}</React.Fragment>
+          ) : (
+            /*
+             * The heading is passed as written and uppercased in CSS, not here:
+             * `text-transform` leaves the accessible name as the manifest spelled
+             * it, so a screen reader announces "Learning" rather than spelling
+             * out an all-caps string letter by letter.
+             *
+             * Collapsed, the kit turns this same heading into the divider
+             * between groups - it keeps the row's height, fades the text out and
+             * paints its top border - which is why the rail gets its separators
+             * for free and why they exist only when collapsed.
+             */
+            <AcvMainNavigationSection key={group.title} className={styles.section} title={group.title}>
+              {group.screens.map(renderScreen)}
+            </AcvMainNavigationSection>
+          )
+        )}
 
         {/* Until discovery settles the menu stays blank rather than guessing. */}
         {extensions.length === 0 && discoverySettled && (

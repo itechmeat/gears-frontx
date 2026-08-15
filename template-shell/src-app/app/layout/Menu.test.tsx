@@ -167,6 +167,81 @@ describe('Menu', () => {
     });
   });
 
+  // Headings are what give the rail its groups, and collapsed they are the only
+  // thing the kit turns into the dividers between them - so a screen landing in
+  // the wrong group is a visible defect in both states.
+  describe('sections', () => {
+    const sectioned = (id: string, order: number, section?: string): ScreenExtension => ({
+      ...screenExtension(id, `/${id}`, order),
+      presentation: {
+        label: id,
+        route: `/${id}`,
+        order,
+        ...(section === undefined ? {} : { section }),
+      },
+    });
+
+    it('leads with the screens that name no section, then groups the rest in first-appearance order', async () => {
+      const { groupScreens } = await import('./Menu');
+
+      const groups = groupScreens([
+        sectioned('dashboard', 10),
+        sectioned('catalog', 20, 'Learning'),
+        sectioned('settings', 30, 'Administration'),
+        // Out of order on purpose: a screen rejoins the group its section already
+        // opened rather than starting a second group with the same heading.
+        sectioned('my-learning', 40, 'Learning'),
+      ]);
+
+      expect(
+        groups.map((g) => [g.title, g.screens.map((s) => s.id)])
+      ).toEqual([
+        [undefined, ['dashboard']],
+        ['Learning', ['catalog', 'my-learning']],
+        ['Administration', ['settings']],
+      ]);
+    });
+
+    it('omits the lead group entirely when every screen names a section', async () => {
+      const { groupScreens } = await import('./Menu');
+
+      const groups = groupScreens([sectioned('catalog', 10, 'Learning')]);
+
+      expect(groups.map((g) => g.title)).toEqual(['Learning']);
+    });
+
+    // `section` is not in `ExtensionPresentation` yet, so it arrives untyped and
+    // a manifest can put anything there. Anything that is not a usable heading
+    // has to fall back to the lead group rather than reach the DOM.
+    it('treats a blank or non-string section as no section at all', async () => {
+      const { groupScreens } = await import('./Menu');
+      const bogus = sectioned('a', 10);
+      Object.assign(bogus.presentation, { section: '   ' });
+      const numeric = sectioned('b', 20);
+      Object.assign(numeric.presentation, { section: 7 });
+
+      const groups = groupScreens([bogus, numeric]);
+
+      expect(groups).toEqual([{ screens: [bogus, numeric] }]);
+    });
+
+    it('draws the heading above its screens', async () => {
+      app.mfeRegistry.getExtensionsForDomain.mockReturnValue([
+        sectioned('dashboard', 10),
+        sectioned('catalog', 20, 'Learning'),
+      ]);
+      const { Menu } = await import('./Menu');
+      render(<Menu />);
+
+      // Uppercasing is left to CSS, so the accessible name stays as written -
+      // asserting the raw spelling is what pins that decision.
+      const heading = await screen.findByText('Learning');
+      const list = heading.closest('li')?.querySelector('ul');
+      expect(list?.textContent).toContain('catalog');
+      expect(list?.textContent).not.toContain('dashboard');
+    });
+  });
+
   it('shows the empty state once the grace window passes with nothing registered', async () => {
     const { Menu, EMPTY_STATE_GRACE_MS } = await import('./Menu');
     app.mfeRegistry.getExtensionsForDomain.mockReturnValue([]);
