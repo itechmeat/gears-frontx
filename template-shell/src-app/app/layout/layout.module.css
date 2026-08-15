@@ -265,6 +265,7 @@
   contain: size;
   flex-grow: 1;
   margin-inline-start: var(--acv-spacing-small);
+  min-inline-size: 0;
   opacity: 1;
   transition:
     margin-inline-start var(--shell-nav-duration) ease,
@@ -529,16 +530,47 @@
   }
 }
 
+/*
+ * The user block is a `.navButton` with a 24px avatar in the icon slot, so it
+ * needs nothing here but that slot width - the pill, the hover, the active
+ * state and the label collapse all come from the button.
+ *
+ * `overflow: hidden` is what lets the pill close around the avatar: the name
+ * inside is still laid out at its full width while it fades, and without this
+ * it would paint outside the shrinking 40px button for the length of the
+ * transition.
+ */
 .user {
-  display: flex;
-  align-items: center;
-  background-color: var(--acv-color-nav-button);
-  block-size: var(--shell-control-size);
-  border-radius: var(--acv-radius-medium);
-  color: var(--acv-color-nav-secondary);
-  min-inline-size: var(--shell-control-size);
+  --shell-nav-button-icon: 24px;
+
   overflow: hidden;
-  padding-inline: var(--acv-spacing-small);
+}
+
+/*
+ * Collapsed the pill is 40px of content, which a 24px avatar can only sit
+ * inside at 8px padding. Expanded it keeps the design's 12px. The 4px is
+ * animated rather than switched because it runs on the same beat as the rail's
+ * width - the avatar slides to the centre of the closing button instead of
+ * stepping there once the width has already arrived.
+ */
+@media (min-width: 720px) {
+  .navCollapsed .user {
+    --shell-nav-button-padding: var(--acv-spacing-small);
+  }
+}
+
+/*
+ * Two lines in the space the button's label slot gives: name over team. A grid
+ * rather than a column flex so both rows resolve against the 40px button
+ * instead of against their own content, which is what keeps the pair centred
+ * when the second line is absent.
+ */
+.userText {
+  display: grid;
+  align-content: center;
+  flex-grow: 1;
+  min-inline-size: 0;
+  text-align: start;
 }
 
 .userAvatarImage {
@@ -549,38 +581,97 @@
 }
 
 /*
- * Collapses like an item label rather than being switched off: opacity, the
- * 8px start margin and the width all animate to nothing on the shared beat, so
- * the 40px button closes around the avatar instead of snapping to it. The name
- * stays in the DOM throughout.
- *
- * `max-inline-size` carries the width because the pill has to give the space
- * back - a name left at full width with opacity 0 would hold the button open.
+ * Both lines truncate rather than wrap: the pill is a fixed 40px tall and a
+ * name long enough to wrap would push the team line out of it.
  */
-.userName {
-  display: none;
-  font-size: var(--acv-font-size-xx-small);
-  margin-inline-start: var(--acv-spacing-small);
-  max-inline-size: 120px;
-  opacity: 1;
+.userName,
+.userSubtitle {
   overflow: hidden;
   text-overflow: ellipsis;
-  transition:
-    margin-inline-start var(--shell-nav-duration) ease,
-    max-inline-size var(--shell-nav-duration) ease,
-    opacity var(--shell-nav-duration) ease;
+  white-space: nowrap;
+}
+
+.userName {
+  font-size: var(--acv-font-size-x-small);
+  line-height: var(--acv-line-height-x-small);
+}
+
+.userSubtitle {
+  color: var(--acv-color-nav-tertiary);
+  font-size: var(--acv-font-size-xx-small);
+  line-height: var(--acv-line-height-xx-small);
+}
+
+/*
+ * The action beside the user block - Cloud's communications hub sits here.
+ *
+ * Collapsed it does not merely fade: it is pulled back under the user block by
+ * exactly its own width plus the gap, so the two controls end up stacked and
+ * the rail closes to one 40px column. Fading alone would leave an invisible
+ * 48px holding the rail open. `pointer-events` goes with the opacity so the
+ * hidden control cannot be clicked through the button now covering it.
+ */
+.action {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--acv-color-nav-button);
+  block-size: var(--shell-control-size);
+  border: 0;
+  border-radius: var(--acv-radius-medium);
+  color: var(--acv-color-nav-secondary);
+  cursor: pointer;
+  inline-size: var(--shell-control-size);
+  transition: background-color var(--shell-nav-duration) var(--shell-nav-easing);
+}
+
+.action:hover {
+  background-color: var(--acv-color-nav-hover);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--acv-color-state-focus-primary);
+  outline-offset: 2px;
 }
 
 @media (min-width: 720px) {
-  .userName {
-    display: block;
+  .action {
+    transition:
+      background-color var(--shell-nav-duration) var(--shell-nav-easing),
+      margin-inline-start var(--shell-nav-duration) var(--shell-nav-easing),
+      opacity var(--shell-nav-duration) var(--shell-nav-easing);
   }
 
-  .navCollapsed .userName {
-    margin-inline-start: 0;
-    max-inline-size: 0;
+  .navCollapsed .action {
+    margin-inline-start: calc(-1 * (var(--shell-control-size) + var(--acv-spacing-small)));
     opacity: 0;
+    pointer-events: none;
   }
+}
+
+/*
+ * The unread count, drawn half off the button's top-inline-end corner the way
+ * the design places it. `min-inline-size` with `padding-inline` is what lets it
+ * stay a circle at one digit and grow to a pill at three.
+ */
+.actionBadge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--acv-color-status-danger-strong);
+  block-size: var(--acv-spacing-medium);
+  border-radius: var(--acv-radius-circle);
+  color: var(--acv-color-nav-secondary);
+  font-size: var(--acv-font-size-xx-small);
+  font-weight: var(--acv-font-weight-medium);
+  inset-block-start: var(--acv-spacing-x-small);
+  inset-inline-start: 20px;
+  line-height: var(--acv-line-height-xx-small);
+  min-inline-size: var(--acv-spacing-medium);
+  padding-inline: var(--acv-spacing-x-small);
 }
 
 /*
@@ -595,24 +686,16 @@
   inline-size: 24px;
 }
 
+/*
+ * No collapse rules of its own: the placeholder sits in the button's label
+ * slot, and `.navButtonLabel` already fades and un-indents whatever is in it.
+ */
 .userSkeletonText {
   animation: shell-pulse 1.6s ease-in-out infinite;
   background-color: var(--acv-color-nav-hover);
   block-size: 10px;
   border-radius: var(--acv-radius-small);
-  display: none;
   inline-size: 72px;
-  margin-inline-start: var(--acv-spacing-small);
-}
-
-@media (min-width: 720px) {
-  .userSkeletonText {
-    display: block;
-  }
-
-  .navCollapsed .userSkeletonText {
-    display: none;
-  }
 }
 
 @keyframes shell-pulse {

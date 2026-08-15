@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { fetchCurrentUser } from '@/app/actions/bootstrapActions';
 import { cn } from '@/app/lib/utils';
 import { Header } from './Header';
+import { NotificationsAction } from './NotificationsAction';
 import { Footer } from './Footer';
 import { Menu } from './Menu';
 import { Sidebar } from './Sidebar';
@@ -49,7 +50,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className={cn(styles.shell, navOpen && styles.shellNavOpen)}>
       <Menu navOpen={navOpen} onNavOpenChange={setNavOpen}>
-        <Header />
+        {/*
+          The foot of the aside: the user block, and beside it the seat the
+          design reserves for a project's own control - Cloud puts its
+          communications hub there.
+
+          `count` is the one piece of make-believe in this layout, and it is
+          here rather than inside the control so it is a single line to delete.
+          Nothing is behind the button yet; wire it to a real service, or drop
+          both the prop and the element, and the footer re-proportions itself
+          (the user pill is `flex-grow`).
+        */}
+        <Header>
+          <NotificationsAction count={1} />
+        </Header>
       </Menu>
 
       <main className={styles.content}>
