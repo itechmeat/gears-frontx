@@ -158,6 +158,19 @@
   .navCollapsed .logo {
     opacity: 0;
     pointer-events: none;
+    /*
+     * The padding has to go, not just the ink. The logo sits in the `1fr`
+     * column of the aside's two-column head, and a grid track cannot shrink
+     * below its item's minimum - which counts padding even when the content
+     * inside it has been given `min-inline-size: 0`. Left at 8px a side it held
+     * that column open at 16px, so the collapsed rail laid itself out 16px
+     * wider than the 40px it had: the toggle overhung the rail, and the list,
+     * the rows and the user block inherited the same overhang because they
+     * span the same columns. Zeroing it lets the column reach 0 and the whole
+     * rail resolve to 12 + 40 + 12.
+     */
+    inline-size: 0;
+    padding-inline: 0;
   }
 }
 
@@ -182,7 +195,20 @@
 
 /* ── Navigation button (Cloud's MainNavigationButton) ────────────────────── */
 
+/*
+ * A 40px control whose width is `padding + icon slot + padding`, so the two
+ * knobs below are the only thing that has to change for a wider glyph. The
+ * design gives the toggle a 16px icon at 12px padding (12+16+12) and the user
+ * block a 24px avatar; the avatar case is what `.user` overrides.
+ *
+ * `padding-inline` is a transition property, not a constant, for the same
+ * reason Cloud animates it: the collapsed rail is 40px of content, so a control
+ * carrying anything wider than a 16px glyph has to give padding back on the way
+ * in rather than jump to its new width when the transition ends.
+ */
 .navButton {
+  --shell-nav-button-icon: var(--acv-icon-size-xs);
+  --shell-nav-button-padding: var(--acv-spacing-regular);
   --base-icon-size: var(--acv-icon-size-xs);
 
   display: flex;
@@ -197,8 +223,10 @@
   cursor: pointer;
   min-inline-size: var(--shell-control-size);
   padding-block: var(--acv-spacing-xx-small);
-  padding-inline: var(--acv-spacing-small);
-  transition: background-color var(--shell-nav-duration) var(--shell-nav-easing);
+  padding-inline: var(--shell-nav-button-padding);
+  transition:
+    background-color var(--shell-nav-duration) var(--shell-nav-easing),
+    padding-inline var(--shell-nav-duration) var(--shell-nav-easing);
 }
 
 .navButton:hover {
@@ -217,8 +245,10 @@
 
 .navButtonIcon {
   display: flex;
+  align-items: center;
   justify-content: center;
-  inline-size: 24px;
+  flex-shrink: 0;
+  inline-size: var(--shell-nav-button-icon);
 }
 
 /*
@@ -293,12 +323,17 @@
   overflow: hidden auto;
   align-self: stretch;
   flex-direction: column;
-  gap: var(--acv-spacing-xx-small);
   grid-area: content;
   grid-column: 1 / -1;
   margin: 0;
   min-block-size: 0;
-  padding-block: var(--acv-spacing-x-small);
+  /*
+   * No padding above the first row and no gap between rows: the design stacks
+   * 32px items flush, and all the vertical rhythm in the list comes from the
+   * section headings - 12px before one, 24px of heading - which the kit already
+   * measures. A gap here would add to those and push every group out of step.
+   */
+  padding-block: 0;
   padding-inline: var(--acv-spacing-regular);
   scrollbar-width: none;
   /*
