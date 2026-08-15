@@ -23,7 +23,7 @@ vi.mock('./hooks/useResizable', () => ({
 
 vi.mock('./hooks/useDraggable', () => ({
   useDraggable: () => ({
-    position: { x: 120, y: 80 },
+    anchor: { right: 120, bottom: 80 },
     isDragging: false,
     handleMouseDown: handleDragMouseDown,
   }),
@@ -52,15 +52,20 @@ describe('StudioPanel', () => {
     screen.getByText('control-panel');
   });
 
-  it('applies draggable position and resizable dimensions to the panel', () => {
+  it('anchors the panel to the corner and applies the resizable dimensions', () => {
     const { container } = render(<StudioPanel />);
 
     const panel = container.querySelector<HTMLDivElement>('.studio-panel');
     expect(panel).not.toBeNull();
-    expect(panel?.style.left).toBe('120px');
-    expect(panel?.style.top).toBe('80px');
+    expect(panel?.style.right).toBe('120px');
+    expect(panel?.style.bottom).toBe('80px');
     expect(panel?.style.width).toBe('420px');
     expect(panel?.style.height).toBe('520px');
+    // Capped against the anchor, so the far edge keeps the same 16px gutter the
+    // near one has - this is what stops a desktop-sized panel running off a
+    // phone-width viewport.
+    expect(panel?.style.maxWidth).toBe('calc(100vw - 136px)');
+    expect(panel?.style.maxHeight).toBe('calc(100dvh - 96px)');
   });
 
   it('toggles collapse when the collapse button is clicked', () => {

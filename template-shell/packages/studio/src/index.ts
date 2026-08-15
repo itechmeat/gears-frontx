@@ -11,4 +11,4 @@
 
 export { StudioOverlay } from './StudioOverlay';
 export { StudioProvider, useStudioContext } from './StudioProvider';
-export type { Position, Size, StudioState } from './types';
+export type { Anchor, Size, StudioState } from './types';

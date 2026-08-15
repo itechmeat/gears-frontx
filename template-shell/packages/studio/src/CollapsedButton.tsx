@@ -15,7 +15,7 @@ interface CollapsedButtonProps {
 // @cpt-begin:cpt-frontx-flow-studio-devtools-drag-button:p1:inst-1
 export const CollapsedButton: React.FC<CollapsedButtonProps> = ({ toggleCollapsed }) => {
   const { t } = useTranslation();
-  const { position, isDragging, handleMouseDown } = useDraggable({
+  const { anchor, isDragging, handleMouseDown } = useDraggable({
     panelSize: BUTTON_SIZE,
     storageKey: STORAGE_KEYS.BUTTON_POSITION,
   });
@@ -42,8 +42,8 @@ export const CollapsedButton: React.FC<CollapsedButtonProps> = ({ toggleCollapse
     <div
       className="fixed z-[10000]"
       style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
+        right: `${anchor.right}px`,
+        bottom: `${anchor.bottom}px`,
       }}
     >
       <GlassmorphicButton

@@ -9,7 +9,7 @@ import { useDraggable } from './hooks/useDraggable';
 import { useResizable } from './hooks/useResizable';
 import { useStudioContext } from './StudioProvider';
 import { ControlPanel } from './sections/ControlPanel';
-import { STORAGE_KEYS } from './types';
+import { STORAGE_KEYS, STUDIO_VIEWPORT_MARGIN } from './types';
 import { STUDIO_COLLAPSE_TESTID } from './testIds';
 
 // @cpt-begin:cpt-frontx-dod-studio-devtools-panel-overlay:p1:inst-1
@@ -22,7 +22,7 @@ export const StudioPanel: React.FC = () => {
   // Initialize hooks
   const { size, isResizing: _isResizing, handleMouseDown: handleResizeMouseDown } = useResizable();
 
-  const { position, isDragging, handleMouseDown: handleDragMouseDown } = useDraggable({
+  const { anchor, isDragging, handleMouseDown: handleDragMouseDown } = useDraggable({
     panelSize: size,
     storageKey: STORAGE_KEYS.POSITION,
   });
@@ -41,13 +41,24 @@ export const StudioPanel: React.FC = () => {
         className="studio-portal-container fixed z-[99999] pointer-events-none"
       />
 
+      {/*
+        Anchored to the corner it was opened from, and capped so the far edge
+        keeps the same margin as the near one. The cap is what a narrow viewport
+        needs: the panel's stored size is a desktop size, and on a phone width
+        400px of panel does not fit beside a 16px gutter - without it the panel
+        would simply run off the inline-start edge. Expressed against the live
+        anchor rather than a constant, so a panel the user has dragged inward is
+        capped from where it actually sits.
+      */}
       <div
         className="studio-panel fixed z-[10000]"
         style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
+          right: `${anchor.right}px`,
+          bottom: `${anchor.bottom}px`,
           width: `${size.width}px`,
           height: `${size.height}px`,
+          maxWidth: `calc(100vw - ${anchor.right + STUDIO_VIEWPORT_MARGIN}px)`,
+          maxHeight: `calc(100dvh - ${anchor.bottom + STUDIO_VIEWPORT_MARGIN}px)`,
         }}
       >
       <Card className="h-full w-full flex flex-col overflow-hidden bg-white/20 dark:bg-black/50 backdrop-blur-md backdrop-saturate-[180%] border border-white/30 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">

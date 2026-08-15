@@ -1,6 +1,6 @@
 // @cpt-algo:cpt-frontx-algo-studio-devtools-event-routing:p1
 // @cpt-dod:cpt-frontx-dod-studio-devtools-persistence:p1
-import type { Position, Size } from '../types';
+import type { Anchor, Size } from '../types';
 
 /**
  * Studio UI Event Payloads
@@ -8,7 +8,7 @@ import type { Position, Size } from '../types';
  */
 
 export interface PositionChangedPayload {
-  position: Position;
+  position: Anchor;
 }
 
 export interface SizeChangedPayload {
@@ -16,7 +16,7 @@ export interface SizeChangedPayload {
 }
 
 export interface ButtonPositionChangedPayload {
-  position: Position;
+  position: Anchor;
 }
 
 /**
