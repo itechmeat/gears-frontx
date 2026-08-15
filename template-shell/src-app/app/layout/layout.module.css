@@ -351,14 +351,34 @@
   inline-size: var(--acv-icon-size-xs);
 }
 
+/*
+ * The `<button>` the kit clones into the item's content element - so this class
+ * lands on the very element the kit paints hover, active and the brand marker
+ * on. That makes every declaration here a potential override, and the cascade
+ * is stacked against us: the kit's sheet lives in `@layer ui` while a CSS module
+ * is unlayered, and unlayered wins over every layer no matter the specificity.
+ *
+ * So this resets nothing the kit is responsible for. The three properties it
+ * used to reset - `background`, `color` and the `font` shorthand - were each
+ * silently beating the kit: `background: none` held the row transparent through
+ * `:hover` and `[data-active]` alike (no hover, no selection), and `font:
+ * inherit` flattened the medium weight back to normal. Tailwind's Preflight
+ * already neutralises the UA button background, border and font, and it sits in
+ * `tw-base` - below `ui` - so the kit still paints over it. That is the whole
+ * reason `index.html` declares the layer order.
+ *
+ * What is left is what nothing else covers: a button centres its text, and this
+ * one is a navigation row.
+ */
 .itemButton {
   appearance: none;
-  background: none;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  inline-size: 100%;
+  /*
+   * The kit draws a navigation row at medium; this design draws it at regular
+   * and keeps the extra weight for the heading above it. It has to be set here,
+   * on the content element, rather than inherited from the row - the kit writes
+   * `font-weight` on this same element, and inheritance loses to a declaration.
+   */
+  font-weight: var(--acv-font-weight-regular);
   text-align: start;
 }
 
