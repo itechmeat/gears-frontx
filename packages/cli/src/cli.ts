@@ -38,6 +38,7 @@ import type { ReadContentItemsFn, WriteFileFn } from './scaffold/types';
 import type { BoundaryConflictEntry } from './scaffold/state';
 import type { ListContentOwnedFilesFn, ReadFileFn } from './manifest/types';
 import type { ProvenanceWriteFn } from './provenance/types';
+import type { AgentSkillDeployment, DeployAgentSkillFn } from './agent-skill/types';
 import type { ReadProvenanceRecordsFn } from './scaffold/materialize';
 import type { ReadTargetDirFn } from './commands/seed-repository';
 import type { ReadTargetPathStateFn } from './commands/add-template';
@@ -54,6 +55,11 @@ import { FsInventoryIndex } from './adapters/fs-inventory-index';
 import { FsContentStore } from './adapters/fs-content-store';
 import { createFsReadContentItemsFn } from './adapters/fs-read-content-items';
 import { createGithubFetchFn, resolveInventoryRoot } from './adapters/github-fetch';
+import {
+  createFsDeployAgentSkillFn,
+  resolveAgentSkillsDir,
+  resolveBundledAgentSkillDir,
+} from './adapters/fs-agent-skill';
 import { createLocalFetchFn } from './adapters/local-fetch';
 import { createFsReadTargetDirFn } from './adapters/fs-target-dir';
 import { createFsReadTargetPathStateFn } from './adapters/fs-target-path';
@@ -165,6 +171,7 @@ export interface CliDeps {
   writeProjectFile: WriteProjectFileFn;
   removeProjectFile: RemoveProjectFileFn;
   presentAndGetApproval: PresentAndGetApprovalFn;
+  deployAgentSkill: DeployAgentSkillFn;
 }
 
 /** Assembles the real, fs/network-backed dependency set for the `frontx` executable. */
@@ -193,6 +200,7 @@ export function createRealDeps(): CliDeps {
     writeProjectFile: createFsWriteProjectFileFn(),
     removeProjectFile: createFsRemoveProjectFileFn(),
     presentAndGetApproval: createInteractiveApproval(),
+    deployAgentSkill: createFsDeployAgentSkillFn(resolveBundledAgentSkillDir(), resolveAgentSkillsDir()),
   };
 }
 
@@ -278,13 +286,35 @@ function joinNoticeAndMessage(notice: string | undefined, message: string | unde
   return notice && message ? `${notice}\n${message}` : (notice ?? message);
 }
 
+/**
+ * The one line every successful acquisition adds about the agent-skill
+ * delivery (F10 §1.6, `cpt-frontx-dod-template-resolution-agent-skill-delivery`).
+ *
+ * A refused delivery reads as a warning and never changes the exit code: the
+ * template is in the inventory either way, and a silent refusal would leave the
+ * developer's agent host on a stale skill with nothing on screen saying so.
+ */
+function formatAgentSkillLine(deployment: AgentSkillDeployment | undefined): string | undefined {
+  if (!deployment) return undefined;
+  if (deployment.ok) return `Agent skill refreshed at ${deployment.targetDir}`;
+  return `Warning: agent skill not refreshed at ${deployment.targetDir} (${deployment.reason}): ${deployment.message}`;
+}
+
+function appendAgentSkillLine(message: string, deployment: AgentSkillDeployment | undefined): string {
+  const line = formatAgentSkillLine(deployment);
+  return line ? `${message}\n${line}` : message;
+}
+
 function formatInstallResult(result: InstallCommandResult): CommandOutcome {
   if (!result.ok) return { exitCode: EXIT_USER_ERROR, stderr: result.message };
   const discoveryLine =
     result.discovery && result.discovery.triggered
       ? ` (AI-extension discovery: ${result.discovery.errorCount ?? 0} error(s))`
       : '';
-  return { exitCode: EXIT_SUCCESS, stdout: `${result.message}${discoveryLine}` };
+  return {
+    exitCode: EXIT_SUCCESS,
+    stdout: appendAgentSkillLine(`${result.message}${discoveryLine}`, result.agentSkill),
+  };
 }
 
 /**
@@ -307,7 +337,7 @@ export async function runCommand(command: KnownCommand, args: string[], deps: Cl
     case 'install': {
       const [spec] = args;
       if (!spec) return { exitCode: EXIT_USER_ERROR, stderr: 'install requires a <spec> argument.' };
-      const result = await installCommand(spec, deps.inventory, deps.fetchFn);
+      const result = await installCommand(spec, deps.inventory, deps.fetchFn, undefined, deps.deployAgentSkill);
       return formatInstallResult(result);
     }
 
@@ -363,9 +393,9 @@ export async function runCommand(command: KnownCommand, args: string[], deps: Cl
       if (!name || !spec) {
         return { exitCode: EXIT_USER_ERROR, stderr: 'update-local requires <identity> and <spec> arguments.' };
       }
-      const result = await updateLocalCommand(name, spec, deps.inventory, deps.fetchFn);
+      const result = await updateLocalCommand(name, spec, deps.inventory, deps.fetchFn, deps.deployAgentSkill);
       if (!result.ok) return { exitCode: EXIT_USER_ERROR, stderr: result.message };
-      return { exitCode: EXIT_SUCCESS, stdout: result.message };
+      return { exitCode: EXIT_SUCCESS, stdout: appendAgentSkillLine(result.message, result.agentSkill) };
     }
 
     // dispatch -> cpt-frontx-flow-template-manifest-validate-for-publication (validateCommand)

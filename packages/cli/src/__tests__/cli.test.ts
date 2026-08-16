@@ -16,6 +16,9 @@ import type { ProvenanceRecord, ProvenanceWriteFn } from '../provenance/types';
 import type { ReadProvenanceRecordsFn } from '../scaffold/materialize';
 import type { TargetPathState } from '../commands/add-template';
 import type { ListContentOwnedFilesFn, ReadFileFn, TemplateManifest } from '../manifest/types';
+import type { AgentSkillDeployment } from '../agent-skill/types';
+
+const AGENT_SKILL_TARGET = '/home/dev/.claude/skills/frontx';
 
 // F18: cpt-frontx-flow-cli-invocation-run-command,
 // cpt-frontx-flow-cli-invocation-help,
@@ -88,6 +91,10 @@ function makeDeps(overrides: Partial<CliDeps> = {}): DepsFixture {
     writeProjectFile: vi.fn(async () => undefined),
     removeProjectFile: vi.fn(async () => undefined),
     presentAndGetApproval: vi.fn(async (): Promise<'approved' | 'declined'> => 'declined'),
+    // Delivery is a filesystem effect on the developer's agent host, so the
+    // dispatch fixture reports it as done without touching a disk; the cases
+    // that care about a refused delivery override this.
+    deployAgentSkill: vi.fn(async (): Promise<AgentSkillDeployment> => ({ ok: true, targetDir: AGENT_SKILL_TARGET })),
     ...overrides,
   };
 
@@ -175,6 +182,36 @@ describe('dispatch: install (cpt-frontx-flow-template-resolution-install)', () =
     expect(outcome.exitCode).toBe(EXIT_SUCCESS);
     expect(outcome.stdout).toContain('Installed foo');
     expect(deps.fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  // cpt-frontx-dod-template-resolution-agent-skill-delivery
+  it('reports the delivered agent-skill directory on one line below the install message', async () => {
+    const { deps, registerManifest } = makeDeps();
+    registerManifest('github:acme/foo@v1.0.0', makeManifest('foo', '1.0.0'));
+
+    const outcome = await run(['install', 'github:acme/foo@v1.0.0'], deps);
+
+    expect(outcome.stdout).toBe(`Installed foo@v1.0.0\nAgent skill refreshed at ${AGENT_SKILL_TARGET}`);
+  });
+
+  // cpt-frontx-dod-template-resolution-agent-skill-delivery: a refused
+  // delivery is a warning on a successful install, never a failed install.
+  it('exits success with a warning line when the agent-skill delivery is refused', async () => {
+    const { deps, registerManifest } = makeDeps({
+      deployAgentSkill: vi.fn(async (): Promise<AgentSkillDeployment> => ({
+        ok: false,
+        reason: 'write-failed',
+        targetDir: AGENT_SKILL_TARGET,
+        message: 'EACCES',
+      })),
+    });
+    registerManifest('github:acme/foo@v1.0.0', makeManifest('foo', '1.0.0'));
+
+    const outcome = await run(['install', 'github:acme/foo@v1.0.0'], deps);
+
+    expect(outcome.exitCode).toBe(EXIT_SUCCESS);
+    expect(outcome.stdout).toContain('Installed foo@v1.0.0');
+    expect(outcome.stdout).toContain(`Warning: agent skill not refreshed at ${AGENT_SKILL_TARGET} (write-failed)`);
   });
 
   it('exits user-error when the <spec> argument is missing', async () => {
@@ -395,6 +432,18 @@ describe('dispatch: update-local (cpt-frontx-flow-template-resolution-update-loc
     expect(outcome.exitCode).toBe(EXIT_SUCCESS);
     expect(outcome.stdout).toContain('Updated foo');
     expect(deps.fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  // cpt-frontx-dod-template-resolution-agent-skill-delivery
+  it('reports the delivered agent-skill directory on the update output too', async () => {
+    const { deps, registerManifest } = makeDeps();
+    registerManifest('github:acme/foo@v1.0.0', makeManifest('foo', '1.0.0'));
+    registerManifest('github:acme/foo@v2.0.0', makeManifest('foo', '2.0.0'));
+    await run(['install', 'github:acme/foo@v1.0.0'], deps);
+
+    const outcome = await run(['update-local', 'foo', 'github:acme/foo@v2.0.0'], deps);
+
+    expect(outcome.stdout).toBe(`Updated foo to v2.0.0\nAgent skill refreshed at ${AGENT_SKILL_TARGET}`);
   });
 
   it('exits user-error when required arguments are missing', async () => {

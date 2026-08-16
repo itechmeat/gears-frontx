@@ -9,6 +9,7 @@
   - [1.3 Actors](#13-actors)
   - [1.4 References](#14-references)
   - [1.5 Machine-Readable Listing Envelope](#15-machine-readable-listing-envelope)
+  - [1.6 Bundled Agent-Skill Delivery](#16-bundled-agent-skill-delivery)
 - [2. Actor Flows (CDSL)](#2-actor-flows-cdsl)
   - [Install Template by Versioned Source-Spec](#install-template-by-versioned-source-spec)
   - [List Local Template Inventory](#list-local-template-inventory)
@@ -23,6 +24,7 @@
   - [CLI Installs Template by Versioned Source-Spec](#cli-installs-template-by-versioned-source-spec)
   - [CLI Lists Local Template Inventory](#cli-lists-local-template-inventory)
   - [CLI Updates Local Inventory Entry Without Touching Scaffolded Projects](#cli-updates-local-inventory-entry-without-touching-scaffolded-projects)
+  - [CLI Delivers the Bundled Agent Skill on Every Successful Acquisition](#cli-delivers-the-bundled-agent-skill-on-every-successful-acquisition)
   - [Source-Spec Parser Rejects Invalid References](#source-spec-parser-rejects-invalid-references)
   - [Template Identity Comes From the Manifest and Collisions Are Rejected](#template-identity-comes-from-the-manifest-and-collisions-are-rejected)
 - [6. Acceptance Criteria](#6-acceptance-criteria)
@@ -81,6 +83,20 @@ This feature owns the concrete shape of the listing command's machine-readable f
 
 The key names are the contract; renaming one is a breaking change to the AI Tooling Framework's read path even though no compile-time edge would report it.
 
+### 1.6 Bundled Agent-Skill Delivery
+
+Acquiring a template makes the CLI usable; it does not make an agent in an arbitrary directory know that the CLI exists or how the scaffolding capability is driven. That knowledge is the AI Tooling Framework's kit (`cpt-frontx-feature-ai-project-scaffolding`), and until it is installed where the developer's agent host looks for capabilities, a session opened outside a FrontX project has no route from "build me a console" to this command surface. Acquisition is the one moment the developer is already reaching for FrontX tooling, so it is where the kit is delivered.
+
+**Bundled, not fetched.** The CLI distribution carries the kit's agent-skill files as package assets, copied in at build time from the kit package. Delivery therefore performs no network call, needs no second source-spec, and cannot leave the developer with a skill that disagrees with the CLI they are running: the two ship as one artifact. It also does not make the CLI depend on the kit at runtime or at compile time (CLI-1 stands) - the assets are inert files the build placed in the distribution.
+
+**Kit-root shaped.** The deployed directory is laid out exactly as an installed kit root: the kit's own `SKILL.md` at its top, `AGENTS.md` and `guidelines/` beside it, and the scaffolding capability at `skills/project-scaffolding/`. The scaffolding document addresses its siblings by their kit-root-relative paths, so a layout that flattened or renamed them would break every one of those references.
+
+**Replaced whole, every time.** Delivery removes whatever the target directory holds and writes the bundled set over it, on every successful acquisition rather than only on the first. A file an earlier CLI version shipped and this one dropped would otherwise stay behind and be read as part of the current skill, and a merge would leave the developer running two versions at once.
+
+**Never fatal.** The target directory belongs to the developer's agent host, not to the CLI, and it can be absent, read-only, or owned by another user. A delivery that fails reports the reason as a warning on an otherwise successful acquisition; it never turns an installed template into a failed install, because the template is in the inventory either way and refusing to say so would be a false report.
+
+**Located by the host, overridable by the caller.** The default target is the per-user agent-skill directory of the host the CLI is run under. An explicit environment override takes precedence, resolved against the working directory when given as a relative path - the same precedence rule the inventory root already follows (`cpt-frontx-adr-template-acquisition-and-location`), so a CI job or a test can redirect the delivery without changing any calling code.
+
 ## 2. Actor Flows (CDSL)
 
 User-facing interactions that start with an actor (human or external system) and describe the end-to-end flow of a use case. Each flow has a triggering actor and shows how the system responds to actor actions.
@@ -102,6 +118,7 @@ User-facing interactions that start with an actor (human or external system) and
 - The referenced subtree holds no content at the referenced version; install fails with an error before any inventory write
 - The fetched template declares an identity the local inventory already tracks for a different template address; install is rejected before any inventory write. A reference differing only in its version selector names the same template and is not a collision
 - The fetched template declares an identity that nests with an already-installed identity, one being a leading path segment sequence of the other; install is rejected before any inventory write, because the two are two inventory keys but not two directories
+- The bundled agent skill cannot be delivered - the distribution carries no bundled assets, or the target directory cannot be written; the template stays installed and the developer is told why the skill was not refreshed. A delivery failure never fails the install, because the template is in the inventory either way
 
 **Steps**:
 1. [x] - `p1` - Developer invokes the CLI install command with a versioned source-spec (`host:owner/repo[//subtree]@ref`) - `inst-install-invoke`
@@ -113,7 +130,10 @@ User-facing interactions that start with an actor (human or external system) and
 6. [x] - `p1` - **IF** the source registry is unreachable or returns an error: - `inst-install-reach-check`
    1. [x] - `p1` - **RETURN** connectivity error to developer; abort install with no inventory write - `inst-install-reach-fail`
 7. [x] - `p1` - CLI materializes the fetched content into the tracked local inventory under the identity the fetched template's manifest declares and the pinned version - `inst-install-materialize`
-8. [x] - `p1` - **RETURN** install success with the installed identity and pinned version to developer - `inst-install-success`
+8. [x] - `p1` - CLI replaces the contents of the per-user agent-skill directory with the agent-skill assets its own distribution bundles (§1.6), so the capability that drives this command surface is present wherever the developer's agent host looks for it - `inst-install-deliver-agent-skill`
+9. [x] - `p1` - **IF** the delivery cannot be performed, because the distribution carries no bundled assets or the target directory cannot be written: - `inst-install-deliver-check`
+   1. [x] - `p1` - **RETURN** install success carrying a delivery warning that names the target directory and the reason the delivery was refused; the installed inventory entry stands and the install is not failed - `inst-install-deliver-warn`
+10. [x] - `p1` - **RETURN** install success with the installed identity, pinned version, and the delivered agent-skill directory to developer - `inst-install-success`
 
 ### List Local Template Inventory
 
@@ -154,6 +174,7 @@ User-facing interactions that start with an actor (human or external system) and
 - Named template is not found in local inventory; CLI reports the error and makes no changes
 - Source registry is unreachable; CLI reports the error and leaves the existing inventory entry unchanged
 - The new source-spec resolves to a template declaring a different identity; CLI reports the error and leaves the existing inventory entry unchanged rather than substituting one template for another
+- The bundled agent skill cannot be delivered; the inventory entry stays updated and the developer is told why the skill was not refreshed, exactly as on install
 
 **Steps**:
 1. [x] - `p1` - Developer invokes the CLI update-local command with the template name and a new versioned source-spec - `inst-update-invoke`
@@ -167,7 +188,10 @@ User-facing interactions that start with an actor (human or external system) and
 7. [x] - `p1` - **IF** the source registry is unreachable or returns an error: - `inst-update-reach-check`
    1. [x] - `p1` - **RETURN** connectivity error to developer; leave the existing inventory entry unchanged - `inst-update-reach-fail`
 8. [x] - `p1` - CLI replaces the inventory store entry for the named template with the fetched content at the new pinned version - `inst-update-write`
-9. [x] - `p1` - **RETURN** update success with the template name and new pinned version to developer - `inst-update-success`
+9. [x] - `p1` - CLI replaces the contents of the per-user agent-skill directory with the agent-skill assets its own distribution bundles (§1.6), on the same terms as install: a developer who updates but never re-installs is otherwise left on whichever skill version the last install delivered - `inst-update-deliver-agent-skill`
+10. [x] - `p1` - **IF** the delivery cannot be performed: - `inst-update-deliver-check`
+   1. [x] - `p1` - **RETURN** update success carrying a delivery warning that names the target directory and the reason; the updated inventory entry stands and the update is not failed - `inst-update-deliver-warn`
+11. [x] - `p1` - **RETURN** update success with the template name, new pinned version, and the delivered agent-skill directory to developer - `inst-update-success`
 
 ## 3. Processes / Business Logic (CDSL)
 
@@ -313,6 +337,21 @@ The system **MUST** replace a named inventory entry with the newly fetched conte
 **Touches**:
 - Entities: `Template`
 
+### CLI Delivers the Bundled Agent Skill on Every Successful Acquisition
+
+- [x] `p1` - **ID**: `cpt-frontx-dod-template-resolution-agent-skill-delivery`
+
+The system **MUST** carry the AI Tooling Framework kit's agent-skill files in its own distribution as build-time assets — the kit's `SKILL.md`, `AGENTS.md`, its guidelines, and the scaffolding capability's document, checklist and verification driver, each at its kit-root-relative path — and **MUST**, after every successful install and every successful bounded local update, replace the contents of the per-user agent-skill directory with that bundled set, so the capability that drives this command surface is present wherever the developer's agent host looks for it. The target directory **MUST** default to the host's per-user agent-skill location and **MUST** yield to an explicit environment override, resolved against the working directory when relative. The delivery **MUST** replace rather than merge, so a file an earlier version shipped and this one dropped does not survive into the current skill, and **MUST** be idempotent: a second acquisition leaves the directory byte-identical to the first. A delivery that cannot be performed — no bundled assets in the distribution, or a target directory that cannot be written — **MUST** be reported as a warning naming the target directory and the refused thing, and **MUST NOT** fail the acquisition that triggered it, because the template is in the inventory either way and reporting otherwise would name a failure that did not happen.
+
+**Implements**:
+- `cpt-frontx-flow-template-resolution-install`
+- `cpt-frontx-flow-template-resolution-update-local`
+
+**Constraints**: `cpt-frontx-constraint-cli-template-independence`
+
+**Touches**:
+- CLI: install command, update-local command, bundled distribution assets
+
 ### Source-Spec Parser Rejects Invalid References
 
 - [x] `p1` - **ID**: `cpt-frontx-dod-template-resolution-spec-parser-rejection`
@@ -361,5 +400,10 @@ The system **MUST** take a template's identity from the identity its own manifes
 - [x] An entry whose stored manifest no longer satisfies the manifest contract is listed with no description and marked unreadable, distinguishably from an entry that conforms and declares none (`target`)
 - [ ] CLI update-local command replaces the named inventory entry with newly fetched content at the new pinned version, leaving every scaffolded project path unmodified
 - [ ] CLI update-local command reports a not-found error when the named template is absent from the local inventory
-- [ ] No template content is bundled in the CLI distribution (zero template assets or dependencies in the CLI package)
+- [x] A successful install replaces the contents of the per-user agent-skill directory with the distribution's bundled agent-skill assets, and reports the delivered directory on one line of the command's human output (`target`)
+- [x] A successful bounded local update delivers the bundled agent skill on the same terms as install (`target`)
+- [x] An explicit environment override redirects the delivery, taking precedence over the per-user default and resolving against the working directory when given as a relative path (`target`)
+- [x] A second acquisition re-delivers over the first, leaving the target directory holding exactly the bundled set and nothing an earlier delivery left behind (`target`)
+- [x] An acquisition whose agent-skill delivery fails still reports the template as installed or updated, at a success exit code, with the delivery reported as a warning naming the target directory and the reason (`target`)
+- [ ] No template content is bundled in the CLI distribution (zero template assets or dependencies in the CLI package). The bundled agent-skill assets of §1.6 are not template content: they are the solution-agnostic tooling kit, they name no template, and they carry no dependency on one
 - [ ] Inventory template state machine cycles UNRESOLVED → RESOLVED → INSTALLED → UPDATED under successful install and update flows
