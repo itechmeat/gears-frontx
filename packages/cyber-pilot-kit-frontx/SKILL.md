@@ -1,6 +1,6 @@
 ---
 name: frontx
-description: "FrontX ecosystem AI capabilities: MFE runtime substrate, GTS type system, API protocol surface, CLI scaffolding, and AI tooling kit. Routes a FrontX request to the capability that serves it. Solution-agnostic base only."
+description: "Entry point for any request naming FrontX or frontx - \"frontx, build me a console\", create or scaffold a FrontX project from what the developer wants built, apply or upgrade a FrontX template, add a screen or MFE to one, or understand the ecosystem's MFE runtime substrate, GTS type system, API protocol surface, CLI and package boundaries. Routes the request to the capability that serves it, and carries the preflight that installs whatever the request needs before it runs. Solution-agnostic base only."
 ---
 
 # FrontX AI Tooling Kit
@@ -28,6 +28,16 @@ from whether the working directory already holds applied templates - a
 If the request matches none of these, say so and name the capabilities above.
 Do not route it to the closest one; a capability applied to a request it does
 not serve produces a confident wrong answer.
+
+**Each capability above is a document installed under this kit root, and the
+route is not the capability.** `frontx_project_scaffolding` is
+`skills/project-scaffolding/SKILL.md`, relative to this document; the standing
+agent rules are `AGENTS.md` beside it, and the package-boundary guidelines are
+under `guidelines/`. Open the routed document and follow it - this table names
+which one serves the request and nothing more, so a request routed here and then
+answered from this page alone has been answered without the steps that serve it.
+That holds wherever this kit root sits: alongside the other Constructor Studio
+kits, or on its own as an agent skill the `frontx` CLI deployed.
 
 <!-- frontx:routing:end -->
 

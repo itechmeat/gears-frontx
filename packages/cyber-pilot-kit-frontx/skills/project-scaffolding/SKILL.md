@@ -24,12 +24,147 @@ document shipped becomes selectable immediately, with no change here.
   them, pre-empt them, or work around a refusal any of them issue.
 - **Write no project file yourself while applying.** Until the applications are
   finished, every file under the target directory is one the CLI wrote.
+- **Preparing the ground is allowed; doing it unasked is not.** Step 0 below runs
+  four commands this document would otherwise never run - the global CLI install,
+  `frontx install`, `mkdir` and `git init` - and each runs only after the closed
+  question offering it came back yes. That is the whole permitted set. Nothing
+  here creates, moves or deletes anything else outside what the CLI writes, and a
+  declined question is an answer to respect rather than a step to route around.
 - **No correction loop.** When a command exits non-zero, stop there. Relay the
   reason that command itself reported, unreinterpreted. Do not retry it, do not
   adjust the arguments and run it again, and do not run the next command.
 - **Refuse rather than guess.** When you cannot tell what to apply, say so and
   write nothing. A project the developer did not ask for is worse than no
   project.
+
+## How you put a question to the developer
+
+Every question raised anywhere in this document - preflight, a tie between
+candidates, an existing directory whose fate is the developer's to decide -
+follows the three rules below. They are stated once here and hold everywhere.
+
+**Ask in the language of the developer's own request.** A developer who wrote in
+Russian is thinking in Russian, and a question returned in English hands them
+this flow's uncertainty to translate before they can answer it. The identifiers
+inside the question - commands, template identities, paths, source-specs - are
+quoted verbatim in their own form and are never translated.
+
+**Ask closed, and recommend an answer.** Yes/no, or a short enumerated set with
+one option marked as the recommendation and one sentence saying why it is the
+recommendation. Where the host offers a structured question tool -
+`AskUserQuestion` in Claude Code, its equivalent elsewhere - the question goes
+through it rather than as prose the developer has to answer in free text. A
+closed question with a recommendation is answered in one keystroke; an open one
+costs the developer a sentence to compose and this flow a sentence to interpret,
+and the interpretation is where a flow starts acting on something the developer
+did not say.
+
+**Open questions are the last resort, and only where the option set cannot be
+enumerated.** A source-spec that appears nowhere on this machine and nowhere in
+the request is such a case: there is no set to offer, so the developer supplies
+it in full. Everything else this document asks about - which candidate to pick,
+whether to install the executable, whether to create the directory - has a
+knowable option set and is asked closed.
+
+## Step 0 - Preflight: establish the ground the rest of this document assumes
+
+Every step below assumes three things hold: the `frontx` executable is
+invocable, the inventory holds something worth matching an intent against, and
+the target directory exists. A session started in an arbitrary folder holds none
+of them by default, and the developer who typed "build me a console" is not
+required to have arranged them first. This step establishes each one - **asking
+before every command, under the rule above** - and changes nothing else.
+
+### 0.1 The executable
+
+```bash
+frontx list --json
+```
+
+Run this first. It is also Step 1's command, so a run that prints its one JSON
+line has already satisfied Step 1: carry that output forward rather than issuing
+the command twice.
+
+If the shell reports the binary as not found, ask whether to install it
+globally:
+
+```bash
+npm install -g @gears-frontx/cli@alpha
+```
+
+Closed question, recommended yes. **On a decline, stop there** - say the flow
+cannot continue without the executable and hand back that exact command as the
+manual step. Do not substitute `npx`, do not install it into the target
+directory instead, and do not carry on to any other sub-step: every command
+after this one is that binary.
+
+After an accepted install, re-run `frontx list --json`. **If it fails a second
+time, stop and relay what it reported** - a binary still missing after an install
+that exited zero is a machine-level problem, and retrying it is the correction
+loop the boundaries forbid.
+
+### 0.2 The inventory
+
+Parse the listing. This sub-step establishes only that there is something for
+Step 3 to match against; the matching itself stays Step 3's, and no template is
+selected here.
+
+If the template or templates the intent needs are absent from the listing, what
+to ask depends on whether a **source spec** is derivable from what is already in
+front of you:
+
+- **The developer named one in their request** - ask a closed question offering
+  `frontx install <that spec>`, recommended yes.
+- **The target directory already holds an applied project** - read
+  `<targetDir>/.frontx/provenance.json` and take the `sourceSpec` each record
+  carries. Those are the addresses this project was built from and they
+  re-resolve as they stand. Ask a closed question offering `frontx install` for
+  the ones the intent needs, recommended yes, quoting each spec in the question
+  so the developer reads what will be fetched before it is fetched.
+- **Neither** - and only now - ask an open question, because no option set exists
+  to offer: ask for the source spec in its `host:owner/repo[//subtree]@ref` form,
+  and say that no template can be selected until one is installed.
+
+Run each accepted install as its own command:
+
+```bash
+frontx install <source-spec>
+```
+
+A non-zero exit stops the flow under the no-correction-loop rule, exactly as a
+failed apply does. Then re-run `frontx list --json` and treat that output as
+Step 1's, so the plan is built from the selectable set that exists after the
+installs rather than the one that existed before them.
+
+### 0.3 The target directory
+
+- **It does not exist** - ask one closed question covering both actions,
+  recommended yes: create the directory and initialize a git repository in it.
+
+  ```bash
+  mkdir -p <targetDir> && git init <targetDir>
+  ```
+
+  On a decline, stop: `frontx seed` writes into a directory, and there is none.
+  A freshly initialized repository holds exactly `.git`, which Step 2's own rule
+  admits as seedable, so this pairing leaves the directory in the state the seed
+  expects.
+
+- **It exists, holds no git repository, and what it holds makes this a seed under
+  Step 2's rule** - ask a closed question offering `git init <targetDir>`,
+  recommended yes. A seed writes a whole repository, and a repository outside
+  version control is one the developer cannot review, revert or branch. On a
+  decline, carry on: the seed does not require git, and the developer has said
+  they want it this way.
+
+- **It exists and is already a git repository, or already holds applied
+  templates** - nothing to do here. Step 2 reads what it holds and decides
+  between seed and add.
+
+**Nothing in this step selects a template or writes a project file.** It makes
+the executable invocable, fills the inventory and makes the directory, and then
+hands over to Step 1 unchanged, which reads the selectable set as though it had
+been there all along.
 
 ## Step 1 - Read the selectable set
 
@@ -98,8 +233,10 @@ its answer cannot disagree:
 Work from the intent, the records from step 1, and the identities from step 2.
 
 1. **Nothing installed.** If `templates` is empty, refuse: selection has nothing
-   to choose from. Tell the developer to install a template first (`frontx
-   install <source-spec>`) and stop. Run no command that writes files.
+   to choose from. Reaching here means Step 0.2 already offered to install and
+   the developer declined, or supplied no spec to install from - so do not put
+   the same question again. Name `frontx install <source-spec>` as the manual
+   step and stop. Run no command that writes files.
 2. **Partition by declared description.** Only records carrying a `description`
    are candidates. Set the rest aside, keeping the two causes apart - you will
    report them, and they call for different actions:
