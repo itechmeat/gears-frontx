@@ -180,6 +180,18 @@ under VER-SCOPE-002 as such.
 - [ ] What a compact snapshot leaves out was not read as evidence of absence
 - [ ] No product source was edited on a snapshot-only signal
 
+### VER-STATE-005: Every Declared Interaction Was Driven Live, Keyboard Included
+**Severity**: CRITICAL
+
+- [ ] Each interaction the screen declares was performed against the running page -
+      clicks and keyboard-operated ones alike
+- [ ] Each one's effect was confirmed from what the page renders afterwards, not from
+      the application state behind it
+- [ ] No interaction was passed on the strength of a unit test: a test renders the
+      control fresh, and that fresh render hides a control which has stopped answering
+      external state
+- [ ] A control whose state updates while its rendering does not is recorded as a
+      defect, not as a passing interaction
 ---
 
 ## VER-CMP - Capture Comparison

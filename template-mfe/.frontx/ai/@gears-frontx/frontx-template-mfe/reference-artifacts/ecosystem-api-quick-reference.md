@@ -278,6 +278,34 @@ A screen that needs to READ the resolved scheme uses `useColorScheme()` from
 `@constructor/react-kit/color-scheme`; it must not `setColorScheme`, which
 `KitProviders` drives from the host's shared theme property.
 
+### A control driven by external state is controlled from its FIRST render
+
+A kit control whose value comes from anywhere outside the component - a slice, the
+query cache, a parent's state - must receive a defined `value` on the very first
+render and every render after. **Never pass `undefined` as the initial value of a
+prop you intend to control.** Use `''`, or whatever empty sentinel that entry's
+`public.md` names, and keep the prop defined for the component's whole life.
+
+The kit's controls follow the React/Base UI convention: a `value` that is `undefined`
+on the first render puts the component into UNCONTROLLED mode permanently, and it
+never leaves. It then keeps its own internal value and ignores the prop, so direct
+clicks appear to work - the internal state changes - while every external update
+lands in the store and repaints nothing.
+
+```tsx
+// WRONG - undefined on the first render locks the control uncontrolled for good
+<AcvSegment value={nps === null ? undefined : String(nps)} onValueChange={...} />
+
+// RIGHT - defined from the first render, empty sentinel for "nothing selected"
+<AcvSegment value={nps === null ? '' : String(nps)} onValueChange={...} />
+```
+
+The failure is invisible to a unit test, which renders the component fresh with the
+value already set, and invisible to a click-through walk, which drives the control the
+one way that still works. What exposes it is the keyboard or any other path that
+changes the state from outside the control, on a page that has already rendered - the
+workflow's step 7 drives exactly that.
+
 ### Verified in this scaffold
 
 Signatures below are read off the installed 0.269.0 declarations. Anything not listed

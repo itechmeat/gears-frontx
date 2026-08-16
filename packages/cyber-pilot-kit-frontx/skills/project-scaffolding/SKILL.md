@@ -725,6 +725,20 @@ that printed pid**, never by pattern, exactly as the rule above requires, and
 re-run the `lsof` until it prints nothing. The run is finished with a server when
 its ports come back, not when a kill command exits zero.
 
+**Gate - this walk takes no capture until the capture directory and the coverage
+file both exist.** Create them together, as the walk's opening act, and fill the
+coverage rows as each theme and screen is finished rather than all at the end.
+**No file, no capture.**
+
+The gate is why this is phrased as something to have before starting rather than
+something to do after finishing. One run read this entire step, drove a
+sixteen-call browser walk, wrote every screenshot into `/tmp`, and produced no
+coverage file at all - while the very same run wrote the design mapping its own
+gate demanded, because that obligation was a precondition and this one was a
+closing task. An obligation at the end of a long walk is the obligation that gets
+dropped, and the walk had by then run for hundreds of steps since this document
+was read.
+
 **Capture into a directory this run created, never a shared fixed path, and
 always inside the project under `.frontx/` rather than `/tmp`.** The captures are
 the evidence behind every claim the coverage file makes, and evidence a developer
@@ -734,6 +748,7 @@ capture, with this command:
 
 ```bash
 CAPDIR="<targetDir>/.frontx/verify-$(date +%Y%m%d-%H%M%S)"; mkdir -p "$CAPDIR"; echo "$CAPDIR"
+COVERAGE="<targetDir>/.frontx/verification-coverage.md"; printf '# Verification coverage\n\n' > "$COVERAGE"; echo "$COVERAGE"
 ```
 
 **Every capture path in this walk starts with `$CAPDIR`.** The batch heredocs
@@ -883,6 +898,18 @@ Per screen, against its own design frame:
    coverage file while the screen ships as finished has been reported instead of
    fixed. Only what the component library genuinely cannot express is recorded and
    closed, and its reason names the library's constraint - not the run's time.
+
+   **A run closes nothing as library-authoritative while reaching past the library
+   elsewhere.** Whatever technique the run has already used to escape the library
+   once - a local override, a screen-scoped variable, a wrapper - is a technique
+   available to every other gap, so a report that applies it to one deviation and
+   cites the library as immovable for the next is describing two different rules
+   as one. Either the technique is admissible here and the gap is closable, or it
+   was not admissible in the first place and the earlier use is the thing to
+   disclose. One run overrode a colour with a screen-local variable and, in the
+   same disclosure list, closed a control's height as fixed by the library -
+   leaving a reader unable to tell which of the two was the real constraint. Say
+   which rule the run is following, and follow the same one both times.
 5. **Check the one thing the frame cannot show: the screen inside its host.** A
    design frame holds the screen alone, so anything the build fixes to the
    viewport - a floating control, a sticky footer, navigation arrows - is
@@ -1123,6 +1150,18 @@ Carry the run out in this order:
    shadow root, so it times out on text that was on screen the whole time. When
    a wait is what is needed, take it from sub-step 7.
 
+   **Every interaction the screen declares is driven here, keyboard included, and
+   what is read back is the visible result.** A control operated by key - a digit
+   that selects, a letter that picks an option, Enter that advances - is exercised
+   in the browser like every click, and the reading is what the page now shows,
+   not what the store now holds. The two come apart: one run's digit keys updated
+   the state correctly and repainted nothing, so the selection appeared only after
+   a remount, and the run had 34 green unit tests over that same keyboard path.
+   **Unit tests cannot catch this class at all** - each test renders the component
+   fresh, which is precisely the remount that hides it. Only a live keypress
+   against a page that has already rendered shows a control that has stopped
+   reacting.
+
    **What a compact snapshot leaves out is not evidence of anything.** It
    enumerates the interactive nodes; static text, and the list structure around
    it, are absent from perfectly sound markup by construction. Judge static
@@ -1169,10 +1208,11 @@ Carry the run out in this order:
    than a blind spot to wait out again. If the runner hands back the promise
    instead of its value, set `timeoutMs` to 0 and re-issue the helper until it
    returns `found` or the wait budget is spent.
-8. **Write the coverage table to a file - on every run, without exception.** The
-   verification's deliverable is `<targetDir>/.frontx/verification-coverage.md`,
-   beside the project's provenance record, written **before the final report is
-   composed** and holding one row per registered theme, the byte-compare verdict
+8. **Complete the coverage table the gate above opened.** The file already exists
+   at `<targetDir>/.frontx/verification-coverage.md`, beside the project's
+   provenance record, and its rows were filled as the walk went; this sub-step is
+   where the table is finished and read back, **before the final report is
+   composed**. It holds one row per registered theme, the byte-compare verdict
    from sub-step 5.5, and one column per screen under verification.
    **It is written whether this document's walk did the verifying or the covering
    skill's own declared procedure did**: the file records what was verified, not

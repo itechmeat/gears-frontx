@@ -21,7 +21,10 @@ Before reading any `dist/*.d.ts` under `node_modules/@gears-frontx/`, read the
 signatures screens actually need (`createSlice`/`registerSlice`, `eventBus`,
 `useAppSelector`, `useApiQuery`/`useApiMutation` with `queryCache`, the endpoint-descriptor
 and mock shapes, the bridge's theme/language properties, and the augmentation-target
-table), verified against those same declarations.
+table), verified against those same declarations. Its UI-components section also carries
+the controlled-value rule every screen wiring a kit control to slice or cache state
+depends on - a control handed `undefined` on its first render stops answering that state
+for good, and the failure survives both unit tests and a click-through walk.
 
 ## One package per run
 
@@ -271,6 +274,21 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    to an app that already exists - never loads the base kit's scaffolding skill and so
    would otherwise stop at the mount check:
 
+   **Gate - no capture is taken until the capture directory and the coverage file both
+   exist.** Create them first, as this verification's opening act, and fill the rows as
+   each screen and theme is finished rather than all at the end:
+
+   ```bash
+   CAPDIR="<project>/.frontx/verify-$(date +%Y%m%d-%H%M%S)"; mkdir -p "$CAPDIR"; echo "$CAPDIR"
+   COVERAGE="<project>/.frontx/verification-coverage.md"; printf '# Verification coverage\n\n' > "$COVERAGE"; echo "$COVERAGE"
+   ```
+
+   **No file, no capture** - the same shape as step 5's design-mapping gate, and for the
+   same reason. A run that reached this step with the coverage file listed as a closing
+   task drove a full sixteen-call browser walk, wrote every screenshot to `/tmp`, and
+   produced no coverage file at all, while writing the design mapping step 5 demanded of
+   it before it began. What a long run finishes is what it could not start without.
+
    1. Start the servers in the background, record the PID, and stop them by that PID
       when verification ends - an orphaned dev server holds the port against the next
       run.
@@ -279,18 +297,26 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    3. Click the screen's menu entry and confirm `location.pathname` equals the route the
       extension declares - a screen reachable only by click, or mounting under a
       different path, passes a mount check and fails a user.
+   3.5. Drive every interaction the screen declares against the live page - keyboard
+      included - and read back what the page now SHOWS, not what the store now holds. A
+      digit that selects, a letter that picks, Enter that advances: press it in the
+      browser and confirm the visible selection changed. One run's digit keys wrote the
+      right value into the slice and repainted nothing, so the selection appeared only
+      after a remount; it shipped a dead control behind 34 green unit tests over that
+      same keyboard path. **Unit tests cannot catch this class** - each renders the
+      component fresh, and that fresh render is exactly the remount that hides it. A
+      keypress against an already-rendered page is the only thing that shows it.
    4. Repeat that check under every theme registered in `src-app/app/main.tsx`
       (`app.themeRegistry.register(...)`), resetting to a clean page load between themes
       and capturing the screen in each - a token that resolves in one theme and not the
       next is invisible without per-theme capture.
-   5. Record the outcome in `<project>/.frontx/verification-coverage.md`: one row per
-      screen and theme, naming what was opened and what was observed. A screen with no
-      row there counts as unverified regardless of what was on the display, and the file
-      is written on every run that verified anything - it is the record, not a summary
-      that the report can stand in for. Every screenshot it cites lives inside the
-      project under `.frontx/`, in a directory this run created, and never in `/tmp`:
-      the captures are the evidence behind each row, and `/tmp` is cleared out from
-      under a developer who tries to check one tomorrow.
+   5. Complete the coverage file the gate opened: one row per screen and theme, naming
+      what was opened and what was observed. A screen with no row there counts as
+      unverified regardless of what was on the display - the file is the record, not a
+      summary the report can stand in for. Every screenshot it cites lives in `$CAPDIR`
+      inside the project, never in `/tmp`: the captures are the evidence behind each
+      row, and `/tmp` is cleared out from under a developer who tries to check one
+      tomorrow.
    6. For a screen built from a design, add its per-region diff to that same entry, in the
       shape `figma-to-kit-mapping` rule 6 gives: one row per region of the design's target
       region, with what the design shows and the build lacks, what the build shows and the
