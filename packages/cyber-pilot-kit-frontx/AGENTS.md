@@ -54,6 +54,7 @@ description: "Agent navigation rules for FrontX ecosystem package boundaries, CL
 ## When a request is to create or extend a project
 
 - Route it first — the routing section of this kit's `SKILL.md` maps each kind of request (create, apply a held reference, add a unit, upgrade, validate) to the capability or command that serves it. Read the routing table there; it is the only copy, and restating it here is how the two fall out of step
+- **Every capability this kit routes to is a file, reached with the Read tool at its path under the kit root.** A `frontx_`-prefixed name is a resource id, not a registered skill: no Skill tool call resolves it, whatever name is guessed at, and the routing row names the path to read instead. The same holds for the skills a template activated under `.frontx/ai/<template-identity>/` — they are files the apply wrote, read from disk where they sit
 - **This kit describes no procedure for adding a unit inside ground an applied template owns** — no MFE package, no screen. That template owns its scaffold, its naming and its registration steps, and states them in the skills it activated under `.frontx/ai/<template-identity>/`. Writing such a procedure here would put solution knowledge in the solution-agnostic base and go stale the moment the template changed
 
 ## When working with MFEs

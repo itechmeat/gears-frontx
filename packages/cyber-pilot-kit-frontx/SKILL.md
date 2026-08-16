@@ -16,12 +16,22 @@ Read this before answering a FrontX request. Decide from the request itself and
 from whether the working directory already holds applied templates - a
 `.frontx/provenance.json` with records means it does.
 
+**Every entry in the "Served by" column is a document to open or a command to
+run, and none of them is a skill to invoke.** A `frontx_`-prefixed name is a
+resource this kit installs at a path under its own root: reach it with the Read
+tool at that path, relative to this document. None of them is registered with
+the agent host as a skill of its own, so a Skill tool call - or any other
+invoke-by-name mechanism - fails with an unknown-skill error, whatever name is
+guessed at. Two runs tried such a call before falling back to reading the file,
+and both fallbacks worked; the guess is simply not a step this table asks for.
+Take the path from the row and read it.
+
 | The request is to | Served by |
 |---|---|
-| Create a new project from what the developer wants to be built, holding no reference to start from | `frontx_project_scaffolding` - matches the stated intent against what the installed inventory declares, applies the chosen set through the `frontx` executable, and realizes the units the intent names |
-| Apply a specific template whose reference the developer already holds - `seed` into a new repository, `add` into an existing one | `frontx_project_scaffolding`, the same capability. Naming the template settles which template and settles nothing else: the executable still has to be invocable, the named template still has to be in the inventory, and the target directory still has to exist and be a repository the developer can revert. Its Step 0 establishes all three, asking before each; its Step 3 then takes the named reference as the selection instead of matching descriptions |
-| Add a unit inside ground an applied template already owns - one more screen, one more isolated UI unit | The skills that applied template activates in this project, discovered under `.frontx/ai/<template-identity>/`. The base kit adds no unit itself |
-| Move an applied template to a newer version | `frontx_project_scaffolding`'s Step 0 first - the executable and the project directory are its business here too - and then `frontx upgrade <projectRoot> <targetVersion>`, or its `--json` form, which emits the change set for review and reads a decision back before anything is applied |
+| Create a new project from what the developer wants to be built, holding no reference to start from | `frontx_project_scaffolding` - **read `skills/project-scaffolding/SKILL.md`**. It matches the stated intent against what the installed inventory declares, applies the chosen set through the `frontx` executable, and realizes the units the intent names |
+| Apply a specific template whose reference the developer already holds - `seed` into a new repository, `add` into an existing one | `frontx_project_scaffolding`, **the same document at `skills/project-scaffolding/SKILL.md`**. Naming the template settles which template and settles nothing else: the executable still has to be invocable, the named template still has to be in the inventory, and the target directory still has to exist and be a repository the developer can revert. Its Step 0 establishes all three, asking before each; its Step 3 then takes the named reference as the selection instead of matching descriptions |
+| Add a unit inside ground an applied template already owns - one more screen, one more isolated UI unit | The skills that applied template activates in this project - read them from disk under `.frontx/ai/<template-identity>/`, where the apply wrote them. The base kit adds no unit itself |
+| Move an applied template to a newer version | Step 0 of that same document, `skills/project-scaffolding/SKILL.md`, first - the executable and the project directory are its business here too - and then `frontx upgrade <projectRoot> <targetVersion>`, or its `--json` form, which emits the change set for review and reads a decision back before anything is applied |
 | Understand the ecosystem - runtime substrate, type system, API surface, package boundaries | This document and the guidelines it ships with |
 | Check that a template is publishable | The `frontx` executable directly - `frontx validate <templateDir>` |
 
@@ -43,13 +53,12 @@ If the request matches none of these, say so and name the capabilities above.
 Do not route it to the closest one; a capability applied to a request it does
 not serve produces a confident wrong answer.
 
-**Each capability above is a document installed under this kit root, and the
-route is not the capability.** `frontx_project_scaffolding` is
-`skills/project-scaffolding/SKILL.md`, relative to this document; the standing
-agent rules are `AGENTS.md` beside it, and the package-boundary guidelines are
-under `guidelines/`. Open the routed document and follow it - this table names
-which one serves the request and nothing more, so a request routed here and then
-answered from this page alone has been answered without the steps that serve it.
+**The route is not the capability.** This table names which document serves the
+request and nothing more, so a request routed here and then answered from this
+page alone has been answered without the steps that serve it: read the routed
+document and follow it. The kit's remaining resources sit under this same root -
+the standing agent rules at `AGENTS.md` beside this file, the package-boundary
+guidelines under `guidelines/` - and are reached the same way, by path.
 That holds wherever this kit root sits: alongside the other Constructor Studio
 kits, or on its own as an agent skill the `frontx` CLI deployed.
 
