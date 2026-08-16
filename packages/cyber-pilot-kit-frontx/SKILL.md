@@ -14,7 +14,22 @@ a FrontX request to the capability that serves it.
 
 Read this before answering a FrontX request. Decide from the request itself and
 from whether the working directory already holds applied templates - a
-`.frontx/provenance.json` with records means it does.
+`.frontx/provenance.json` with records means it does. **Decide that by looking,
+never by asking**: an empty or absent directory is a state the routed capability
+classifies under its own rule, and a developer who pointed at a directory has
+already told you which one they mean.
+
+**A request that names a URL carries part of itself there, so read that before
+you route.** An issue, a ticket, a spec: it states what is to be built, and which
+row below serves the request can turn on what it says. Reach it with a connected
+fetch capability if one addresses that host, and otherwise with `curl` from the
+shell, which needs nothing connected. If it answers unauthorized, a token by
+environment convention and the API form of a human-facing page are both worth an
+attempt before anyone is asked anything - the mechanics are written out once, in
+`skills/project-scaffolding/SKILL.md` under Step 0.1, and that is the copy to
+follow. **No connected tool for a host is not the same as no way to read it**: one
+run looked for such a tool, found none, and ended its turn asking the developer to
+paste an issue that a shell command would have fetched.
 
 **Every entry in the "Served by" column is a document to open or a command to
 run, and none of them is a skill to invoke.** A `frontx_`-prefixed name is a

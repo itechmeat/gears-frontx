@@ -84,14 +84,15 @@ knowable option set and is asked closed.
 
 ## Step 0 - Preflight: establish the ground the rest of this document assumes
 
-Every step below assumes three things hold: the `frontx` executable is
-invocable, the inventory holds something worth matching an intent against, and
-the target directory exists. A session started in an arbitrary folder holds none
-of them by default, and neither the developer who typed "build me a console" nor
-the one who typed "seed the `shell` template into `smoke-app`" is required to
-have arranged them first. This step establishes each one - **asking before every
-command, and asking in the language the developer's request was written in** -
-and changes nothing else.
+Every step below assumes four things hold: the request has been read in full,
+including whatever it points at; the `frontx` executable is invocable; the
+inventory holds something worth matching an intent against; and the target
+directory exists. A session started in an arbitrary folder holds none of them by
+default, and neither the developer who typed "build me a console" nor the one who
+typed "seed the `shell` template into `smoke-app`" nor the one who pasted a
+ticket link is required to have arranged them first. This step establishes each
+one - **asking before every command, and asking in the language the developer's
+request was written in** - and changes nothing else.
 
 **Step 0 runs before every `frontx` command that writes** - `seed`, `add` and
 `upgrade` - however the request reached this document. A named template reference
@@ -100,7 +101,67 @@ straight to `frontx seed`, into a directory it had itself just created, and
 handed back a project with provenance in it and no git repository around it,
 because nothing on that path ever asked.
 
-### 0.1 The executable
+### 0.1 The request's own references
+
+**A request that names a URL is a request whose content is partly at that URL** -
+an issue, a ticket, a spec. Read it before planning anything. It states what is to
+be built, and it usually defines the terms the request itself leaves short, so a
+plan composed without it is a plan composed from the sentence that pointed at it
+rather than from the thing pointed at.
+
+Reach it in this order, and stop at the first that answers:
+
+1. **A fetch capability the host has connected**, if one addresses that host.
+   Absence of such a capability is not absence of the document - it is one route
+   of several, and the next one needs nothing connected.
+2. **Otherwise a direct request from the shell**, which is always available:
+
+   ```bash
+   curl -sS -L -w '\n%{http_code}\n' '<the URL>'
+   ```
+
+3. **If that comes back unauthorized, look for a token by the environment's own
+   naming convention** - the host's name, uppercased, with `_API_TOKEN` appended:
+   `youtrack.constr.dev` gives `YOUTRACK_API_TOKEN`, `tracker.example.org` gives
+   `TRACKER_API_TOKEN`. A `401` or `403` is that answer, and so is a page of
+   sign-in markup returned at `200` where prose was expected. Check whether the
+   variable is set, and retry through it:
+
+   ```bash
+   curl -sS -L -H "Authorization: Bearer $<THAT_VARIABLE>" '<the URL>'
+   ```
+
+   **Pass the token by name and never by value.** Do not echo it, do not read it
+   into a report, do not write it into a file, and do not paste it into a command
+   line in place of the variable. The form above lets the shell expand it and
+   nothing prints it. A token that reaches a transcript is a token to rotate.
+4. **A human-facing page and an API are two addresses for one record.** Where the
+   page form wants a browser session, the same record is often served under an API
+   path a bearer token does reach: trackers commonly answer at an `/api/` path
+   taking the record's identifier, sometimes wanting the fields named. For a page
+   at `<host>/issue/<id>`, `<host>/api/issues/<id>?fields=summary,description` is
+   the form to derive and try. One attempt, derived from the URL you were given -
+   this is a convention several hosts share, not a rule they all follow, so move
+   on if it does not answer.
+
+**Ask only when every route above has failed**, and ask closed, in the language of
+the developer's request: offer pasting the content against proceeding without the
+reference, recommend the paste, and say what cannot be planned without it.
+
+**Do not ask what the reference itself answers.** The document defines the
+request's own terms - which components to build with, what a screen shows, what a
+named kit or library is - and a question about something the unread document
+states is a question the developer answers by telling you to go read it. Read
+first; then ask about what is genuinely left open.
+
+**Do not ask what the steps below settle either.** The target directory's state is
+Step 2's to classify, by its own rule and without a question: absent or empty is
+seedable, and putting "is this a fresh project?" to a developer who pointed at an
+empty directory asks them to do Step 2's job. One run stacked exactly that
+question onto an unread reference and finished its first turn having read nothing,
+planned nothing and written nothing.
+
+### 0.2 The executable
 
 ```bash
 frontx list --json
@@ -128,7 +189,7 @@ time, stop and relay what it reported** - a binary still missing after an instal
 that exited zero is a machine-level problem, and retrying it is the correction
 loop the boundaries forbid.
 
-### 0.2 The inventory
+### 0.3 The inventory
 
 Parse the listing. This sub-step establishes only that there is something for
 Step 3 to match against; the matching itself stays Step 3's, and no template is
@@ -167,7 +228,7 @@ failed apply does. Then re-run `frontx list --json` and treat that output as
 Step 1's, so the plan is built from the selectable set that exists after the
 installs rather than the one that existed before them.
 
-### 0.3 The target directory
+### 0.4 The target directory
 
 - **It does not exist** - ask one closed question, worded in the language of the
   developer's request, covering both actions and recommending yes: create the
@@ -281,11 +342,11 @@ units to realize - and nothing else.
 
 **A named reference no step 1 record carries is not a no-match refusal.** The
 developer named a template this machine does not have, so the open question is
-where to install it from, and that is Step 0.2's case: go back to it rather than
+where to install it from, and that is Step 0.3's case: go back to it rather than
 refusing under rule 5.
 
 1. **Nothing installed.** If `templates` is empty, refuse: selection has nothing
-   to choose from. Reaching here means Step 0.2 already offered to install and
+   to choose from. Reaching here means Step 0.3 already offered to install and
    the developer declined, or supplied no spec to install from - so do not put
    the same question again. Name `frontx install <source-spec>` as the manual
    step and stop. Run no command that writes files.
