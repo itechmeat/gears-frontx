@@ -48,13 +48,22 @@ document shipped becomes selectable immediately, with no change here.
 
 Every question raised anywhere in this document - preflight, a tie between
 candidates, an existing directory whose fate is the developer's to decide -
-follows the three rules below. They are stated once here and hold everywhere.
+follows the three rules below. Here is why each holds; the steps themselves
+restate them at the moment they apply. That repetition is deliberate: a rule
+read at the top of a document and needed forty lines later is a rule that gets
+read and not applied. One run read this section in full, routed correctly,
+asked before writing - and drafted its question in English against a request
+written in Russian.
 
-**Ask in the language of the developer's own request.** A developer who wrote in
-Russian is thinking in Russian, and a question returned in English hands them
-this flow's uncertainty to translate before they can answer it. The identifiers
-inside the question - commands, template identities, paths, source-specs - are
-quoted verbatim in their own form and are never translated.
+**Settle the language before anything else about the question, and it is the
+language of the developer's own request.** Language first, then the wording,
+the options and the recommendation - because a question composed in English and
+translated afterwards is a question already written, and the translating is the
+step that gets dropped. A developer who wrote in Russian is thinking in Russian,
+and a question returned in English hands them this flow's uncertainty to
+translate before they can answer it. The identifiers inside the question -
+commands, template identities, paths, source-specs - are quoted verbatim in
+their own form and are never translated.
 
 **Ask closed, and recommend an answer.** Yes/no, or a short enumerated set with
 one option marked as the recommendation and one sentence saying why it is the
@@ -81,7 +90,8 @@ the target directory exists. A session started in an arbitrary folder holds none
 of them by default, and neither the developer who typed "build me a console" nor
 the one who typed "seed the `shell` template into `smoke-app`" is required to
 have arranged them first. This step establishes each one - **asking before every
-command, under the rule above** - and changes nothing else.
+command, and asking in the language the developer's request was written in** -
+and changes nothing else.
 
 **Step 0 runs before every `frontx` command that writes** - `seed`, `add` and
 `upgrade` - however the request reached this document. A named template reference
@@ -100,8 +110,8 @@ Run this first. It is also Step 1's command, so a run that prints its one JSON
 line has already satisfied Step 1: carry that output forward rather than issuing
 the command twice.
 
-If the shell reports the binary as not found, ask whether to install it
-globally:
+If the shell reports the binary as not found, ask - worded in the language of
+the developer's request - whether to install it globally:
 
 ```bash
 npm install -g @gears-frontx/cli@alpha
@@ -131,17 +141,20 @@ of you. A named template is an identity, not an address: `shell` says which
 template and says nothing about where to fetch it from, so a named reference the
 inventory does not carry still needs one of the three answers below.
 
-- **The developer named one in their request** - ask a closed question offering
-  `frontx install <that spec>`, recommended yes.
+- **The developer named one in their request** - ask a closed question, worded in
+  the language of that request, offering `frontx install <that spec>`,
+  recommended yes.
 - **The target directory already holds an applied project** - read
   `<targetDir>/.frontx/provenance.json` and take the `sourceSpec` each record
   carries. Those are the addresses this project was built from and they
-  re-resolve as they stand. Ask a closed question offering `frontx install` for
-  the ones the intent needs, recommended yes, quoting each spec in the question
-  so the developer reads what will be fetched before it is fetched.
-- **Neither** - and only now - ask an open question, because no option set exists
-  to offer: ask for the source spec in its `host:owner/repo[//subtree]@ref` form,
-  and say that no template can be selected until one is installed.
+  re-resolve as they stand. Ask a closed question, worded in the language of the
+  developer's request, offering `frontx install` for the ones the intent needs,
+  recommended yes, quoting each spec verbatim in the question so the developer
+  reads what will be fetched before it is fetched.
+- **Neither** - and only now - ask an open question, worded like every other
+  question here in the language of the developer's request, because no option set
+  exists to offer: ask for the source spec in its `host:owner/repo[//subtree]@ref`
+  form, and say that no template can be selected until one is installed.
 
 Run each accepted install as its own command:
 
@@ -156,8 +169,9 @@ installs rather than the one that existed before them.
 
 ### 0.3 The target directory
 
-- **It does not exist** - ask one closed question covering both actions,
-  recommended yes: create the directory and initialize a git repository in it.
+- **It does not exist** - ask one closed question, worded in the language of the
+  developer's request, covering both actions and recommending yes: create the
+  directory and initialize a git repository in it.
 
   ```bash
   mkdir -p <targetDir> && git init <targetDir>
@@ -169,8 +183,9 @@ installs rather than the one that existed before them.
   expects.
 
 - **It exists, holds no git repository, and what it holds makes this a seed under
-  Step 2's rule** - ask a closed question offering `git init <targetDir>`,
-  recommended yes. A seed writes a whole repository, and a repository outside
+  Step 2's rule** - ask a closed question, worded in the language of the
+  developer's request, offering `git init <targetDir>`, recommended yes. A seed
+  writes a whole repository, and a repository outside
   version control is one the developer cannot review, revert or branch. On a
   decline, carry on: the seed does not require git, and the developer has said
   they want it this way.
@@ -235,7 +250,8 @@ its answer cannot disagree:
   seed nor add can use it. Report it and stop; do not offer add.
 - **holds any other entry, with no provenance** - this is someone's existing
   work, not a project this flow started. Do not plan a seed against it. Report
-  what was found and put the choice to the developer: a fresh directory to seed
+  what was found and put the choice to the developer, worded in the language of
+  their request: a fresh directory to seed
   into, or `frontx add` applied to the directory as it stands - saying, when you
   offer add, that it writes only the ground the template declares and refuses,
   naming the paths, if any of that ground already holds content, so the existing
@@ -304,12 +320,14 @@ refusing under rule 5.
    project: a plan built from them carries no seed and lays no ground, and a
    supplemental template contributes *to* a project, so there would be nothing
    for it to contribute to. That is the whole reason - do not claim the CLI would
-   refuse such a directory, because it would not. Ask the developer to install a
-   template that establishes a project, or to restate the intent. Write nothing.
+   refuse such a directory, because it would not. Ask the developer, in the
+   language of their request, to install a template that establishes a project or
+   to restate the intent. Write nothing.
 8. **A tie is a question, not a coin flip.** If two or more candidates match the
    project-establishing part indistinguishably, refuse: a choice is required.
    Name each tied candidate with its declared description and ask the developer
-   to choose. Guessing here writes a project they did not ask for.
+   to choose, worded in the language of their request. Guessing here writes a
+   project they did not ask for.
 9. **Further templates.** For each remaining part of the intent, select at most
    one candidate whose description matches it, skipping any candidate already in
    the plan. **A template contributes to a project once.** A part of the intent
@@ -317,9 +335,10 @@ refusing under rule 5.
    application - see Step 7 (Realize the units the intent names) below.
    **A tie here refuses exactly as an establishing tie does**: if two or more
    candidates match one supplemental part indistinguishably, refuse with a choice
-   required, naming that part of the intent and each tied candidate with its
-   description. This is not a lesser decision - the identity you pick is the one
-   the project carries in its provenance from then on.
+   required, worded in the language of the developer's request, naming that part
+   of the intent and each tied candidate with its description. This is not a
+   lesser decision - the identity you pick is the one the project carries in its
+   provenance from then on.
 10. **Drop what is already applied.** Remove from the plan every identity Step 2
    (Read what the target directory already holds) recorded, and record it as already applied. Re-applying an identity
    re-claims ground it already occupies, and the CLI's conflict check refuses the
@@ -333,6 +352,13 @@ refusing under rule 5.
     is residual.
 
 ## Step 4 - Present the plan before writing anything
+
+**Compose this presentation in the language of the developer's request, and
+settle that before writing a line of it.** It is the last thing they read before
+files are written and the thing they answer to let the writing start, so it is
+the one place where a wrong language costs them the most: the identifiers below
+stay verbatim, and the prose around them is theirs. One run reached exactly here
+having done everything else right, and asked in English.
 
 Show the developer, and do not proceed past a refusal:
 
