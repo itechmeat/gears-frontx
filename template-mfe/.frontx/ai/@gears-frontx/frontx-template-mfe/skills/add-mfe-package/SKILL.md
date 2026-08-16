@@ -83,8 +83,11 @@ to mount into an extension domain).
    `build:mfes`/`generate:mfe-manifests` once after the last one. Both tiers assume that
    workflow's step 0 - `npm install`, `build:package`, `build:packages` - already ran,
    before any of the authoring above. Then `npm run dev:all` and run that workflow's step
-   7 in full - mount check, declared route, menu pathname, every registered theme, and the
-   coverage file it names.
+   7 in full - mount check, declared route, menu pathname, every registered theme, the
+   per-region design diff when the screen came from a design, and the coverage file it
+   names. **A screen built from a design is not done at zero console errors**: that walk
+   passes a screen whose colours are exact and whose boxes are the wrong size, and step
+   7.6 is the leg that catches it.
 
 ## Boundaries
 

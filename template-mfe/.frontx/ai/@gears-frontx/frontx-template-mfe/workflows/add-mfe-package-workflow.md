@@ -285,7 +285,12 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
       next is invisible without per-theme capture.
    5. Record the outcome in `<project>/.frontx/verification-coverage.md`: one row per
       screen and theme, naming what was opened and what was observed. A screen with no
-      row there counts as unverified regardless of what was on the display.
+      row there counts as unverified regardless of what was on the display, and the file
+      is written on every run that verified anything - it is the record, not a summary
+      that the report can stand in for. Every screenshot it cites lives inside the
+      project under `.frontx/`, in a directory this run created, and never in `/tmp`:
+      the captures are the evidence behind each row, and `/tmp` is cleared out from
+      under a developer who tries to check one tomorrow.
    6. For a screen built from a design, add its per-region diff to that same entry, in the
       shape `figma-to-kit-mapping` rule 6 gives: one row per region of the design's target
       region, with what the design shows and the build lacks, what the build shows and the
@@ -295,10 +300,22 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
       off - and a region whose metrics cell stays empty keeps its row, because an empty cell
       is a measurement nobody took and has to look like one. The verdict is what decides
       whether the screen is done: a geometry difference (size variant, gap, gutter,
-      proportion, placement) is a defect to fix first, while a colour or intrinsic the kit
-      renders its own way is closed as kit-authoritative and disclosed. The comparison runs at
-      the design's native viewport in the design's own colour scheme, against the
-      target-region crop when the design source ships one.
+      proportion, placement, control width, how a selected state renders) is a defect to fix
+      first, while a colour or intrinsic the kit renders its own way is closed as
+      kit-authoritative and disclosed. **Fixed means changed in the build, not written in the
+      row** - a screen shipped as done over an open geometry row has reported the deviation
+      instead of correcting it, and closing one as kit-authoritative names the kit constraint
+      that forces it, never the run's remaining time. The comparison runs at the design's
+      native viewport in the design's own colour scheme, against the target-region crop when
+      the design source ships one, and it looks at the rendered capture beside the frame:
+      reading the design's tokens correctly is what makes this failure survivable, since a
+      screen can carry exact colours and control heights while its boxes are twice the
+      design's height.
+   7. Capture the screen inside the running shell as well, and look at what any
+      viewport-fixed element lands on - a floating control, a sticky footer, navigation
+      arrows. The design frame draws the screen alone, so a collision with the shell's own
+      floating furniture is invisible in every comparison against the frame and visible
+      immediately here.
 
    Wherever those steps shell out to a node-based CLI and parse its output, set
    `NODE_NO_WARNINGS=1` and filter stderr rather than taking the last line - node's

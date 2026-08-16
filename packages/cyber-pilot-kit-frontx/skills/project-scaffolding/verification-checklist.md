@@ -30,6 +30,7 @@ leaves every item under it to be established some other way and disclosed as suc
    - [VER-SCOPE - Declared Scope](#ver-scope---declared-scope)
    - [VER-STATE - State and Capture Evidence](#ver-state---state-and-capture-evidence)
    - [VER-CMP - Capture Comparison](#ver-cmp---capture-comparison)
+   - [VER-DESIGN - Comparison Against a Named Design](#ver-design---comparison-against-a-named-design)
    - [VER-ROUTE - Address and Routing](#ver-route---address-and-routing)
    - [VER-NUM - Published Figures](#ver-num---published-figures)
    - [VER-ENV - Run Environment](#ver-env---run-environment)
@@ -74,6 +75,10 @@ names what about this run put the category out of reach.
   addressable screens.
 - **VER-CMP** is N/A only where the host registers a single theme, so no capture
   pair exists to compare.
+- **VER-DESIGN** is N/A only where neither the request nor anything it referenced
+  named a design. A design that was named and not compared against is a FAIL, not
+  an N/A, and so is one the run could not retrieve: the reason it was out of reach
+  belongs in the report, and the screens stay unverified against it.
 - **VER-NUM** is N/A only where the run published no figure at all.
 
 Everything else applies whenever the browser walk ran. `N/A` is not available for a
@@ -195,6 +200,61 @@ under VER-SCOPE-002 as such.
 
 ---
 
+## VER-DESIGN - Comparison Against a Named Design
+
+### VER-DESIGN-001: Every Screen Was Compared Against Its Frame
+**Severity**: CRITICAL
+
+- [ ] Each implemented screen was rendered at the design frame's own viewport width
+      and captured there
+- [ ] The capture and the design frame were examined together as images, not
+      substituted by a token check, a DOM reading, or a component-name match
+- [ ] Every screen the design covers has such a comparison; a screen skipped is
+      named as skipped, and is not reported as verified against the design
+
+### VER-DESIGN-002: Each Difference Carries Both Numbers
+**Severity**: CRITICAL
+
+- [ ] Every geometry difference found is recorded with the design's value and the
+      built value as measurements - height, width, gap, padding, alignment, or the
+      share of its column a control occupies
+- [ ] No difference is recorded as a bare adjective; "looks close" and "slightly
+      off" are not measurements
+- [ ] A region whose numbers were never taken keeps its row and says so, because an
+      unmeasured region has to look like one
+
+### VER-DESIGN-003: Geometry Deviations Were Fixed, Not Filed
+**Severity**: CRITICAL
+
+- [ ] Every geometry deviation - element size, placement, alignment, control width,
+      how a selected state renders - was corrected before the screen was claimed done
+- [ ] A deviation left in place is closed only as beyond what the component library
+      can express, and its row names the library's constraint
+- [ ] No screen is reported as done over an open geometry deviation that was merely
+      written down; reporting a deviation is not fixing it
+
+### VER-DESIGN-004: The Screen Was Judged Inside Its Host
+**Severity**: NORMAL
+
+- [ ] Any element the build fixes to the viewport - floating control, sticky footer,
+      navigation arrows - was captured in the running shell and checked against the
+      host chrome it lands on
+- [ ] A collision with the host's own furniture is recorded as a defect, since the
+      design frame draws the screen alone and cannot show it
+
+### VER-DESIGN-005: The Comparison Reached the Coverage File
+**Severity**: CRITICAL
+
+- [ ] `<targetDir>/.frontx/verification-coverage.md` carries the comparison outcome
+      per screen: what was compared, at which viewport, each difference with both
+      values, and fixed-or-closed per difference
+- [ ] Every capture the comparison rests on is inside the project under `.frontx/`,
+      not in `/tmp` or any path cleared between sessions
+- [ ] A comparison that ran and left no row is recorded as not-audited, because a
+      reader has no way to check it
+
+---
+
 ## VER-ROUTE - Address and Routing
 
 ### VER-ROUTE-001: Each Screen Answers Its Own Declared Route
@@ -305,6 +365,9 @@ under VER-SCOPE-002 as such.
 
 - [ ] The coverage file exists **on disk** beside the project's provenance record, at
       the path the skill names, and that path was read to establish it
+- [ ] It exists for this run whichever procedure did the verifying - this checklist's
+      walk, or a covering skill's own declared one. Delegating the walk delegates the
+      procedure, never the record
 - [ ] It was written before the final report was composed
 - [ ] It holds one row per registered theme, including every theme recorded as not-opened
 - [ ] It holds the distinctness verdict and one states-captured column per screen under

@@ -725,8 +725,12 @@ that printed pid**, never by pattern, exactly as the rule above requires, and
 re-run the `lsof` until it prints nothing. The run is finished with a server when
 its ports come back, not when a kill command exits zero.
 
-**Capture into a directory this run created, never a shared fixed path.** Make
-it once, before the first capture, with this command:
+**Capture into a directory this run created, never a shared fixed path, and
+always inside the project under `.frontx/` rather than `/tmp`.** The captures are
+the evidence behind every claim the coverage file makes, and evidence a developer
+cannot open tomorrow is evidence nobody can check: `/tmp` is cleared out from
+under them, the project is kept and committed. Make it once, before the first
+capture, with this command:
 
 ```bash
 CAPDIR="<targetDir>/.frontx/verify-$(date +%Y%m%d-%H%M%S)"; mkdir -p "$CAPDIR"; echo "$CAPDIR"
@@ -847,6 +851,45 @@ against this runner rather than assumed:
   bullet already requires be what establishes the text landed where it was
   aimed. Where a control carries no testid, drive it by a reference from a
   snapshot taken at that point, and read it back the same way.
+
+**When the request named a design, the walk compares against it, and a screen is
+not done until its geometry matches.** A design the request or its referenced
+document names - a Figma link, exported frames, a spec carrying them - arrived as
+part of the request under Step 0.1, so this is not a check this document invented
+on a template's behalf: it is the intent's own acceptance condition, and the
+covering skill's declared checks run alongside it rather than instead of it.
+**Where the covering skill declares its own comparison procedure, follow that
+one** - it knows the design source, the component library and the shape of diff
+its template records - and take from here only what it leaves unsaid.
+
+Per screen, against its own design frame:
+
+1. **Render at the design's viewport.** Size the page to the frame's width before
+   capturing. A screen judged at whatever width the browser happened to open at
+   was judged against a layout the design never specified.
+2. **Put the capture beside the frame and look at the two together.** Not the DOM,
+   not the token values - the two images. Reading the tokens correctly is what
+   makes this failure survivable: one run took the design's colours and control
+   heights exactly, then rendered option cards as 82px two-line blocks where the
+   design showed a 54px single row with a right-aligned badge, and passed the
+   screen, because nothing in its walk ever compared the two pictures.
+3. **Measure whatever reads differently.** Take the design's value and the built
+   value as numbers - height, width, gap, padding, alignment, the share of its
+   column a control occupies - and write both down. "Looks close" is not a
+   comparison; 24px against the design's 48px is.
+4. **Fix the geometry rather than noting it.** Element sizes, placement,
+   alignment, control widths, how a selected state renders: these are the build's
+   to correct before the screen is claimed done. A deviation written into the
+   coverage file while the screen ships as finished has been reported instead of
+   fixed. Only what the component library genuinely cannot express is recorded and
+   closed, and its reason names the library's constraint - not the run's time.
+5. **Check the one thing the frame cannot show: the screen inside its host.** A
+   design frame holds the screen alone, so anything the build fixes to the
+   viewport - a floating control, a sticky footer, navigation arrows - is
+   positioned against host chrome the frame does not draw. Capture it in the
+   running shell and look at what it lands on. One run's viewport-fixed nav arrows
+   came to rest under the shell's own floating button, and no comparison against
+   the frame alone could have caught it.
 
 Carry the run out in this order:
 
@@ -1126,11 +1169,23 @@ Carry the run out in this order:
    than a blind spot to wait out again. If the runner hands back the promise
    instead of its value, set `timeoutMs` to 0 and re-issue the helper until it
    returns `found` or the wait budget is spent.
-8. **Write the coverage table to a file.** The verification's deliverable is
-   `<targetDir>/.frontx/verification-coverage.md`, beside the project's provenance
-   record, written **before the final report is composed** and holding one row per
-   registered theme, the byte-compare verdict from sub-step 5.5, and one column
-   per screen under verification:
+8. **Write the coverage table to a file - on every run, without exception.** The
+   verification's deliverable is `<targetDir>/.frontx/verification-coverage.md`,
+   beside the project's provenance record, written **before the final report is
+   composed** and holding one row per registered theme, the byte-compare verdict
+   from sub-step 5.5, and one column per screen under verification.
+   **It is written whether this document's walk did the verifying or the covering
+   skill's own declared procedure did**: the file records what was verified, not
+   which procedure verified it, so a run that handed the walk to a template's
+   skill still owes the record. One scaffolding run wrote this file and the next
+   one did not, which is how a deliverable becomes something nobody can rely on
+   finding.
+   **Where a design was compared against, the same file carries that outcome** -
+   per screen, what was compared, at which viewport, each geometry difference
+   found with the design's value against the built value, and for each one whether
+   it was fixed or closed as beyond the component library, with the constraint
+   named. A comparison that happened and left no row is a comparison the developer
+   has no way to audit. The table's own shape:
 
    ```markdown
    | Theme | Opened | Visually distinct from previous | <screen> states captured | <screen> states captured |
@@ -1178,10 +1233,15 @@ success over it would hand back the one problem this step exists to catch.
 
 ## Step 8 - Report
 
-**The completion test for this step is a file on disk.** Where step 7 performed a
-browser verification, this step is not complete until
-`<targetDir>/.frontx/verification-coverage.md` exists at that path and holds the
-coverage table. Check for it, by reading that path, before the report is
+**The completion test for this step is a file on disk.** Every run that realized a
+unit writes `<targetDir>/.frontx/verification-coverage.md`, and this step is not
+complete until that file exists at that path and holds the coverage table. **The
+obligation does not turn on which procedure ran the walk**: a run whose covering
+skill declared its own verification owes the record exactly as one that followed
+this document's, because the file answers what was verified rather than how. Two
+consecutive scaffolding runs split on this - the first wrote the file, the second
+verified and wrote nothing - and a deliverable produced on alternate runs is one
+no reader can rely on. Check for it, by reading that path, before the report is
 composed. A table written into the report, a table shown in the conversation, or
 a table the driver printed and nobody kept is not that file and does not stand in
 for it: the developer keeps the project, not the transcript, and the coverage
