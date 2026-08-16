@@ -1,12 +1,19 @@
 ---
 name: frontx-project-scaffolding
-description: "Applies when a developer wants a new FrontX project created from what they say they want built, rather than from a reference they already hold - for example a console with a stated number of screens. Matches the stated intent against what the locally installed inventory declares about itself, drives the frontx executable to apply the chosen set, and then realizes each unit the intent names inside the applied ground."
+description: "Applies whenever a FrontX project is to be created or extended by applying a template - from what the developer says they want built, such as a console with a stated number of screens, or from a template reference they name outright. Establishes the executable, the inventory and the target directory first, asking before each. Matches the stated intent against what the locally installed inventory declares about itself, or takes a named reference as the selection, drives the frontx executable to apply the chosen set, and then realizes each unit the intent names inside the applied ground."
 ---
 
 # Create a FrontX Project from a Stated Intent
 
 The developer says what they want built. This capability delivers a project that
 holds it.
+
+**A developer who names the template outright arrives here too, and by the same
+door.** Naming it answers which template to apply and answers nothing else - the
+executable, the inventory entry behind that name and the target directory are
+still whatever the session happens to have, and Step 0 is where they are
+established. Only the selection changes: Step 3 takes the named reference rather
+than matching descriptions, and every step around it runs unaltered.
 
 Nothing in this document knows the name of any template. Everything it chooses
 among is read from the inventory installed on this machine, at the moment of
@@ -71,9 +78,17 @@ knowable option set and is asked closed.
 Every step below assumes three things hold: the `frontx` executable is
 invocable, the inventory holds something worth matching an intent against, and
 the target directory exists. A session started in an arbitrary folder holds none
-of them by default, and the developer who typed "build me a console" is not
-required to have arranged them first. This step establishes each one - **asking
-before every command, under the rule above** - and changes nothing else.
+of them by default, and neither the developer who typed "build me a console" nor
+the one who typed "seed the `shell` template into `smoke-app`" is required to
+have arranged them first. This step establishes each one - **asking before every
+command, under the rule above** - and changes nothing else.
+
+**Step 0 runs before every `frontx` command that writes** - `seed`, `add` and
+`upgrade` - however the request reached this document. A named template reference
+shortens Step 3 and shortens nothing here. One session took such a reference
+straight to `frontx seed`, into a directory it had itself just created, and
+handed back a project with provenance in it and no git repository around it,
+because nothing on that path ever asked.
 
 ### 0.1 The executable
 
@@ -109,9 +124,12 @@ Parse the listing. This sub-step establishes only that there is something for
 Step 3 to match against; the matching itself stays Step 3's, and no template is
 selected here.
 
-If the template or templates the intent needs are absent from the listing, what
-to ask depends on whether a **source spec** is derivable from what is already in
-front of you:
+If the template or templates the request needs are absent from the listing -
+whether an intent implies them or the developer named one outright - what to ask
+depends on whether a **source spec** is derivable from what is already in front
+of you. A named template is an identity, not an address: `shell` says which
+template and says nothing about where to fetch it from, so a named reference the
+inventory does not carry still needs one of the three answers below.
 
 - **The developer named one in their request** - ask a closed question offering
   `frontx install <that spec>`, recommended yes.
@@ -231,6 +249,24 @@ its answer cannot disagree:
 ## Step 3 - Select what to apply
 
 Work from the intent, the records from step 1, and the identities from step 2.
+
+**A template the developer named is the selection, and nothing below re-derives
+it.** Where the request holds a reference rather than only an intent - "seed the
+`shell` template into `smoke-app`" - the matching is already settled: take the
+step 1 record whose `name` is that reference and put it in the plan, as the seed
+when step 2 found no applied template and as a further template otherwise. Rules
+4 through 9 exist to find a match where none was given, and running them over a
+named reference risks selecting some other template whose description happens to
+read better than the named one's - which is selecting a template against the
+developer's own words. Rule 1 and rules 10 and 11 still apply, and so does every
+step around this one. The rules below then govern whatever the request states
+*beyond* the named template - further templates it also names or implies, and the
+units to realize - and nothing else.
+
+**A named reference no step 1 record carries is not a no-match refusal.** The
+developer named a template this machine does not have, so the open question is
+where to install it from, and that is Step 0.2's case: go back to it rather than
+refusing under rule 5.
 
 1. **Nothing installed.** If `templates` is empty, refuse: selection has nothing
    to choose from. Reaching here means Step 0.2 already offered to install and

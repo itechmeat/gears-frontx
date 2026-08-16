@@ -19,11 +19,25 @@ from whether the working directory already holds applied templates - a
 | The request is to | Served by |
 |---|---|
 | Create a new project from what the developer wants to be built, holding no reference to start from | `frontx_project_scaffolding` - matches the stated intent against what the installed inventory declares, applies the chosen set through the `frontx` executable, and realizes the units the intent names |
-| Apply a specific template whose reference the developer already holds | The `frontx` executable directly - `frontx seed` for a new repository, `frontx add` for an existing one. This path is unchanged and needs no capability here |
+| Apply a specific template whose reference the developer already holds - `seed` into a new repository, `add` into an existing one | `frontx_project_scaffolding`, the same capability. Naming the template settles which template and settles nothing else: the executable still has to be invocable, the named template still has to be in the inventory, and the target directory still has to exist and be a repository the developer can revert. Its Step 0 establishes all three, asking before each; its Step 3 then takes the named reference as the selection instead of matching descriptions |
 | Add a unit inside ground an applied template already owns - one more screen, one more isolated UI unit | The skills that applied template activates in this project, discovered under `.frontx/ai/<template-identity>/`. The base kit adds no unit itself |
-| Move an applied template to a newer version | `frontx upgrade <projectRoot> <targetVersion>` directly, or its `--json` form, which emits the change set for review and reads a decision back before anything is applied |
+| Move an applied template to a newer version | `frontx_project_scaffolding`'s Step 0 first - the executable and the project directory are its business here too - and then `frontx upgrade <projectRoot> <targetVersion>`, or its `--json` form, which emits the change set for review and reads a decision back before anything is applied |
 | Understand the ecosystem - runtime substrate, type system, API surface, package boundaries | This document and the guidelines it ships with |
 | Check that a template is publishable | The `frontx` executable directly - `frontx validate <templateDir>` |
+
+**No `frontx` command that writes is reached straight from this table.** `seed`,
+`add` and `upgrade` each write into a directory the developer keeps, and every
+route ending in one of them passes through `frontx_project_scaffolding`'s Step 0
+first, which establishes the executable, the inventory and the target directory
+and puts a closed question before every command it runs. Only the reading
+commands - `list`, `validate`, `help` - are invoked directly from a route here.
+
+**A request that names its template is not an exception to that.** Reading it as
+one is the failure this rule exists to stop: a session asked to scaffold a named
+template into a new folder took the reference as licence to skip the capability,
+ran `frontx seed` into a directory it had itself just created, asked nothing, and
+handed back a project with provenance in it and no git repository around it. The
+name answers "which template". It answers none of what the preflight asks.
 
 If the request matches none of these, say so and name the capabilities above.
 Do not route it to the closest one; a capability applied to a request it does
