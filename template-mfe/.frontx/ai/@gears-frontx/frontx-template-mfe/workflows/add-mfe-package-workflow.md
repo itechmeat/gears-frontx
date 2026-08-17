@@ -289,6 +289,27 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
    produced no coverage file at all, while writing the design mapping step 5 demanded of
    it before it began. What a long run finishes is what it could not start without.
 
+   **The same gate opens the checklist rows.** Before the first capture, append to
+   `$COVERAGE` one open row per check this step declares - mount, declared route, menu
+   pathname, every registered theme, every declared interaction including the
+   keyboard-operated ones, and, for a screen built from a design, one row per region of
+   the diff:
+
+   ```markdown
+   | Check | Verdict | Evidence |
+   |---|---|---|
+   | <check this step declares> | (open) | |
+   ```
+
+   Where the base kit's `verification-checklist.md` is installed alongside this bundle,
+   read it in full first and transcribe its category ids into that block as well, in its
+   own order. The rows exist so the read produces something: a run that wrote the
+   coverage file and never opened the checklist left every category without a verdict and
+   steered its walk by nothing, and a row list written from memory rather than from the
+   file shows up immediately as ids that file does not carry. Fill each verdict as the
+   walk establishes it; one still reading `(open)` at the end is a check this run did not
+   make, and says so.
+
    1. Start the servers in the background, record the PID, and stop them by that PID
       when verification ends - an orphaned dev server holds the port against the next
       run.
@@ -323,7 +344,11 @@ failure it ever caught per unit was local to the new package (a TS2322 in its ow
       design does not, two or three box metrics plus two or three region-level proportions as
       design value vs built value, and a verdict per difference. Both difference columns are
       filled - the "extra in the build" one is what catches a component default nobody turned
-      off - and a region whose metrics cell stays empty keeps its row, because an empty cell
+      off. **A region that is a row of repeated cells is measured as a row**: cell widths
+      equal to one another, gaps equal, the row's edges flush with the content column's, and
+      the end labels anchored to those same edges - every cell can measure right while the
+      row reads wrong, since those are properties of the series that no per-cell metric
+      carries. A region whose metrics cell stays empty keeps its row, because an empty cell
       is a measurement nobody took and has to look like one. The verdict is what decides
       whether the screen is done: a geometry difference (size variant, gap, gutter,
       proportion, placement, control width, how a selected state renders) is a defect to fix

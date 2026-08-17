@@ -306,6 +306,38 @@ one way that still works. What exposes it is the keyboard or any other path that
 changes the state from outside the control, on a page that has already rendered - the
 workflow's step 7 drives exactly that.
 
+### `AcvSelect` does not fill its container - every other input does
+
+**This is the single most recurrent defect across every scaffolding run of this
+template so far**: it shipped in one run, was fixed in the next, and came back in
+the one after that. It is not a hypothetical.
+
+Kit text inputs stretch to their container, so a screen that sets no width gets a
+full-width control and reads as if width needs no thought. `AcvSelect` does not
+follow that: its own intrinsic width wins, and a select dropped into a 740px
+column renders around 370px - half - while every field above it fills the row. The
+screen then looks broken in exactly one place, and the cause looks like a layout
+bug anywhere but the select.
+
+```tsx
+// WRONG - inherits the kit's intrinsic width, ~370px in a 740px column
+<AcvSelect value={tenure} onValueChange={...} items={items} />
+
+// RIGHT - the screen states the width it wants
+<AcvSelect className={styles.fullWidth} value={tenure} onValueChange={...} items={items} />
+```
+
+```css
+/* one shared class, applied to every control the design shows filling its column */
+.fullWidth { inline-size: 100%; }
+```
+
+Set it from the screen's own stylesheet, on the screen's own class - this is the
+screen stating its layout, not a restyle of the component's internals, and it stays
+on the right side of the "do not repaint a kit component" rule. When the design
+shows a column of controls at one width, give them one shared class rather than a
+width per control: the recurrence above is what a per-control decision produces.
+
 ### Verified in this scaffold
 
 Signatures below are read off the installed 0.269.0 declarations. Anything not listed

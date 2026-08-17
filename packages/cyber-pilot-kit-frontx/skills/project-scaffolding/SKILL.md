@@ -725,10 +725,12 @@ that printed pid**, never by pattern, exactly as the rule above requires, and
 re-run the `lsof` until it prints nothing. The run is finished with a server when
 its ports come back, not when a kill command exits zero.
 
-**Gate - this walk takes no capture until the capture directory and the coverage
-file both exist.** Create them together, as the walk's opening act, and fill the
-coverage rows as each theme and screen is finished rather than all at the end.
-**No file, no capture.**
+**Gate - this walk takes no capture until three things exist: the capture
+directory, the coverage file, and, inside that file, one empty row per category
+of `verification-checklist.md`, transcribed from the checklist itself.** Create
+them together, as the walk's opening act, and fill the rows as each theme,
+screen and category is finished rather than all at the end. **No file, no
+capture.**
 
 The gate is why this is phrased as something to have before starting rather than
 something to do after finishing. One run read this entire step, drove a
@@ -738,6 +740,19 @@ gate demanded, because that obligation was a precondition and this one was a
 closing task. An obligation at the end of a long walk is the obligation that gets
 dropped, and the walk had by then run for hundreds of steps since this document
 was read.
+
+**The category rows are what make the checklist read actually happen.** Step 7's
+instruction to read `verification-checklist.md` in full, further up, is the same
+kind of obligation that has been dropped before: the next run wrote the coverage
+file this gate demanded and still never opened the checklist, so no category ever
+got a verdict and the walk was steered by nothing. A read that must produce
+structure is a read that happens, because the row list cannot be written without
+it - the ids are in that file and nowhere else, this document deliberately does
+not restate them, and a guessed id is visible on sight. Transcribe the categories
+in the order the checklist lists them, leave each verdict empty, and fill them as
+the walk establishes them. **A row list that came from memory rather than from
+the file is the failure this gate exists to stop**, and it is self-reporting: a
+category the checklist carries and the row list lacks says the file was not open.
 
 **Capture into a directory this run created, never a shared fixed path, and
 always inside the project under `.frontx/` rather than `/tmp`.** The captures are
@@ -750,6 +765,24 @@ capture, with this command:
 CAPDIR="<targetDir>/.frontx/verify-$(date +%Y%m%d-%H%M%S)"; mkdir -p "$CAPDIR"; echo "$CAPDIR"
 COVERAGE="<targetDir>/.frontx/verification-coverage.md"; printf '# Verification coverage\n\n' > "$COVERAGE"; echo "$COVERAGE"
 ```
+
+Then, having read `verification-checklist.md`, append the category block to that
+same file - one line per category it declares, in its order, each verdict left
+open until the walk decides it:
+
+```markdown
+## Checklist categories
+
+| Category | Verdict | Evidence |
+|---|---|---|
+| <the checklist's first category id> | (open) | |
+| <the next, in the checklist's own order> | (open) | |
+```
+
+Step 8's report walks these same ids and is filled from this block, so a
+category still reading `(open)` when the report is composed is a category this
+run did not establish - which is the honest thing for it to say, and the reason
+the rows start open rather than blank.
 
 **Every capture path in this walk starts with `$CAPDIR`.** The batch heredocs
 below are quoted (`<<'JSON'`), which is what keeps their escaped quotes intact
@@ -892,6 +925,16 @@ Per screen, against its own design frame:
    value as numbers - height, width, gap, padding, alignment, the share of its
    column a control occupies - and write both down. "Looks close" is not a
    comparison; 24px against the design's 48px is.
+
+   **A row of repeated cells is measured as a row, not as one cell.** Scales,
+   segmented controls, option grids, anything the design lays out as a repeating
+   series: check that the cells are equal in width to each other, that the gaps
+   between them are equal, that the row's left and right edges sit flush with the
+   edges of the content column around it, and that whatever labels the ends -
+   captions, min/max legends - is anchored to those same edges. Each cell can
+   measure correctly on its own while the row is visibly wrong, because these
+   four are properties of the series and not of any member of it, and a
+   per-element check cannot see any of them.
 4. **Fix the geometry rather than noting it.** Element sizes, placement,
    alignment, control widths, how a selected state renders: these are the build's
    to correct before the screen is claimed done. A deviation written into the

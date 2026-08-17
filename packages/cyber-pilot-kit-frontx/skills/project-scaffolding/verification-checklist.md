@@ -234,6 +234,10 @@ under VER-SCOPE-002 as such.
       off" are not measurements
 - [ ] A region whose numbers were never taken keeps its row and says so, because an
       unmeasured region has to look like one
+- [ ] Every row of repeated cells - scale, segmented control, option grid - was
+      measured as a row: cell widths equal to each other, gaps equal, the row's edges
+      flush with the content column's edges, and the end labels anchored to those
+      edges. These are properties of the series, and a per-cell check cannot see them
 
 ### VER-DESIGN-003: Geometry Deviations Were Fixed, Not Filed
 **Severity**: CRITICAL
