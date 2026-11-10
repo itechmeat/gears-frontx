@@ -109,12 +109,13 @@ toast twice, once per viewport. If a subtree genuinely needs its own
 viewport, give it an isolated manager via `createToastManager()` and
 pass that as its `Toaster`'s `toastManager`.
 
-Without a `container`, the viewport portals to the nearest
+Without a `container`, a viewport rendered inside another kit popup stays
+in that popup's portal; otherwise it portals to the nearest
 `PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `Toaster`'s `container` or wrap the
-subtree in `PortalContainerProvider`, or toasts render with the root theme
-- same contract as `Dialog`, `Select`, `DropdownMenu`, and `Tooltip`.
+subtree in `PortalContainerProvider`, or toasts render with the root
+theme: same contract as `Dialog`, `Select`, `DropdownMenu`, and `Tooltip`.
 Inside a shadow root (an MFE screen), the viewport must be given a
 container inside that shadow root - through `PortalContainerProvider` or
 `container` - or it renders outside the shadow root: unstyled, and an

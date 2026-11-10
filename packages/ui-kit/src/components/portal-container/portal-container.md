@@ -16,13 +16,28 @@ Every kit overlay that portals a popup reads it: `AlertDialogContent`,
 order:
 
 1. the overlay's own `container` prop, when the caller passed one (an
-   explicit `null` counts: the caller set it on purpose),
-2. the nearest `PortalContainerProvider`'s value,
-3. Base UI's own default, `<body>`.
+   explicit `null` counts: the caller set it on purpose, and Base UI then
+   waits for a target instead of falling through),
+2. Base UI's parent portal, when the overlay renders inside another kit
+   popup, so a nested overlay stays in the popup that opened it. Every kit
+   popup wraps its children in `PortalScope` to arm this step, and a
+   `PortalContainerProvider` nested inside that popup resets it, so that
+   provider wins again for the overlays below it,
+3. the nearest `PortalContainerProvider`'s value,
+4. Base UI's own default, `<body>`.
+
+Menus add one step in front: a submenu first inherits the container its
+parent menu content resolved (`DropdownMenuContent` hands the container it
+resolved to every `DropdownMenuSubContent` below it, so a theme passed to
+the first-level popup holds in its submenus), then follows the order
+above. One known limit: `NavigationMenuContent` mounts through a raw
+`createPortal` into the viewport, outside the popup's React subtree, so
+overlays inside `NavigationMenuContent` skip step 2 and go
+provider-then-body.
 
 `usePortalContainer()` returns the provided value, or `undefined` with no
-provider above the caller, so app code can hand the same target to a
-non-kit portal.
+provider above the caller - also inside popups, where it ignores the
+popup scope - so app code can hand the same target to a non-kit portal.
 
 ## When to use
 
@@ -67,11 +82,14 @@ function Screen({ portalHost }: { portalHost: HTMLElement }) {
 Read the value to portal something the kit does not own the same way:
 
 ```tsx
+import { createPortal } from 'react-dom';
+
 import { usePortalContainer } from '@gears-frontx/ui-kit';
 
 function ExternalPopup({ children }: { children: React.ReactNode }) {
-  const portalContainer = usePortalContainer();
-  return createPortal(children, portalContainer ?? document.body);
+  const container = usePortalContainer();
+  const target = container && 'current' in container ? container.current : container;
+  return createPortal(children, target ?? document.body);
 }
 ```
 

@@ -292,18 +292,17 @@ is never persisted.
 
 ### `portalContainer`
 
-The popups the grid and its plugins open render in a portal, on `<body>` by
-default: the filter popovers and their narrow-screen panel, the All filters
-panel, the sort and table configuration popovers, and the actions menu.
-`portalContainer` moves them all to another node, the way `container` does on
-a kit popup.
+The popups the grid and its plugins open render in a portal: the filter
+popovers and their narrow-screen panel, the All filters panel, the sort and
+table configuration popovers, and the actions menu. `portalContainer` moves
+them all to another node, the way `container` does on a kit popup.
 
 Pass it when `<body>` is not where the kit's styles or theme reach: a grid in a
 shadow root whose CSS is injected into that root, or a grid under a
 `data-theme` container that is not `<html>` or `<body>`. The node takes a
 shadow root, an element or a ref. With `portalContainer` unset, the popups
-fall through to the nearest `PortalContainerProvider` like every other kit
-overlay, so one provider over a subtree covers grids too.
+follow the kit overlay order: the nearest `PortalContainerProvider`'s
+value, else `<body>`, so one provider over a subtree covers grids too.
 
 ```tsx
 <div data-theme="dark" ref={themedRef}>

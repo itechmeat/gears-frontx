@@ -41,7 +41,7 @@
     },
     {
       "id": "inherits-the-parent-container",
-      "text": "Without `container`, the submenu popup portals into the container its enclosing ContextMenuContent or ContextMenuSubContent resolved, or the nearest PortalContainerProvider's value when the menu tree resolved none, so a theme passed to the first-level popup holds in the submenu; its own `container` wins when given."
+      "text": "Without `container`, the submenu popup portals into the container its enclosing ContextMenuContent or ContextMenuSubContent resolved, so a theme passed to the first-level popup holds in the submenu; when the menu tree resolved none, into the portal node of the kit popup it renders inside, the nearest PortalContainerProvider's value, or the document body; its own `container` wins when given."
     },
     {
       "id": "sized-to-its-content",
@@ -78,8 +78,8 @@
       "because": "`React.ReactNode` is a union of elements, strings, numbers, fragments and more; the compiler emits one JSON type per property."
     },
     "container": {
-      "states": "container is the DOM node, shadow root or ref to one that the popup portals into; null and undefined both mean no container of its own",
-      "because": "`HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null` - live DOM nodes and ref objects, which no JSON Schema type covers. The kit resolves it as `container ?? <the enclosing content's container>`, so an explicit null falls through like an absent prop."
+      "states": "container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the parent menu's resolved container, then the portal node of the enclosing kit popup, the nearest PortalContainerProvider's value, and the document body; an explicit null is kept, so Base UI waits for a target",
+      "because": "`HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null` - live DOM nodes and ref objects, which no JSON Schema type covers. The kit resolves it as the caller's own `container` when given (an explicit null included), otherwise the parent menu's resolved container, otherwise the portal node of the enclosing kit popup, the nearest PortalContainerProvider's value, and the document body, so an explicit null survives inheritance instead of falling through like an absent prop."
     },
     "sideOffset": {
       "states": "sideOffset is the gap in pixels between the anchor and the popup, as a number or a function of side, align and both boxes' sizes",
@@ -161,7 +161,7 @@
         "type": "string"
       },
       "container": {
-        "description": "Partially typed: HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null | undefined. The compiler emits one JSON type per property and none for this one; shape checked by tsc, see x-uikit.partially_typed_props. container is the DOM node, shadow root or ref to one that the popup portals into; null and undefined both mean no container of its own. `HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null` - live DOM nodes and ref objects, which no JSON Schema type covers. The kit resolves it as `container ?? <the enclosing content's container>`, so an explicit null falls through like an absent prop."
+        "description": "Partially typed: HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null | undefined. The compiler emits one JSON type per property and none for this one; shape checked by tsc, see x-uikit.partially_typed_props. container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the parent menu's resolved container, then the portal node of the enclosing kit popup, the nearest PortalContainerProvider's value, and the document body; an explicit null is kept, so Base UI waits for a target. `HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null` - live DOM nodes and ref objects, which no JSON Schema type covers. The kit resolves it as the caller's own `container` when given (an explicit null included), otherwise the parent menu's resolved container, otherwise the portal node of the enclosing kit popup, the nearest PortalContainerProvider's value, and the document body, so an explicit null survives inheritance instead of falling through like an absent prop."
       },
       "align": {
         "type": "string",

@@ -10,8 +10,8 @@ type PortalContainer = PopoverContentProps['container'];
  * grid store for the same reason as the label: it is read at render time only, and nothing
  * loads, persists or writes it from a second place.
  *
- * `undefined` is what a grid without the prop provides, and the popups then portal to <body>,
- * as they did before the prop existed.
+ * `undefined` is what a grid without the prop provides, and the popups then follow the kit overlay
+ * order: the nearest PortalContainerProvider's value, else <body>.
  */
 const DataGridPortalContainerContext = createContext<PortalContainer>(undefined);
 

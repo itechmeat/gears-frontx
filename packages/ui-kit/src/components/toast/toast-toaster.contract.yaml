@@ -42,9 +42,10 @@ invariants:
       button named by `closeLabel`.
   - id: region-portals-regardless-of-position
     text: >-
-      The notification region portals into `container`, then the nearest
-      PortalContainerProvider's value, then the document body without
-      either, wherever Toaster sits in the tree; its children are
+      The notification region portals into `container`, then the portal
+      node of the kit popup it renders inside, then the nearest
+      PortalContainerProvider's value, then the document body when there
+      is neither, wherever Toaster sits in the tree; its children are
       rendered in place.
   - id: shared-manager-by-default
     text: >-
@@ -87,7 +88,7 @@ prop_statements:
       `React.ReactNode` is a union of elements, strings, numbers, fragments
       and more; the compiler emits one JSON type per property.
   container:
-    states: container is the node the notification region portals into; absent, the nearest PortalContainerProvider's value, else the document body
+    states: container is the node the notification region portals into; absent, the portal node of the kit popup it renders inside, then the nearest PortalContainerProvider's value, else the document body
     because: >-
       Base UI types it `HTMLElement | ShadowRoot | null` or a React ref
       object holding one, and the compiler emits one JSON type per

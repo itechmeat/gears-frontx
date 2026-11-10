@@ -197,9 +197,6 @@ export function DrawerContent({ className, children, container, ...props }: Draw
         >
           {showSwipeHandle && <DrawerSwipeHandle />}
           <DrawerPrimitive.Content className={styles.content}>
-            {/* PortalScope marks the popup's subtree so a nested kit overlay
-              * follows this popup's portal instead of the provider's
-              * container (gears-frontx#763). Context only: no DOM. */}
             <PortalScope>{children}</PortalScope>
           </DrawerPrimitive.Content>
         </DrawerPrimitive.Popup>

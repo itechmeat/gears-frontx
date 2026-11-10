@@ -130,9 +130,6 @@ export function SelectContent({
         <SelectPrimitive.Popup className={cx(styles.popup, className)} {...props}>
           <SelectScrollUpButton />
           <SelectPrimitive.List className={styles.list}>
-            {/* PortalScope marks the popup's subtree so a nested kit overlay
-              * follows this popup's portal instead of the provider's
-              * container (gears-frontx#763). Context only: no DOM. */}
             <PortalScope>{children}</PortalScope>
           </SelectPrimitive.List>
           <SelectScrollDownButton />

@@ -69,14 +69,9 @@ export function NavigationMenu<Value = unknown>({
           className={styles.positioner}
         >
           <NavigationMenuPrimitive.Popup className={styles.popup}>
-            {/* PortalScope marks the popup's subtree so a nested kit overlay
-              * follows this popup's portal instead of the provider's
-              * container (gears-frontx#763). Context only: no DOM. It covers
-              * content composed directly into the portal subtree (including
-              * a consumer-rendered Viewport child); NavigationMenuContent
-              * itself mounts through a raw createPortal into the viewport
-              * from up in the root's subtree, outside this React position,
-              * so overlays inside it keep resolving provider-then-body. */}
+            {/* PortalScope covers only content composed directly into this portal
+              * subtree; NavigationMenuContent mounts through a raw createPortal into
+              * the viewport, so overlays inside it resolve provider-then-body. */}
             <PortalScope>
               <NavigationMenuViewport />
             </PortalScope>
