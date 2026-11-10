@@ -1,15 +1,8 @@
-// Load-bearing: NavigationMenu calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { NavigationMenu as NavigationMenuPrimitive } from '@base-ui/react/navigation-menu';
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { ChevronDownIcon } from 'lucide-react';
 
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './navigation-menu.module.css';
 
 export interface NavigationMenuProps<Value = unknown>
@@ -61,11 +54,10 @@ export function NavigationMenu<Value = unknown>({
   collisionPadding,
   ...props
 }: NavigationMenuProps<Value>) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
     <NavigationMenuPrimitive.Root className={cx(styles.root, className)} {...props}>
       {children}
-      <NavigationMenuPrimitive.Portal container={resolvedContainer}>
+      <ResolvedPortal portal={NavigationMenuPrimitive.Portal} container={container}>
         <NavigationMenuPrimitive.Positioner
           side={side}
           sideOffset={sideOffset}
@@ -90,7 +82,7 @@ export function NavigationMenu<Value = unknown>({
             </PortalScope>
           </NavigationMenuPrimitive.Popup>
         </NavigationMenuPrimitive.Positioner>
-      </NavigationMenuPrimitive.Portal>
+      </ResolvedPortal>
     </NavigationMenuPrimitive.Root>
   );
 }

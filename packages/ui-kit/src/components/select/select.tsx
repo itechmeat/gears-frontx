@@ -1,16 +1,9 @@
-// Load-bearing: SelectContent calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { Select as SelectPrimitive } from '@base-ui/react/select';
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './select.module.css';
 
 export const Select = SelectPrimitive.Root;
@@ -112,9 +105,8 @@ export function SelectContent({
   collisionPadding,
   ...props
 }: SelectContentProps) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <SelectPrimitive.Portal container={resolvedContainer}>
+    <ResolvedPortal portal={SelectPrimitive.Portal} container={container}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -146,7 +138,7 @@ export function SelectContent({
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
-    </SelectPrimitive.Portal>
+    </ResolvedPortal>
   );
 }
 

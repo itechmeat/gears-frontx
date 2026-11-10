@@ -1,17 +1,10 @@
-// Load-bearing: DialogContent calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { cx } from 'class-variance-authority';
 import { XIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { Button } from '../button/button';
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './dialog.module.css';
 
 export const Dialog = DialogPrimitive.Root;
@@ -87,9 +80,8 @@ export function DialogContent({
   size = 'default',
   ...props
 }: DialogContentProps) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <DialogPrimitive.Portal container={resolvedContainer}>
+    <ResolvedPortal portal={DialogPrimitive.Portal} container={container}>
       {showBackdrop && <DialogPrimitive.Backdrop className={styles.backdrop} />}
       <DialogPrimitive.Popup data-size={size} className={cx(styles.popup, className)} {...props}>
         {/* PortalScope marks the popup's subtree so a nested kit overlay
@@ -104,7 +96,7 @@ export function DialogContent({
           />
         )}
       </DialogPrimitive.Popup>
-    </DialogPrimitive.Portal>
+    </ResolvedPortal>
   );
 }
 

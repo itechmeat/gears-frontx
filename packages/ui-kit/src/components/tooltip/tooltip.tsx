@@ -1,14 +1,7 @@
-// Load-bearing: TooltipContent calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
 import { cx } from 'class-variance-authority';
 
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './tooltip.module.css';
 
 export const Tooltip = TooltipPrimitive.Root;
@@ -81,9 +74,8 @@ export function TooltipContent({
   collisionPadding,
   ...props
 }: TooltipContentProps) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <TooltipPrimitive.Portal container={resolvedContainer}>
+    <ResolvedPortal portal={TooltipPrimitive.Portal} container={container}>
       <TooltipPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -102,6 +94,6 @@ export function TooltipContent({
           <TooltipPrimitive.Arrow className={styles.arrow} />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
-    </TooltipPrimitive.Portal>
+    </ResolvedPortal>
   );
 }
