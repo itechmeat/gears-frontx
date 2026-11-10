@@ -1,8 +1,16 @@
+// Load-bearing: SelectContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { Select as SelectPrimitive } from '@base-ui/react/select';
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './select.module.css';
 
 export const Select = SelectPrimitive.Root;
@@ -82,9 +90,10 @@ export interface SelectContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a section rather
-   * than <html>) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * section rather than <html>) so the popup inherits its tokens and font.
    */
   container?: SelectPrimitive.Portal.Props['container'];
 }
@@ -103,8 +112,9 @@ export function SelectContent({
   collisionPadding,
   ...props
 }: SelectContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <SelectPrimitive.Portal container={container}>
+    <SelectPrimitive.Portal container={resolvedContainer}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

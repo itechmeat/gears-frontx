@@ -1,6 +1,14 @@
+// Load-bearing: TooltipContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
 import { cx } from 'class-variance-authority';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './tooltip.module.css';
 
 export const Tooltip = TooltipPrimitive.Root;
@@ -51,9 +59,11 @@ export interface TooltipContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    */
   container?: TooltipPrimitive.Portal.Props['container'];
 }
@@ -71,8 +81,9 @@ export function TooltipContent({
   collisionPadding,
   ...props
 }: TooltipContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <TooltipPrimitive.Portal container={container}>
+    <TooltipPrimitive.Portal container={resolvedContainer}>
       <TooltipPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

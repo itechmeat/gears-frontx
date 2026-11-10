@@ -43,11 +43,12 @@ Rules for generated code:
   and render directly from a Server Component — no wrapping
   client-boundary module needed — unless it appears in the next line. The
   kit components that carry a `'use client'` banner of their own:
-  Alert, Attachment, Badge, Breadcrumb, Bubble, ButtonGroup, Card,
-  Carousel, Chart, CodeBlock, Combobox, Command, ContextMenu, DataGrid,
-  DataTable, Drawer, DropdownMenu, Empty, Heading, InputOtp, Item, Link,
-  Marker, PageHeader, Sidebar, StatusDot, Table, Text, Toast,
-  VisuallyHidden. Each calls a hook directly
+  Alert, AlertDialog, Attachment, Badge, Breadcrumb, Bubble, ButtonGroup,
+  Card, Carousel, Chart, CodeBlock, Combobox, Command, ContextMenu,
+  DataGrid, DataTable, Dialog, Drawer, DropdownMenu, Empty, Heading,
+  HoverCard, InputOtp, Item, Link, Marker, NavigationMenu, PageHeader,
+  Popover, PortalContainer, Select, Sheet, Sidebar, StatusDot, Table, Text,
+  Toast, Tooltip, VisuallyHidden. Each calls a hook directly
   in its own render body, so it always renders on the client, wherever it
   is imported from.
 - The kit paints the page itself from its tokens and sets `color-scheme`: with
@@ -63,13 +64,19 @@ Rules for generated code:
 - Font overrides AND, for explicit control instead of following the OS
   preference, `data-theme` go on `<html>`/`<body>`, not on an inner
   container: overlay components (Select, Dialog, DropdownMenu, Tooltip,
-  Toaster) portal their popup to `<body>` and inherit theme tokens and
+  Toaster) portal their popup to the nearest `PortalContainerProvider`'s
+  value, or to `<body>` when there is none, and inherit theme tokens and
   font from there. A
   `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
   surface, not just its descendants' tokens, so it can be nested inside a
   page carrying the opposite theme. If a subtree must carry its own theme,
   pass that element as `container` to `SelectContent` / `DialogContent` /
-  `DropdownMenuContent` / `TooltipContent` / `Toaster`.
+  `DropdownMenuContent` / `TooltipContent` / `Toaster`, or wrap the subtree
+  in `PortalContainerProvider` with it. Inside a shadow root (a
+  micro-frontend screen), the popup must be given a container inside that
+  shadow root - through `PortalContainerProvider` or `container` - or it
+  renders outside the shadow root, unstyled, and an outside press closes
+  it; see [PortalContainer](dist/docs/portal-container.md).
 - Brand/appearance changes go through theme tokens (CSS variables in
   `theme.css`, light/dark via `data-theme`), never through inline styles or
   overriding kit class names.
@@ -401,6 +408,12 @@ Rules for generated code:
   PopoverHeader/PopoverTitle/PopoverDescription); non-modal by default —
   no focus trap, no backdrop; `PopoverTrigger`'s `openOnHover` opts into
   hover-open.
+- [PortalContainer](dist/docs/portal-container.md): the default portal
+  container for every kit overlay, provided as React context
+  (PortalContainerProvider/usePortalContainer); an overlay's own
+  `container` prop wins, and with neither set the popup portals to
+  `<body>`. How an MFE screen inside a shadow root keeps its popups
+  inside that shadow root.
 - [Progress](dist/docs/progress.md): completion bar (Progress/
   ProgressTrack/ProgressIndicator/ProgressLabel/ProgressValue); `value`
   required, `null` for indeterminate; reports `role="progressbar"` with

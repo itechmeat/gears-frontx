@@ -43,7 +43,8 @@ default `5000`), `limit` (max toasts shown at once, default `3`;
 overflow toasts stay mounted with `data-limited` rather than being
 removed, so they can reappear as space frees up), `toastManager`
 (defaults to the shared `toast` manager below), `container` (DOM node to
-portal the toast viewport into, default `<body>`), `closeLabel`
+portal the toast viewport into; default: the nearest
+`PortalContainerProvider`'s value, else `<body>`), `closeLabel`
 (accessible name for each toast's close (X) button, default
 `'Close toast'`), `label` (accessible name for the toast region landmark,
 default `'Notifications'`) — `closeLabel` and `label` are the two strings
@@ -108,10 +109,16 @@ toast twice, once per viewport. If a subtree genuinely needs its own
 viewport, give it an isolated manager via `createToastManager()` and
 pass that as its `Toaster`'s `toastManager`.
 
-The viewport portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that
-section as `Toaster`'s `container` or toasts render with the root theme
-— same contract as `Dialog`, `Select`, `DropdownMenu`, and `Tooltip`.
+Without a `container`, the viewport portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `Toaster`'s `container` or wrap the
+subtree in `PortalContainerProvider`, or toasts render with the root theme
+- same contract as `Dialog`, `Select`, `DropdownMenu`, and `Tooltip`.
+Inside a shadow root (an MFE screen), the viewport must be given a
+container inside that shadow root - through `PortalContainerProvider` or
+`container` - or it renders outside the shadow root: unstyled, and an
+outside press closes a toast that carries interactive content.
 
 ## Examples
 

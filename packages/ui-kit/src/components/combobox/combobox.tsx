@@ -8,6 +8,7 @@ import { cx } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 import { type ComponentPropsWithRef, type ReactNode, useRef } from 'react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './combobox.module.css';
 
 export const Combobox = ComboboxPrimitive.Root;
@@ -197,9 +198,10 @@ export interface ComboboxContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a section rather
-   * than <html>) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * section rather than <html>) so the popup inherits its tokens and font.
    */
   container?: ComboboxPrimitive.Portal.Props['container'];
 }
@@ -227,8 +229,9 @@ export function ComboboxContent({
   collisionPadding,
   ...props
 }: ComboboxContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <ComboboxPrimitive.Portal container={container}>
+    <ComboboxPrimitive.Portal container={resolvedContainer}>
       <ComboboxPrimitive.Positioner
         anchor={anchor}
         side={side}

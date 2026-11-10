@@ -1,7 +1,15 @@
+// Load-bearing: NavigationMenu calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { NavigationMenu as NavigationMenuPrimitive } from '@base-ui/react/navigation-menu';
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { ChevronDownIcon } from 'lucide-react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './navigation-menu.module.css';
 
 export interface NavigationMenuProps<Value = unknown>
@@ -21,10 +29,11 @@ export interface NavigationMenuProps<Value = unknown>
     > {
   className?: string;
   /**
-   * Where to portal the shared popup. Defaults to <body>. Pass a themed
-   * container when the theme is scoped to a subtree (data-theme on a
+   * Where to portal the shared popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
    * container that isn't at document root) so the popup inherits its
-   * tokens and font — same contract as DropdownMenuContent/SelectContent.
+   * tokens and font - same contract as DropdownMenuContent/SelectContent.
    */
   container?: NavigationMenuPrimitive.Portal.Props['container'];
 }
@@ -52,10 +61,11 @@ export function NavigationMenu<Value = unknown>({
   collisionPadding,
   ...props
 }: NavigationMenuProps<Value>) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
     <NavigationMenuPrimitive.Root className={cx(styles.root, className)} {...props}>
       {children}
-      <NavigationMenuPrimitive.Portal container={container}>
+      <NavigationMenuPrimitive.Portal container={resolvedContainer}>
         <NavigationMenuPrimitive.Positioner
           side={side}
           sideOffset={sideOffset}

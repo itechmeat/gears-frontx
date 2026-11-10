@@ -41,7 +41,7 @@
     },
     {
       "id": "region-portals-regardless-of-position",
-      "text": "The notification region portals into `container`, or the document body without one, wherever Toaster sits in the tree; its children are rendered in place."
+      "text": "The notification region portals into `container`, then the nearest PortalContainerProvider's value, then the document body without either, wherever Toaster sits in the tree; its children are rendered in place."
     },
     {
       "id": "shared-manager-by-default",
@@ -78,7 +78,7 @@
       "because": "`React.ReactNode` is a union of elements, strings, numbers, fragments and more; the compiler emits one JSON type per property."
     },
     "container": {
-      "states": "container is the node the notification region portals into, the document body when absent",
+      "states": "container is the node the notification region portals into; absent, the nearest PortalContainerProvider's value, else the document body",
       "because": "Base UI types it `HTMLElement | ShadowRoot | null` or a React ref object holding one, and the compiler emits one JSON type per property. Passing a themed subtree's node makes the toasts inherit that subtree's tokens."
     },
     "toastManager": {
@@ -157,7 +157,7 @@
         "default": "Close toast"
       },
       "container": {
-        "description": "Partially typed: HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null | undefined. The compiler emits one JSON type per property and none for this one; shape checked by tsc, see x-uikit.partially_typed_props. container is the node the notification region portals into, the document body when absent. Base UI types it `HTMLElement | ShadowRoot | null` or a React ref object holding one, and the compiler emits one JSON type per property. Passing a themed subtree's node makes the toasts inherit that subtree's tokens."
+        "description": "Partially typed: HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null | undefined. The compiler emits one JSON type per property and none for this one; shape checked by tsc, see x-uikit.partially_typed_props. container is the node the notification region portals into; absent, the nearest PortalContainerProvider's value, else the document body. Base UI types it `HTMLElement | ShadowRoot | null` or a React ref object holding one, and the compiler emits one JSON type per property. Passing a themed subtree's node makes the toasts inherit that subtree's tokens."
       },
       "label": {
         "type": "string",

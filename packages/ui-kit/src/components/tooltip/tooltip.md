@@ -59,15 +59,20 @@ alone never starts the timer for a non-zero delay.)
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `top` |
 | `align` | `start` \| `center` \| `end` | `center` |
 | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
-| `container` | DOM node to portal the popup into | `<body>` |
+| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container, where absolute positioning resolves against the wrong box | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI Tooltip.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
 
-The popup portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that
-section as `container` or the popup renders with the root theme — same
-contract as `Dialog`, `Select`, and `DropdownMenu`.
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` or wrap the subtree in
+`PortalContainerProvider`, or the popup renders with the root theme - same
+contract as `Dialog`, `Select`, and `DropdownMenu`. Inside a shadow root
+(an MFE screen), the popup must be given a container inside that shadow
+root - through `PortalContainerProvider` or `container` - or it renders
+outside the shadow root: unstyled, and an outside press closes it.
 
 `TooltipContent` always renders a small caret against the popup edge
 (Base UI's `Tooltip.Arrow`) — there's no prop to hide it, matching the

@@ -8,6 +8,7 @@ import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronRightIcon } from 'lucide-react';
 import { type ComponentProps, createContext, useContext } from 'react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './dropdown-menu.module.css';
 
 /*
@@ -51,9 +52,11 @@ export interface DropdownMenuContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    * Inherited by nested DropdownMenuSubContent unless it passes its own.
    */
   container?: MenuPrimitive.Portal.Props['container'];
@@ -73,7 +76,11 @@ export function DropdownMenuContent({
   ...props
 }: DropdownMenuContentProps) {
   const inheritedContainer = useContext(MenuContainerContext);
-  const effectiveContainer = container ?? inheritedContainer;
+  // The menu tree's own inheritance stays nearest: a container an enclosing
+  // DropdownMenuContent resolved (its own prop, or the provider it saw)
+  // outranks the provider around this submenu, or a themed first-level popup
+  // would lose its subtree to a farther provider.
+  const effectiveContainer = useResolvedPortalContainer(container ?? inheritedContainer);
   return (
     <MenuContainerContext.Provider value={effectiveContainer}>
       <MenuPrimitive.Portal container={effectiveContainer}>

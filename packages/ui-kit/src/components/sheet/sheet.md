@@ -49,7 +49,7 @@ default; `false`; `'trap-focus'`) — see Base UI Dialog.Root.
 | `showCloseButton` | `boolean` — renders a top-right close (X) button | `true` |
 | `showBackdrop` | `boolean` - renders the backdrop, which is the drawn side-panel veil (`--overlay-panel`, a 10 per cent tint plus a 4px blur) rather than the modal scrim that dims; set `false` together with `modal={false}` on the root for a genuinely non-modal sheet | `true` |
 | `closeLabel` | `string` — accessible name for that button, the panel's only kit-authored text; same contract as `Dialog`'s `closeLabel` | `'Close'` |
-| `container` | DOM node to portal the panel into | `<body>` |
+| `container` | DOM node to portal the panel into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
@@ -58,9 +58,15 @@ touch screen reader users have out of a modal sheet (see above) — only do
 this if you compose your own `SheetClose` somewhere inside `SheetContent`
 (e.g. in the footer).
 
-The panel portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that section
-as `container` or the panel renders with the root theme.
+Without a `container`, the panel portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` or wrap the subtree in
+`PortalContainerProvider`, or the panel renders with the root theme.
+Inside a shadow root (an MFE screen), the panel must be given a container
+inside that shadow root - through `PortalContainerProvider` or `container`
+- or it renders outside the shadow root: unstyled, and an outside press
+closes it.
 
 `SheetTrigger` and `SheetClose` are unstyled pass-throughs (native
 `<button>` semantics) — compose them with `Button` via their `render` prop

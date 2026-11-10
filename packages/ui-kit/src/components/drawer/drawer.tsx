@@ -9,6 +9,7 @@ import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 import { cva, cx } from 'class-variance-authority';
 import { createContext, useContext, type ComponentProps } from 'react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './drawer.module.css';
 
 /**
@@ -113,8 +114,9 @@ export function DrawerTrigger({ className, ...props }: DrawerTriggerProps) {
 
 export type DrawerPortalProps = Omit<DrawerPrimitive.Portal.Props, 'className'>;
 
-export function DrawerPortal(props: DrawerPortalProps) {
-  return <DrawerPrimitive.Portal {...props} />;
+export function DrawerPortal({ container, ...props }: DrawerPortalProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
+  return <DrawerPrimitive.Portal container={resolvedContainer} {...props} />;
 }
 
 export interface DrawerCloseProps extends Omit<DrawerPrimitive.Close.Props, 'className'> {
@@ -162,9 +164,10 @@ const drawerPopupVariants = cva(styles.popup, {
 export interface DrawerContentProps extends Omit<DrawerPrimitive.Popup.Props, 'className'> {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree — same contract as
-   * DialogContent/SheetContent.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree - same contract
+   * as DialogContent/SheetContent.
    */
   container?: DrawerPrimitive.Portal.Props['container'];
 }

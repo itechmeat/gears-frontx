@@ -51,7 +51,7 @@ DropdownMenu/Select sit here instead:
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `bottom` |
 | `align` | `start` \| `center` \| `end` | `start` |
 | `sideOffset` / `alignOffset` | `number` | `8` / `0` |
-| `container` | DOM node to portal the shared popup into | `<body>` |
+| `container` | DOM node to portal the shared popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the menu sits inside a `transform`/`filter` container | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI NavigationMenu.Positioner | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
@@ -95,10 +95,15 @@ its active state from that item's own context and throws if used outside
 one — unlike the classic Radix indicator, this is not one shared
 list-level element with computed `left`/`width` math.
 
-The popup portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that section
-as `container` on `NavigationMenu` — same contract as `Dialog`/`Select`/
-`DropdownMenu`.
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` on `NavigationMenu` or wrap the
+subtree in `PortalContainerProvider` - same contract as `Dialog`/`Select`/
+`DropdownMenu`. Inside a shadow root (an MFE screen), the popup must be
+given a container inside that shadow root - through
+`PortalContainerProvider` or `container` - or it renders outside the
+shadow root: unstyled, and an outside press closes it.
 
 ## Visual states (no variant/size props)
 

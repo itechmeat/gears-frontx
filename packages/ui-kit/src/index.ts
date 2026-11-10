@@ -90,6 +90,7 @@ export * from './components/navigation-menu/public.js';
 export * from './components/page-header/public.js';
 export * from './components/pagination/public.js';
 export * from './components/popover/public.js';
+export * from './components/portal-container/public.js';
 export * from './components/progress/public.js';
 export * from './components/questionnaire/public.js';
 export * from './components/radio-group/public.js';

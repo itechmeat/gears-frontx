@@ -1,7 +1,15 @@
+// Load-bearing: PopoverContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { cx } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './popover.module.css';
 
 export const Popover = PopoverPrimitive.Root;
@@ -38,9 +46,11 @@ export interface PopoverContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    */
   container?: PopoverPrimitive.Portal.Props['container'];
 }
@@ -59,8 +69,9 @@ export function PopoverContent({
   collisionPadding,
   ...props
 }: PopoverContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <PopoverPrimitive.Portal container={container}>
+    <PopoverPrimitive.Portal container={resolvedContainer}>
       <PopoverPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

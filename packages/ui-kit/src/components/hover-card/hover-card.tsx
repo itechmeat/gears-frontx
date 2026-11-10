@@ -1,6 +1,14 @@
+// Load-bearing: HoverCardContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { PreviewCard as PreviewCardPrimitive } from '@base-ui/react/preview-card';
 import { cx } from 'class-variance-authority';
 
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './hover-card.module.css';
 
 /**
@@ -46,9 +54,11 @@ export interface HoverCardContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    */
   container?: PreviewCardPrimitive.Portal.Props['container'];
 }
@@ -66,8 +76,9 @@ export function HoverCardContent({
   collisionPadding,
   ...props
 }: HoverCardContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <PreviewCardPrimitive.Portal container={container}>
+    <PreviewCardPrimitive.Portal container={resolvedContainer}>
       <PreviewCardPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

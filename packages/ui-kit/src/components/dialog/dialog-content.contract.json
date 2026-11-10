@@ -34,7 +34,7 @@
     },
     {
       "id": "portals-to-body-unless-container",
-      "text": "Without `container`, the popup portals into the node of the nearest enclosing portal, or the document body when there is none; a theme scoped to a subtree reaches the popup only when that subtree, or a node inside it, is passed as `container`."
+      "text": "Without `container`, the popup portals into the node of the nearest enclosing portal, then the nearest PortalContainerProvider's value, then the document body when there is neither; a theme scoped to a subtree reaches the popup only when that subtree, or a node inside it, is passed as `container`."
     },
     {
       "id": "named-by-its-title-described-by-its-description",
@@ -140,7 +140,7 @@
       {
         "title": "A popup expected to inherit a theme scoped to a section",
         "code": "<section data-theme=\"dark\">\n  <Dialog>\n    <DialogTrigger>Preferences</DialogTrigger>\n    <DialogContent>\n      <DialogTitle>Preferences</DialogTitle>\n    </DialogContent>\n  </Dialog>\n</section>\n",
-        "why": "The popup portals to the document body, outside the section, so it renders with the document root's theme; pass the section, or a node inside it, as `container`."
+        "why": "The popup portals to the document body, outside the section, so it renders with the document root's theme; pass the section, or a node inside it, as `container`, or wrap the section in PortalContainerProvider."
       }
     ]
   },

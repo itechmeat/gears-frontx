@@ -307,7 +307,19 @@ export function buildPlugin(): PluginOption[] {
         // stripping it. Reuses `directiveRe` (rather than a plain
         // `startsWith(USE_CLIENT)`) so this guard tolerates the same quote
         // styles the detection above does.
-        if (directiveRe.test(code) || !chunk.moduleIds.some((id) => clientModuleIds.has(id))) {
+        //
+        // A module shared by several entries is hoisted into a shared chunk,
+        // which leaves its own entry a bare re-export facade: `moduleIds` is
+        // empty there, only `facadeModuleId` still names the entry module.
+        // Such a facade must inherit the banner from that module: every
+        // published subpath entry has to carry the directive itself, since a
+        // Server Component importing the subpath never sees past the facade.
+        const facadeIsClient =
+          chunk.facadeModuleId !== null && clientModuleIds.has(chunk.facadeModuleId);
+        if (
+          directiveRe.test(code) ||
+          !(facadeIsClient || chunk.moduleIds.some((id) => clientModuleIds.has(id)))
+        ) {
           return null;
         }
 
