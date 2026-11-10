@@ -54,7 +54,7 @@ content.
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `right` (Content and SubContent) |
 | `align` | `start` \| `center` \| `end` | `start` |
 | `sideOffset` / `alignOffset` | `number` | `0` / `4` (Content and SubContent) |
-| `container` | DOM node to portal the popup into; `ContextMenuSubContent` inherits the nearest Content's unless given its own | `<body>` |
+| `container` | DOM node to portal the popup into; `ContextMenuSubContent` inherits the nearest Content's unless given its own | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container (an animated panel), where absolute positioning resolves against the wrong box | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI Menu.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
@@ -71,10 +71,15 @@ regardless of its longest label — the shortcut column is pushed to the end
 of the row, so a content-sized popup leaves no gap between a label and its
 shortcut.
 
-The popup portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that section
-as `container` or the popup renders with the root theme — same contract as
-`Dialog`, `Select`, and `DropdownMenu`.
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` or wrap the subtree in
+`PortalContainerProvider`, or the popup renders with the root theme - same
+contract as `Dialog`, `Select`, and `DropdownMenu`. Inside a shadow root
+(an MFE screen), the popup must be given a container inside that shadow
+root - through `PortalContainerProvider` or `container` - or it renders
+outside the shadow root: unstyled, and an outside press closes it.
 
 `ContextMenuItem`: `variant` — `default` | `destructive`, `disabled`,
 `closeOnClick` (`true` by default — Base UI closes the menu on selection),

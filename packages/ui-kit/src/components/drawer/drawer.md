@@ -60,9 +60,18 @@ directly — pass `side` instead.
 
 | Prop | Type | Default |
 |------|------|---------|
-| `container` | DOM node to portal the popup into | `<body>` |
+| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI `Drawer.Popup` | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
+
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none. If
+your theme lives on a subtree, pass it (or a node inside it) as
+`container` or wrap the subtree in `PortalContainerProvider`, or the popup
+renders with the root theme. Inside a shadow root (an MFE screen), the
+popup must be given a container inside that shadow root - through
+`PortalContainerProvider` or `container` - or it renders outside the
+shadow root: unstyled, and an outside press closes it.
 
 `side` and `showSwipeHandle` are read from the ancestor `Drawer`, not passed
 to `DrawerContent` directly — same context-based handoff upstream's own

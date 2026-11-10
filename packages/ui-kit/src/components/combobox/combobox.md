@@ -74,10 +74,15 @@ Every other prop is Base UI's `Combobox.Trigger` (`render`, `nativeButton`,
 `ComboboxContent` accepts positioning props (`side`, `sideOffset`,
 `align`, `alignOffset`, `anchor`, plus the escape hatch for fields inside a
 `transform`/`filter` container: `positionMethod="fixed"`,
-`collisionBoundary`, `collisionPadding`) and `container` — the popup
-portals to `<body>` by default, so if your theme lives on a subtree
+`collisionBoundary`, `collisionPadding`) and `container` - the popup
+portals to the nearest `PortalContainerProvider`'s value, or to `<body>`
+when there is none, so if your theme lives on a subtree
 (`data-theme` on a section instead of `<html>`), pass that section as
-`container` or the popup renders with the root theme. `ComboboxItem` takes
+`container` or wrap the subtree in `PortalContainerProvider`, or the popup
+renders with the root theme. Inside a shadow root (an MFE screen), the
+popup must be given a container inside that shadow root - through
+`PortalContainerProvider` or `container` - or it renders outside the
+shadow root: unstyled, and an outside press closes it. `ComboboxItem` takes
 `value` (required) and `disabled`. `aria-invalid` on `ComboboxInput` (or
 `ComboboxChips`, for multi-select) switches its border and ring to the
 destructive color.

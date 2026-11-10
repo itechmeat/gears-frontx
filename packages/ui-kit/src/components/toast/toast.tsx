@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '../button/button';
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './toast.module.css';
 
 /* One icon per toast `type`; an unset/unrecognized type renders no icon,
@@ -132,8 +133,9 @@ export const createToastManager = ToastPrimitive.createToastManager;
 
 export interface ToasterProps extends ToastPrimitive.Provider.Props {
   /**
-   * Where to portal the toast viewport. Defaults to <body>. Pass a themed
-   * container when the theme is scoped to a subtree (data-theme on a
+   * Where to portal the toast viewport. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
    * container that isn't at document root) so toasts inherit its tokens
    * and font.
    */
@@ -172,10 +174,11 @@ export function Toaster({
   toastManager = toast,
   ...props
 }: ToasterProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
     <ToastPrimitive.Provider toastManager={toastManager} {...props}>
       {children}
-      <ToastPrimitive.Portal container={container}>
+      <ToastPrimitive.Portal container={resolvedContainer}>
         <ToastPrimitive.Viewport aria-label={label} className={styles.viewport}>
           <ToastList closeLabel={closeLabel} />
         </ToastPrimitive.Viewport>

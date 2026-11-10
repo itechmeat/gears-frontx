@@ -43,7 +43,8 @@ invariants:
   - id: portals-to-body-unless-container
     text: >-
       Without `container`, the popup portals into the node of the nearest
-      enclosing portal, or the document body when there is none; a theme
+      enclosing portal, then the nearest PortalContainerProvider's value,
+      then the document body when there is neither; a theme
       scoped to a subtree reaches the popup only when that subtree, or a
       node inside it, is passed as `container`.
   - id: named-by-its-title-described-by-its-description

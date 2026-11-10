@@ -1,9 +1,17 @@
+// Load-bearing: DialogContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { cx } from 'class-variance-authority';
 import { XIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { Button } from '../button/button';
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './dialog.module.css';
 
 export const Dialog = DialogPrimitive.Root;
@@ -34,9 +42,11 @@ export function DialogClose({ className, ...props }: DialogCloseProps) {
 export interface DialogContentProps extends Omit<DialogPrimitive.Popup.Props, 'className'> {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    */
   container?: DialogPrimitive.Portal.Props['container'];
   /** Renders a top-right close (X) button inside the popup. @default true */
@@ -77,8 +87,9 @@ export function DialogContent({
   size = 'default',
   ...props
 }: DialogContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <DialogPrimitive.Portal container={container}>
+    <DialogPrimitive.Portal container={resolvedContainer}>
       {showBackdrop && <DialogPrimitive.Backdrop className={styles.backdrop} />}
       <DialogPrimitive.Popup data-size={size} className={cx(styles.popup, className)} {...props}>
         {children}

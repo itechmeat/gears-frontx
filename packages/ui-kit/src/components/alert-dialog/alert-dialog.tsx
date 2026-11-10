@@ -1,8 +1,16 @@
+// Load-bearing: AlertDialogContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { AlertDialog as AlertDialogPrimitive } from '@base-ui/react/alert-dialog';
 import { cx } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 
 import { Button, type ButtonProps } from '../button/button';
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './alert-dialog.module.css';
 
 export const AlertDialog = AlertDialogPrimitive.Root;
@@ -24,9 +32,11 @@ export interface AlertDialogContentProps
   extends Omit<AlertDialogPrimitive.Popup.Props, 'className'> {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree (data-theme on a container that
-   * isn't at document root) so the popup inherits its tokens and font.
+   * Where to portal the popup. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree (data-theme on a
+   * container that isn't at document root) so the popup inherits its tokens
+   * and font.
    */
   container?: AlertDialogPrimitive.Portal.Props['container'];
   /**
@@ -57,8 +67,9 @@ export function AlertDialogContent({
   size = 'default',
   ...props
 }: AlertDialogContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <AlertDialogPrimitive.Portal container={container}>
+    <AlertDialogPrimitive.Portal container={resolvedContainer}>
       {showBackdrop && <AlertDialogPrimitive.Backdrop className={styles.backdrop} />}
       <AlertDialogPrimitive.Popup
         data-size={size}

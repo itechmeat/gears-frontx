@@ -4,7 +4,7 @@
   "metamodel": "2.0.0",
   "component": "drawer-portal",
   "forwards_to": "gts.frontx.uikit.element.dom_div.v1~",
-  "intent": "The primitive's portal, which moves what it holds out of the page's DOM tree into the document body or a given container while its Drawer is mounted.",
+  "intent": "The primitive's portal, which moves what it holds out of the page's DOM tree into the document body, the nearest PortalContainerProvider's value, or a given container while its Drawer is mounted.",
   "typical_uses": [
     "A layer a caller must portal beside the drawer's panel, outside it"
   ],

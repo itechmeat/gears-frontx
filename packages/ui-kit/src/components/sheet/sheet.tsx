@@ -1,9 +1,17 @@
+// Load-bearing: SheetContent calls useContext (through
+// useResolvedPortalContainer) directly in its own render body, same shape as
+// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
+// own banner comment. Coupled to CLIENT_COMPONENTS in
+// scripts/verify-consumer.sh - keep both in sync if this ever changes.
+'use client';
+
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { XIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { Button } from '../button/button';
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './sheet.module.css';
 
 export const Sheet = DialogPrimitive.Root;
@@ -47,8 +55,10 @@ export interface SheetContentProps
     VariantProps<typeof sheetContentVariants> {
   className?: string;
   /**
-   * Where to portal the panel. Defaults to <body>. Pass a themed container
-   * when the theme is scoped to a subtree — same contract as DialogContent.
+   * Where to portal the panel. Defaults to the nearest
+   * PortalContainerProvider's value, or <body> when there is none. Pass a
+   * themed container when the theme is scoped to a subtree - same contract
+   * as DialogContent.
    */
   container?: DialogPrimitive.Portal.Props['container'];
   /** Renders a top-right close (X) button inside the panel. @default true */
@@ -77,8 +87,9 @@ export function SheetContent({
   closeLabel = 'Close',
   ...props
 }: SheetContentProps) {
+  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <DialogPrimitive.Portal container={container}>
+    <DialogPrimitive.Portal container={resolvedContainer}>
       {showBackdrop && <DialogPrimitive.Backdrop className={styles.backdrop} />}
       <DialogPrimitive.Popup
         className={sheetContentVariants({ side, className })}

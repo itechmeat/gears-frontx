@@ -301,7 +301,9 @@ a kit popup.
 Pass it when `<body>` is not where the kit's styles or theme reach: a grid in a
 shadow root whose CSS is injected into that root, or a grid under a
 `data-theme` container that is not `<html>` or `<body>`. The node takes a
-shadow root, an element or a ref.
+shadow root, an element or a ref. With `portalContainer` unset, the popups
+fall through to the nearest `PortalContainerProvider` like every other kit
+overlay, so one provider over a subtree covers grids too.
 
 ```tsx
 <div data-theme="dark" ref={themedRef}>

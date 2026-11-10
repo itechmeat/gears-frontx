@@ -49,16 +49,21 @@ on hover, e.g. an info icon whose only job is revealing more text), `delay`
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `bottom` |
 | `align` | `start` \| `center` \| `end` | `center` |
 | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
-| `container` | DOM node to portal the popup into | `<body>` |
+| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `anchor` | the element or virtual element the popup positions against | the trigger |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI Popover.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
 
-The popup portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that section
-as `container` or the popup renders with the root theme — same contract as
-`Dialog`/`Tooltip`/`DropdownMenu`.
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` or wrap the subtree in
+`PortalContainerProvider`, or the popup renders with the root theme - same
+contract as `Dialog`/`Tooltip`/`DropdownMenu`. Inside a shadow root (an
+MFE screen), the popup must be given a container inside that shadow root -
+through `PortalContainerProvider` or `container` - or it renders outside
+the shadow root: unstyled, and an outside press closes it.
 
 ## Examples
 

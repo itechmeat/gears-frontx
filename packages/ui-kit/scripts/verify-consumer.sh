@@ -221,14 +221,18 @@ assert_exceljs_not_installed() {
 # by hook usage, not by any other property: badge/breadcrumb/button-group/
 # dropdown-menu/toast call a hook directly in their own render body
 # (useRender/useContext/useToastManager — see buildPlugin.ts's
-# preserveUseClientPlugin comment); everything else only composes Base UI
-# primitives as JSX, which already carry their own directive in Base UI's
-# dist, so marking them here would take server-renderability away for no
-# reason. input-group/native-select/pagination compose Button/Input/
-# Textarea/Separator as plain JSX (no hook of their own), same as card/
-# table/tabs above.
-CLIENT_COMPONENTS=(alert attachment badge breadcrumb bubble button-group card carousel chart code-block combobox command context-menu data-grid data-table drawer dropdown-menu empty heading input-otp item link marker page-header sidebar status-dot table text toast visually-hidden)
-SERVER_COMPONENTS=(accordion alert-dialog aspect-ratio avatar button calendar checkbox collapsible date-picker description-list dialog direction field grid hover-card input input-group kbd label menubar message message-scroller native-select navigation-menu pagination popover progress questionnaire radio-group resizable scroll-area select separator sheet skeleton slider spinner switch tabs textarea toggle toggle-group tooltip)
+# preserveUseClientPlugin comment); portal-container and the overlay
+# components whose popups resolve their portal target through
+# useResolvedPortalContainer call useContext through it (alert-dialog,
+# combobox, context-menu, dialog, drawer, dropdown-menu, hover-card,
+# navigation-menu, popover, portal-container, select, sheet, toast,
+# tooltip); everything else only composes Base UI primitives as JSX, which
+# already carry their own directive in Base UI's dist, so marking them here
+# would take server-renderability away for no reason. input-group/
+# native-select/pagination compose Button/Input/Textarea/Separator as plain
+# JSX (no hook of their own), same as card/table/tabs above.
+CLIENT_COMPONENTS=(alert alert-dialog attachment badge breadcrumb bubble button-group card carousel chart code-block combobox command context-menu data-grid data-table dialog drawer dropdown-menu empty heading hover-card input-otp item link marker navigation-menu page-header popover portal-container select sheet sidebar status-dot table text toast tooltip visually-hidden)
+SERVER_COMPONENTS=(accordion aspect-ratio avatar button calendar checkbox collapsible date-picker description-list direction field grid input input-group kbd label menubar message message-scroller native-select pagination progress questionnaire radio-group resizable scroll-area separator skeleton slider spinner switch tabs textarea toggle toggle-group)
 
 in_list() {
   # $1: needle, $2+: haystack

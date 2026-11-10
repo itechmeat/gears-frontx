@@ -38,14 +38,19 @@ is no `modal={false}` escape hatch (unlike `Dialog`).
 |------|------|---------|
 | `size` | `'default' \| 'sm'` — `sm` narrows the max width and stacks `AlertDialogCancel`/`AlertDialogAction` into two equal columns instead of a row | `'default'` |
 | `showBackdrop` | `boolean` - renders the dimming backdrop (`--overlay-modal`, the same dark scrim in both themes) | `true` |
-| `container` | DOM node to portal the popup into | `<body>` |
+| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
-The popup portals to `<body>` by default, so if your theme lives on a
-subtree (`data-theme` on a section instead of `<html>`), pass that section
-as `container` or the popup renders with the root theme — same contract as
-`Dialog`.
+Without a `container`, the popup portals to the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+your theme lives on a subtree (`data-theme` on a section instead of
+`<html>`), pass that section as `container` or wrap the subtree in
+`PortalContainerProvider`, or the popup renders with the root theme - same
+contract as `Dialog`. Inside a shadow root (an MFE screen), the popup must
+be given a container inside that shadow root - through
+`PortalContainerProvider` or `container` - or it renders outside the
+shadow root: unstyled, and an outside press closes it.
 
 `AlertDialogAction` and `AlertDialogCancel` are both a Base UI
 `AlertDialog.Close` rendered as a kit `Button` (any `variant`/`size`;
