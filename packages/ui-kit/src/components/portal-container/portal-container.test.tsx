@@ -8,13 +8,14 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 
 import { AlertDialog, AlertDialogContent } from '../alert-dialog/alert-dialog';
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxList } from '../combobox/combobox';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '../context-menu/context-menu';
 import { Dialog, DialogContent, DialogTitle } from '../dialog/dialog';
+import dialogStyles from '../dialog/dialog.module.css';
 import { Drawer, DrawerContent, DrawerPortal, DrawerTitle } from '../drawer/drawer';
 import {
   DropdownMenu,
@@ -85,6 +86,38 @@ interface OverlayCase {
 }
 
 const byProbe = (root: ParentNode) => root.querySelector(`[data-testid="${PROBE_ID}"]`);
+
+/**
+ * A real press on an element: the pointer and mouse run plus the click that
+ * Base UI's dismissal logic decides on, dispatched synchronously like a
+ * browser would fire them. jsdom has no PointerEvent, so pointer events go
+ * through MouseEvent (the kit's vitest setup polyfills a PointerEvent that
+ * subclasses it; constructing the base class directly works either way).
+ */
+function press(target: Element): void {
+  const rect = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    clientX: 0,
+    clientY: 0,
+    button: 0,
+  };
+  fireEvent.pointerDown(target, rect);
+  fireEvent.mouseDown(target, rect);
+  fireEvent.pointerUp(target, rect);
+  fireEvent.mouseUp(target, rect);
+  fireEvent.click(target, rect);
+}
+
+/** One macrotask: the window dismissal handlers run their bookkeeping in timeouts. */
+async function tick(): Promise<void> {
+  await act(async () => {
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  });
+}
 
 const cases: OverlayCase[] = [
   {
@@ -385,6 +418,17 @@ describe('PortalContainerProvider', () => {
   // shadow root, so the popup must land inside it (getRootNode proves the
   // root the popup actually lives in), and pressing a field inside the popup
   // must not dismiss it as an outside press.
+  //
+  // The press is the full synchronous pointer sequence plus a tick, not a
+  // bare click: Base UI's dismissal hook decides on the `click` event and
+  // suppresses it when the press began inside the popup (tracked across the
+  // pointer/mouse down-up run), and its bookkeeping timers only run between
+  // macrotasks - a synchronous fireEvent.click alone can pass through an
+  // exit transition that the real sequence survives. The open state is
+  // asserted through onOpenChange (never called with false) and the popup's
+  // data-open attribute, not through the dialog's mere presence: the popup
+  // node outlives a close during its exit transition, which is exactly what
+  // made the old synchronous [role="dialog"] check vacuous.
   it('keeps a dialog popup inside the shadow root and open on a field press', async () => {
     const host = createHost();
     const shadowRoot = host.attachShadow({ mode: 'open' });
@@ -392,10 +436,11 @@ describe('PortalContainerProvider', () => {
     shadowRoot.appendChild(mountPoint);
     const portalHost = document.createElement('div');
     shadowRoot.appendChild(portalHost);
+    const onOpenChange = vi.fn();
 
     render(
       <PortalContainerProvider value={portalHost}>
-        <Dialog defaultOpen>
+        <Dialog defaultOpen onOpenChange={onOpenChange}>
           <DialogContent>
             <DialogTitle>Settings</DialogTitle>
             <input aria-label="Name" />
@@ -414,8 +459,57 @@ describe('PortalContainerProvider', () => {
 
     const field = portalHost.querySelector('input');
     expect(field).not.toBeNull();
-    fireEvent.click(field as HTMLElement);
-    expect(portalHost.querySelector('[role="dialog"]')).not.toBeNull();
+    press(field as HTMLElement);
+    await tick();
+
+    expect(
+      onOpenChange.mock.calls.some(([open]) => open === false),
+      'the dialog must not treat a press on its own field as an outside press',
+    ).toBe(false);
+    expect(popup.getAttribute('data-open')).toBe('');
+  });
+
+  // Negative control for the test above: the same press sequence on the
+  // modal backdrop - the only surface outside the popup whose press the
+  // modal Dialog honors (a press on any other element outside the shadow
+  // root is ignored, so there is no closer "outside" to press) - must close
+  // it. Without this, the sibling test cannot distinguish "dismissal works
+  // and our press survived it" from "this press sequence can never dismiss
+  // anything".
+  it('closes the dialog when the same press sequence lands on the backdrop', async () => {
+    const host = createHost();
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    const mountPoint = document.createElement('div');
+    shadowRoot.appendChild(mountPoint);
+    const portalHost = document.createElement('div');
+    shadowRoot.appendChild(portalHost);
+    const onOpenChange = vi.fn();
+
+    render(
+      <PortalContainerProvider value={portalHost}>
+        <Dialog defaultOpen onOpenChange={onOpenChange}>
+          <DialogContent>
+            <DialogTitle>Settings</DialogTitle>
+            <input aria-label="Name" />
+          </DialogContent>
+        </Dialog>
+      </PortalContainerProvider>,
+      { container: mountPoint },
+    );
+
+    const popup = await waitFor(() => {
+      const el = portalHost.querySelector('[role="dialog"]');
+      expect(el).not.toBeNull();
+      return el as HTMLElement;
+    });
+
+    const backdrop = portalHost.querySelector(`.${dialogStyles.backdrop}`);
+    expect(backdrop, 'the dialog must render its modal backdrop').not.toBeNull();
+    press(backdrop as HTMLElement);
+    await tick();
+
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything());
+    expect(popup.getAttribute('data-open')).toBeNull();
   });
 
   // gears-frontx#763: Base UI resolves
