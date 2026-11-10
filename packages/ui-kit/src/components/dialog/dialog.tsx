@@ -11,7 +11,7 @@ import { XIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { Button } from '../button/button';
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './dialog.module.css';
 
 export const Dialog = DialogPrimitive.Root;
@@ -92,7 +92,10 @@ export function DialogContent({
     <DialogPrimitive.Portal container={resolvedContainer}>
       {showBackdrop && <DialogPrimitive.Backdrop className={styles.backdrop} />}
       <DialogPrimitive.Popup data-size={size} className={cx(styles.popup, className)} {...props}>
-        {children}
+        {/* PortalScope marks the popup's subtree so a nested kit overlay
+          * follows this popup's portal instead of the provider's container
+          * (gears-frontx#763). Context only: no DOM. */}
+        <PortalScope>{children}</PortalScope>
         {showCloseButton && (
           <DialogPrimitive.Close
             aria-label={closeLabel}

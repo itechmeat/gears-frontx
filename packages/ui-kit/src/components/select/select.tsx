@@ -10,7 +10,7 @@ import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './select.module.css';
 
 export const Select = SelectPrimitive.Root;
@@ -137,7 +137,12 @@ export function SelectContent({
       >
         <SelectPrimitive.Popup className={cx(styles.popup, className)} {...props}>
           <SelectScrollUpButton />
-          <SelectPrimitive.List className={styles.list}>{children}</SelectPrimitive.List>
+          <SelectPrimitive.List className={styles.list}>
+            {/* PortalScope marks the popup's subtree so a nested kit overlay
+              * follows this popup's portal instead of the provider's
+              * container (gears-frontx#763). Context only: no DOM. */}
+            <PortalScope>{children}</PortalScope>
+          </SelectPrimitive.List>
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>

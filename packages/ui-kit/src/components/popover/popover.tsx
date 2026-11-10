@@ -9,7 +9,7 @@ import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { cx } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './popover.module.css';
 
 export const Popover = PopoverPrimitive.Root;
@@ -84,7 +84,10 @@ export function PopoverContent({
         className={styles.positioner}
       >
         <PopoverPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          {children}
+          {/* PortalScope marks the popup's subtree so a nested kit overlay
+            * follows this popup's portal instead of the provider's container
+            * (gears-frontx#763). Context only: no DOM. */}
+          <PortalScope>{children}</PortalScope>
         </PopoverPrimitive.Popup>
       </PopoverPrimitive.Positioner>
     </PopoverPrimitive.Portal>

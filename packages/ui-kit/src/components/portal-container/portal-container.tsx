@@ -23,11 +23,37 @@ export type PortalContainer = DialogPrimitive.Portal.Props['container'];
  */
 const PortalContainerContext = createContext<PortalContainer>(undefined);
 
+/*
+ * True inside a kit popup's portal. useResolvedPortalContainer reads it to
+ * hand a nested overlay to Base UI's own parent-portal fallback (step two
+ * of the resolution order documented on that hook) instead of answering the
+ * provider's container, which would pull the nested overlay out of the
+ * popup that opened it. PortalContainerProvider arms the context to false
+ * around its children, so a provider placed inside a popup - nearer than
+ * that popup - wins again for the overlays below it.
+ */
+const InsidePortalContext = createContext(false);
+
+/**
+ * Marks everything a kit popup renders inside its Base UI Portal as
+ * "inside a kit popup" for useResolvedPortalContainer. Internal building
+ * block: every kit overlay's content part wraps its popup children with it,
+ * and it is deliberately absent from public.ts and src/index.ts so consumer
+ * code can neither fake nor accidentally trip the popup scope. Renders no
+ * DOM of its own.
+ */
+export function PortalScope({ children }: { children?: ReactNode }) {
+  return <InsidePortalContext.Provider value={true}>{children}</InsidePortalContext.Provider>;
+}
+
 export interface PortalContainerProviderProps {
   /**
    * The default portal target for every kit overlay below this provider.
-   * An overlay's own `container` prop still wins, and with neither set the
-   * overlay portals to <body>.
+   * It is step three of the resolution order documented on
+   * useResolvedPortalContainer: an overlay's own `container` prop wins, a
+   * nested overlay inside another kit popup follows that popup's portal,
+   * and with neither set the overlay portals to this value - or to <body>
+   * when there is no provider either.
    */
   value: PortalContainer;
   children?: ReactNode;
@@ -41,9 +67,20 @@ export interface PortalContainerProviderProps {
  * micro-frontend screen rendered inside a shadow root wraps its subtree in
  * this provider with a node inside that shadow root, and every popup lands
  * inside the tree the kit's styles are delivered to.
+ *
+ * An overlay resolves its target as: its own `container` prop, then the
+ * portal of the kit popup it renders inside (so a nested overlay stays in
+ * the popup that opened it), then this value, then <body>. The provider
+ * also resets the popup scope around its children, so a provider nested
+ * inside a popup is nearer than that popup and wins again for the overlays
+ * below it.
  */
 export function PortalContainerProvider({ value, children }: PortalContainerProviderProps) {
-  return <PortalContainerContext.Provider value={value}>{children}</PortalContainerContext.Provider>;
+  return (
+    <PortalContainerContext.Provider value={value}>
+      <InsidePortalContext.Provider value={false}>{children}</InsidePortalContext.Provider>
+    </PortalContainerContext.Provider>
+  );
 }
 
 /**
@@ -57,14 +94,35 @@ export function usePortalContainer(): PortalContainer | undefined {
 }
 
 /**
- * One overlay's resolved portal target: the given `container` when the
- * caller passed one - including an explicit null, which the caller set on
- * purpose - otherwise the nearest PortalContainerProvider's value,
- * otherwise undefined, which leaves Base UI's own default (the document
- * body) in force. Every kit component that renders a Base UI Portal
- * resolves its target through this hook.
+ * One overlay's resolved portal target, in order:
+ *
+ * 1. the given `container` when the caller passed one - including an
+ *    explicit null, which the caller set on purpose and which makes Base UI
+ *    wait for a target instead of falling through;
+ * 2. undefined when the overlay renders inside another kit popup's portal:
+ *    Base UI then portals the overlay into that popup's own portal node
+ *    (FloatingPortal's parentPortalNode), so a nested overlay stays in the
+ *    popup that opened it;
+ * 3. the nearest PortalContainerProvider's value;
+ * 4. undefined, which leaves Base UI's own default (the document body) in
+ *    force.
+ *
+ * The popup scope read in step two is armed by every kit overlay's Portal
+ * (PortalScope around its popup children) and reset by every
+ * PortalContainerProvider, so a provider placed inside a popup is nearer
+ * than that popup and wins again. usePortalContainer stays scope-blind: it
+ * always answers the provider value, so app code portalling its own content
+ * keeps working inside popups too. Every kit component that renders a Base
+ * UI Portal resolves its target through this hook.
  */
 export function useResolvedPortalContainer(container: PortalContainer): PortalContainer {
   const provided = useContext(PortalContainerContext);
-  return container !== undefined ? container : provided;
+  const insideKitPopup = useContext(InsidePortalContext);
+  if (container !== undefined) {
+    return container;
+  }
+  if (insideKitPopup) {
+    return undefined;
+  }
+  return provided;
 }

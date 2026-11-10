@@ -9,7 +9,7 @@ import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 import { cva, cx } from 'class-variance-authority';
 import { createContext, useContext, type ComponentProps } from 'react';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './drawer.module.css';
 
 /**
@@ -196,7 +196,12 @@ export function DrawerContent({ className, children, container, ...props }: Draw
           {...props}
         >
           {showSwipeHandle && <DrawerSwipeHandle />}
-          <DrawerPrimitive.Content className={styles.content}>{children}</DrawerPrimitive.Content>
+          <DrawerPrimitive.Content className={styles.content}>
+            {/* PortalScope marks the popup's subtree so a nested kit overlay
+              * follows this popup's portal instead of the provider's
+              * container (gears-frontx#763). Context only: no DOM. */}
+            <PortalScope>{children}</PortalScope>
+          </DrawerPrimitive.Content>
         </DrawerPrimitive.Popup>
       </DrawerPrimitive.Viewport>
     </DrawerPortal>
