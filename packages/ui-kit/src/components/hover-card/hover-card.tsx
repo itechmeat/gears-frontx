@@ -8,7 +8,7 @@
 import { PreviewCard as PreviewCardPrimitive } from '@base-ui/react/preview-card';
 import { cx } from 'class-variance-authority';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './hover-card.module.css';
 
 /**
@@ -90,7 +90,10 @@ export function HoverCardContent({
         className={styles.positioner}
       >
         <PreviewCardPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          {children}
+          {/* PortalScope marks the popup's subtree so a nested kit overlay
+            * follows this popup's portal instead of the provider's container
+            * (gears-frontx#763). Context only: no DOM. */}
+          <PortalScope>{children}</PortalScope>
         </PreviewCardPrimitive.Popup>
       </PreviewCardPrimitive.Positioner>
     </PreviewCardPrimitive.Portal>

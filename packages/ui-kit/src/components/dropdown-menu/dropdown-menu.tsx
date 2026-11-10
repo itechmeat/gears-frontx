@@ -8,7 +8,7 @@ import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronRightIcon } from 'lucide-react';
 import { type ComponentProps, createContext, useContext } from 'react';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './dropdown-menu.module.css';
 
 /*
@@ -79,8 +79,13 @@ export function DropdownMenuContent({
   // The menu tree's own inheritance stays nearest: a container an enclosing
   // DropdownMenuContent resolved (its own prop, or the provider it saw)
   // outranks the provider around this submenu, or a themed first-level popup
-  // would lose its subtree to a farther provider.
-  const effectiveContainer = useResolvedPortalContainer(container ?? inheritedContainer);
+  // would lose its subtree to a farther provider. `!== undefined` rather
+  // than ??, so an explicit `container={null}` survives inheritance and
+  // still makes Base UI wait for a target instead of silently becoming the
+  // inherited value.
+  const effectiveContainer = useResolvedPortalContainer(
+    container !== undefined ? container : inheritedContainer,
+  );
   return (
     <MenuContainerContext.Provider value={effectiveContainer}>
       <MenuPrimitive.Portal container={effectiveContainer}>
@@ -95,7 +100,10 @@ export function DropdownMenuContent({
           className={styles.positioner}
         >
           <MenuPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-            {children}
+            {/* PortalScope marks the popup's subtree so a nested kit overlay
+              * follows this popup's portal instead of the provider's
+              * container (gears-frontx#763). Context only: no DOM. */}
+            <PortalScope>{children}</PortalScope>
           </MenuPrimitive.Popup>
         </MenuPrimitive.Positioner>
       </MenuPrimitive.Portal>

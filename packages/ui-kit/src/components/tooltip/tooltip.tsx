@@ -8,7 +8,7 @@
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
 import { cx } from 'class-variance-authority';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './tooltip.module.css';
 
 export const Tooltip = TooltipPrimitive.Root;
@@ -95,7 +95,10 @@ export function TooltipContent({
         className={styles.positioner}
       >
         <TooltipPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          {children}
+          {/* PortalScope marks the popup's subtree so a nested kit overlay
+            * follows this popup's portal instead of the provider's container
+            * (gears-frontx#763). Context only: no DOM. */}
+          <PortalScope>{children}</PortalScope>
           <TooltipPrimitive.Arrow className={styles.arrow} />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>

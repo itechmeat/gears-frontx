@@ -8,7 +8,7 @@ import { cx } from 'class-variance-authority';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 import { type ComponentPropsWithRef, type ReactNode, useRef } from 'react';
 
-import { useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './combobox.module.css';
 
 export const Combobox = ComboboxPrimitive.Root;
@@ -244,7 +244,10 @@ export function ComboboxContent({
         className={styles.positioner}
       >
         <ComboboxPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          {children}
+          {/* PortalScope marks the popup's subtree so a nested kit overlay
+            * follows this popup's portal instead of the provider's container
+            * (gears-frontx#763). Context only: no DOM. */}
+          <PortalScope>{children}</PortalScope>
         </ComboboxPrimitive.Popup>
       </ComboboxPrimitive.Positioner>
     </ComboboxPrimitive.Portal>
