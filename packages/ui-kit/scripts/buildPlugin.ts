@@ -312,8 +312,9 @@ export function buildPlugin(): PluginOption[] {
         // which leaves its own entry a bare re-export facade: `moduleIds` is
         // empty there, only `facadeModuleId` still names the entry module.
         // Such a facade must inherit the banner from that module: every
-        // published subpath entry has to carry the directive itself, since a
-        // Server Component importing the subpath never sees past the facade.
+        // published client entry carries the banner itself
+        // (scripts/verify-consumer.sh checks it), so the client boundary is
+        // visible at the subpath without following the re-export.
         const facadeIsClient =
           chunk.facadeModuleId !== null && clientModuleIds.has(chunk.facadeModuleId);
         if (

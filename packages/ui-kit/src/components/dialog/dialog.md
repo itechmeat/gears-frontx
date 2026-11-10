@@ -54,14 +54,15 @@ touch screen reader users have out of a modal dialog (see above) — only
 do this if you compose your own `DialogClose` somewhere inside
 `DialogContent` (e.g. in the footer).
 
-Without a `container`, the popup portals to the nearest
+Without a `container`, a popup opened inside another kit popup stays in
+that popup's portal; otherwise it portals to the nearest
 `PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the popup renders with the root theme.
 Inside a shadow root (an MFE screen), the popup must be given a container
-inside that shadow root - through `PortalContainerProvider` or `container`
-- or it renders outside the shadow root: unstyled, and an outside press
+inside that shadow root, through `PortalContainerProvider` or `container`,
+or it renders outside the shadow root: unstyled, and an outside press
 closes it.
 
 `DialogTrigger` and `DialogClose` are unstyled pass-throughs (native

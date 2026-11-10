@@ -42,11 +42,12 @@ invariants:
       popover renders nothing.
   - id: portals-to-body-unless-container
     text: >-
-      Without `container`, the popup portals into the node of the nearest
-      enclosing portal, then the nearest PortalContainerProvider's value,
-      then the document body when there is neither; a theme
-      scoped to a subtree reaches the popup only when that subtree, or a
-      node inside it, is passed as `container`.
+      Without `container`, the popup portals into the portal node of the
+      kit popup it renders inside, so a nested overlay stays in the popup
+      that opened it (a PortalContainerProvider nested inside that popup
+      wins for the overlays below it), then the nearest
+      PortalContainerProvider's value, then the document body when there
+      is neither.
   - id: named-by-its-title-described-by-its-description
     text: >-
       The popup has the dialog role and takes its accessible name from the
@@ -191,7 +192,8 @@ examples:
       why: >-
         The popup portals to the document body, outside the section, so it
         renders with the document root's theme; pass the section, or a node
-        inside it, as `container`.
+        inside it, as `container`, or wrap the section in
+        PortalContainerProvider.
 
 family_membership:
   name: popover

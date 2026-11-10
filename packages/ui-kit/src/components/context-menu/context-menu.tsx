@@ -109,9 +109,6 @@ export function ContextMenuContent({
           className={styles.positioner}
         >
           <ContextMenuPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-            {/* PortalScope marks the popup's subtree so a nested kit overlay
-              * follows this popup's portal instead of the provider's
-              * container (gears-frontx#763). Context only: no DOM. */}
             <PortalScope>{children}</PortalScope>
           </ContextMenuPrimitive.Popup>
         </ContextMenuPrimitive.Positioner>

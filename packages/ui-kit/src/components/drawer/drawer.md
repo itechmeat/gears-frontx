@@ -64,7 +64,8 @@ directly — pass `side` instead.
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI `Drawer.Popup` | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
-Without a `container`, the popup portals to the nearest
+Without a `container`, a popup opened inside another kit popup stays in
+that popup's portal; otherwise it portals to the nearest
 `PortalContainerProvider`'s value, or to `<body>` when there is none. If
 your theme lives on a subtree, pass it (or a node inside it) as
 `container` or wrap the subtree in `PortalContainerProvider`, or the popup

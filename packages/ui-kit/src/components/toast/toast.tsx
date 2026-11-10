@@ -180,10 +180,6 @@ export function Toaster({
       {children}
       <ToastPrimitive.Portal container={resolvedContainer}>
         <ToastPrimitive.Viewport aria-label={label} className={styles.viewport}>
-          {/* PortalScope marks the viewport's subtree so a kit overlay that
-            * a toast's own content renders follows the toast portal instead
-            * of the provider's container (gears-frontx#763). Context only:
-            * no DOM. */}
           <PortalScope>
             <ToastList closeLabel={closeLabel} />
           </PortalScope>

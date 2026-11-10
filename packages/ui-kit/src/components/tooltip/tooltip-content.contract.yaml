@@ -29,11 +29,12 @@ invariants:
       tooltip renders nothing.
   - id: portals-to-body-unless-container
     text: >-
-      Without `container`, the popup portals into the node of the nearest
-      enclosing portal, then the nearest PortalContainerProvider's value,
-      then the document body when there is neither; a theme
-      scoped to a subtree reaches the popup only when that subtree, or a
-      node inside it, is passed as `container`.
+      Without `container`, the popup portals into the portal node of the
+      kit popup it renders inside, so a nested overlay stays in the popup
+      that opened it (a PortalContainerProvider nested inside that popup
+      wins for the overlays below it), then the nearest
+      PortalContainerProvider's value, then the document body when there
+      is neither.
   - id: caret-always-rendered
     text: >-
       Every popup renders a caret, hidden from assistive technology, against
