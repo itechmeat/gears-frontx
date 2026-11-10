@@ -5,7 +5,12 @@
 'use client';
 
 import type { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { createContext, useContext, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 
 /**
  * The portal target every kit overlay accepts: the `container` prop type of
@@ -113,7 +118,9 @@ export function usePortalContainer(): PortalContainer | undefined {
  * than that popup and wins again. usePortalContainer stays scope-blind: it
  * always answers the provider value, so app code portalling its own content
  * keeps working inside popups too. Every kit component that renders a Base
- * UI Portal resolves its target through this hook.
+ * UI Portal resolves its target through this hook - either by calling it in
+ * its own render body (which makes that module a client module) or, for the
+ * overlays below that stay server modules, through ResolvedPortal.
  */
 export function useResolvedPortalContainer(container: PortalContainer): PortalContainer {
   const provided = useContext(PortalContainerContext);
@@ -125,4 +132,43 @@ export function useResolvedPortalContainer(container: PortalContainer): PortalCo
     return undefined;
   }
   return provided;
+}
+
+/**
+ * Renders a Base UI Portal pointed at the target useResolvedPortalContainer
+ * resolves for the calling overlay: pass the Portal component to render as
+ * `portal` and that Portal's own props (`container`, `children`, the rest)
+ * as the remaining props, and this resolves `container` through the
+ * resolution order documented on useResolvedPortalContainer and renders
+ * that Portal with it. Typing `portal` against the same props keeps every
+ * call site on the full prop types of the primitive it renders.
+ *
+ * Internal building block: deliberately absent from public.ts and
+ * src/index.ts, exactly like PortalScope, so consumer code cannot render a
+ * kit portal that bypasses the resolution order.
+ *
+ * Why the overlay parts render this instead of calling the hook in their
+ * own render body: the hook reads context, which makes the component that
+ * calls it a client module. Rendering ResolvedPortal instead keeps those
+ * overlay modules directive-free and server-renderable - the context read
+ * happens here, inside this client module, in the shared portal-container
+ * chunk their portal already links against.
+ */
+export function ResolvedPortal<Props extends { container?: PortalContainer }>({
+  portal: Portal,
+  container,
+  ...rest
+}: { portal: ComponentType<Props> } & Props) {
+  const resolvedContainer = useResolvedPortalContainer(container);
+  /*
+   * Sound, and still fully checked: the call site's JSX was already checked
+   * against Props in full, so `rest` (the same props minus `portal` and
+   * `container`) plus the resolved `container` are Props values again.
+   * TypeScript cannot prove that for a generic rest type - it would have to
+   * subtract two keys from an uninstantiated Props - so the conversion goes
+   * through unknown, the way tsc itself prescribes for this shape. The cast
+   * moves values, not types out of scope: the rendered Portal still checks
+   * every prop against Props, so no `any` and nothing to suppress.
+   */
+  return <Portal {...(rest as unknown as Props)} container={resolvedContainer} />;
 }

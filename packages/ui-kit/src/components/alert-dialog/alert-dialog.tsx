@@ -1,16 +1,9 @@
-// Load-bearing: AlertDialogContent calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { AlertDialog as AlertDialogPrimitive } from '@base-ui/react/alert-dialog';
 import { cx } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 
 import { Button, type ButtonProps } from '../button/button';
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './alert-dialog.module.css';
 
 export const AlertDialog = AlertDialogPrimitive.Root;
@@ -67,9 +60,8 @@ export function AlertDialogContent({
   size = 'default',
   ...props
 }: AlertDialogContentProps) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <AlertDialogPrimitive.Portal container={resolvedContainer}>
+    <ResolvedPortal portal={AlertDialogPrimitive.Portal} container={container}>
       {showBackdrop && <AlertDialogPrimitive.Backdrop className={styles.backdrop} />}
       <AlertDialogPrimitive.Popup
         data-size={size}
@@ -81,7 +73,7 @@ export function AlertDialogContent({
           * (gears-frontx#763). Context only: no DOM. */}
         <PortalScope>{children}</PortalScope>
       </AlertDialogPrimitive.Popup>
-    </AlertDialogPrimitive.Portal>
+    </ResolvedPortal>
   );
 }
 

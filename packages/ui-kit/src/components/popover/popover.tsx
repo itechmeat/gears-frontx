@@ -1,15 +1,8 @@
-// Load-bearing: PopoverContent calls useContext (through
-// useResolvedPortalContainer) directly in its own render body, same shape as
-// DropdownMenuContent's useContext(MenuContainerContext) - see that file's
-// own banner comment. Coupled to CLIENT_COMPONENTS in
-// scripts/verify-consumer.sh - keep both in sync if this ever changes.
-'use client';
-
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { cx } from 'class-variance-authority';
 import type { ComponentProps } from 'react';
 
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
 import styles from './popover.module.css';
 
 export const Popover = PopoverPrimitive.Root;
@@ -69,9 +62,8 @@ export function PopoverContent({
   collisionPadding,
   ...props
 }: PopoverContentProps) {
-  const resolvedContainer = useResolvedPortalContainer(container);
   return (
-    <PopoverPrimitive.Portal container={resolvedContainer}>
+    <ResolvedPortal portal={PopoverPrimitive.Portal} container={container}>
       <PopoverPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -90,7 +82,7 @@ export function PopoverContent({
           <PortalScope>{children}</PortalScope>
         </PopoverPrimitive.Popup>
       </PopoverPrimitive.Positioner>
-    </PopoverPrimitive.Portal>
+    </ResolvedPortal>
   );
 }
 

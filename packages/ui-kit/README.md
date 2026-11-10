@@ -61,22 +61,18 @@ In an RSC framework (Next.js App Router being the dominant case), most kit
 components render straight from a Server Component with no kit-side client JS —
 they only compose Base UI primitives as JSX, and Base UI's own dist already
 carries `'use client'` on the modules that call hooks (an interactive primitive
-like Checkbox or Switch still ships Base UI's own client bundle; only the kit
+like Select or Dialog still ships Base UI's own client bundle; only the kit
 wrapper around it needs no directive of its own). The rest call a hook directly
-in their own render body and ship a banner on their own chunk instead: the
-portal container provider with its hook, and the overlay parts whose popups
-read that context to resolve where they portal.
+in their own render body and ship a banner on their own chunk instead.
 
 The kit components that carry a `'use client'` banner of their own: Alert,
-AlertDialog, Attachment, Badge, Breadcrumb, Bubble, ButtonGroup, Card,
-Carousel, Chart, CodeBlock, Combobox, Command, ContextMenu, DataGrid,
-DataTable, Dialog, Drawer, DropdownMenu, Empty, Heading, HoverCard, InputOtp,
-Item, Link, Marker, NavigationMenu, PageHeader, Popover, PortalContainer,
-Select, Sheet, Sidebar, StatusDot, Table, Text, Toast, Tooltip,
-VisuallyHidden.
+Attachment, Badge, Breadcrumb, Bubble, ButtonGroup, Card, Carousel, Chart,
+CodeBlock, Combobox, Command, ContextMenu, DataGrid, DataTable, Drawer,
+DropdownMenu, Empty, Heading, InputOtp, Item, Link, Marker, PageHeader,
+PortalContainer, Sidebar, StatusDot, Table, Text, Toast, VisuallyHidden.
 
-Everything else, the interactive primitives like Button, Checkbox,
-Switch, RadioGroup, and Tabs, stays server-renderable; each
+Everything else — including interactive primitives like Button, Checkbox,
+Dialog, Select, Switch, RadioGroup, and Tabs — stays server-renderable; each
 one's own client interactivity comes from a Base UI primitive it renders as a
 child, which establishes its own client boundary as needed. That list is
 checked against the source on every test run (`src/client-boundaries.test.ts`),
