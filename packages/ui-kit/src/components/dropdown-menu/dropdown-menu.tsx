@@ -89,8 +89,8 @@ export function DropdownMenuContent({
   // than ??, so an explicit `container={null}` survives inheritance and
   // still makes Base UI wait for a target instead of silently becoming the
   // inherited value. Before 0.6.0 this was `container ?? inheritedContainer`,
-  // so an explicit null fell through - to <body> with no provider above, to
-  // the provider's node under one - and did not hold the popup back.
+  // so an explicit null fell through to the container an enclosing menu
+  // content resolved, or to <body>, and did not hold the popup back.
   const effectiveContainer = useResolvedPortalContainer(
     container !== undefined ? container : inheritedContainer,
   );

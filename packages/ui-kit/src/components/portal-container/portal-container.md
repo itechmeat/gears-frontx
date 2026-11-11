@@ -19,7 +19,7 @@ order:
    explicit `null` counts: the caller set it on purpose, and Base UI then
    waits for a target instead of falling through - a behaviour menus
    gained in 0.6.0: before, an explicit null on menu content fell through
-   to `<body>`),
+   to the container an enclosing menu content resolved, or to `<body>`),
 2. Base UI's parent portal, when the overlay renders, at any depth, inside
    a kit popup that gives Base UI one, so a nested overlay stays in the
    popup that opened it. A popup arms this step by wrapping its popup
