@@ -80,7 +80,7 @@ step. The inheritance crosses menu popups only: any kit popup that arms the popu
 menu of the same family between the two menu contents ends it, so a menu
 inside one of those follows the kit overlay order from that popup on - its
 portal node, unless a nearer `PortalContainerProvider` sits in between -
-which keeps the menu reachable when the intervening popup is a modal
+which keeps the menu out of the subtree a dialog hides when the intervening popup is a modal
 dialog, since the dialog marks everything outside its own popup
 `aria-hidden` while it is open. Outside kit popups that arm the popup
 scope, that is the nearest `PortalContainerProvider`'s value, or `<body>`
