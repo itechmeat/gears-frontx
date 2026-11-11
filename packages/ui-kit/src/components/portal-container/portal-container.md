@@ -23,28 +23,32 @@ order:
    popup that opened it. A popup arms this step by wrapping its popup
    children in `PortalScope`, with no `PortalContainerProvider` in
    between: the arming overlays are Dialog, AlertDialog, Sheet, Drawer,
-   Popover, Select, Combobox, the menus (DropdownMenu, ContextMenu,
-   Menubar, submenus included) and the NavigationMenu viewport. A
-   `PortalContainerProvider` nested inside a popup resets the step, so
-   that provider wins again for the overlays below it,
+   Popover, Select, Combobox and the menus (DropdownMenu, ContextMenu,
+   Menubar, submenus included). A `PortalContainerProvider` nested inside
+   a popup resets the step, so that provider wins again for the overlays
+   below it - menu content keeps the inheritance described below,
 3. the nearest `PortalContainerProvider`'s value,
 4. Base UI's own default, `<body>`.
 
-Menus add one step in front: a submenu first inherits the container its
-parent menu content resolved (`DropdownMenuContent` hands the container it
-resolved to every `DropdownMenuSubContent` below it, so a theme passed to
-the first-level popup holds in its submenus), then follows the order
-above.
+Menus add one step in front: any menu content rendered inside another menu
+content (a submenu, or a menu opened inside a popup or provider that sits
+in a menu) first inherits the container that enclosing menu content
+resolved (`DropdownMenuContent` hands the container it resolved to every
+menu content below it, so a theme passed to the first-level popup holds in
+its submenus). That inheritance outranks a nearer `PortalContainerProvider`
+and the popup step; what it leaves unset follows the order above.
 
 Tooltip, HoverCard and Toast neither arm nor reset the popup scope: an
 overlay nested inside one of them follows whatever encloses that Tooltip,
 HoverCard or Toast - step two when a popup that arms the scope encloses it
-(at any depth), steps three and four when none does. One known limit:
-`NavigationMenuContent` mounts through a raw `createPortal` into the
-viewport, outside the popup's React subtree, so overlays inside
-`NavigationMenuContent` see the popup step only from popups enclosing the
-whole NavigationMenu - they skip the NavigationMenu's own viewport scope,
-and otherwise follow steps three and four.
+(at any depth), steps three and four when none does. One known limit: the
+NavigationMenu wraps its viewport in `PortalScope`, but no consumer content
+renders under it, because `NavigationMenuContent` arrives through a raw
+`createPortal` into the viewport, outside that popup's React subtree. The
+NavigationMenu therefore arms nothing for consumer overlays: overlays
+inside `NavigationMenuContent` see the popup step only from popups
+enclosing the whole NavigationMenu, and otherwise follow steps three and
+four.
 
 `usePortalContainer()` returns the provided value, or `undefined` with no
 provider above the caller - also inside popups, where it ignores the

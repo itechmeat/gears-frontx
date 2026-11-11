@@ -62,13 +62,17 @@ export interface ContextMenuContentProps
   className?: string;
   /**
    * Where to portal the popup. Without a `container`, the popup portals
-   * where the kit overlay order puts it (see PortalContainer): a submenu
-   * first inherits the container its parent menu resolved, and outside
-   * other kit popups that is the nearest PortalContainerProvider's value,
-   * or <body> when there is none. Pass a themed container when the theme
-   * is scoped to a subtree (data-theme on a container that isn't at
-   * document root) so the popup inherits its tokens and font.
-   * Inherited by nested ContextMenuSubContent unless it passes its own.
+   * where the kit overlay order puts it (see useResolvedPortalContainer):
+   * any ContextMenuContent rendered inside another ContextMenuContent (a
+   * submenu, or a menu opened inside a popup or provider that sits in a
+   * menu) first inherits the container that enclosing content resolved,
+   * and that inheritance outranks a nearer PortalContainerProvider and the
+   * popup step; outside kit popups that arm the popup scope, that is the
+   * nearest PortalContainerProvider's value, or <body> when there is none.
+   * Pass a themed container when the theme is scoped to a subtree
+   * (data-theme on a container that isn't at document root) so the popup
+   * inherits its tokens and font. Inherited by nested
+   * ContextMenuSubContent unless it passes its own.
    */
   container?: ContextMenuPrimitive.Portal.Props['container'];
 }

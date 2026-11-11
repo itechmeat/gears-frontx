@@ -64,11 +64,15 @@ Rules for generated code:
   preference, `data-theme` go on `<html>`/`<body>`, not on an inner
   container: overlay components (Select, Dialog, DropdownMenu, Tooltip,
   Toaster) portal their popup into an enclosing kit popup's portal when
-  that popup arms the kit's portal order - a Tooltip, HoverCard or Toast
-  neither arms nor resets it, so the popup then follows whatever encloses
-  it - else the nearest `PortalContainerProvider`'s value, or to
-  `<body>` when there is none, and inherit theme tokens and font from
-  there. A
+  that popup arms the popup scope - a Tooltip, HoverCard or Toast neither
+  arms nor resets it, so the popup then follows whatever encloses it -
+  else the nearest `PortalContainerProvider`'s value, or `<body>` when
+  there is none, and inherit theme tokens and font from there. A menu
+  content rendered inside another menu content (a submenu, or a menu
+  opened inside a popup or provider that sits in a menu) first inherits
+  the container that enclosing menu content resolved, and that
+  inheritance outranks a nearer `PortalContainerProvider` and the popup
+  step. A
   `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
   surface, not just its descendants' tokens, so it can be nested inside a
   page carrying the opposite theme. If a subtree must carry its own theme,

@@ -54,13 +54,16 @@ sizes to its own content instead, since a submenu's anchor is its own
 trigger.
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): a submenu first inherits the container its
-parent menu resolved, and outside other kit popups that is the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
-your theme lives on a subtree (`data-theme` on a section instead of
-`<html>`), pass that section as `container` or wrap the subtree in
-`PortalContainerProvider`, or the popup renders with the root theme - same
-contract as `Dialog` and `Select`. Inside a shadow root (an MFE screen),
+it (see PortalContainer): any `DropdownMenuContent` rendered inside another
+`DropdownMenuContent` (a submenu, or a menu opened inside a popup or
+provider that sits in a menu) first inherits the container that enclosing
+content resolved, and that inheritance outranks a nearer
+`PortalContainerProvider` and the popup step; outside kit popups that arm
+the popup scope, that is the nearest `PortalContainerProvider`'s value, or
+`<body>` when there is none, so if your theme lives on a subtree
+(`data-theme` on a section instead of `<html>`), pass that section as
+`container` or wrap the subtree in `PortalContainerProvider`, or the popup
+renders with the root theme - same contract as `Dialog` and `Select`. Inside a shadow root (an MFE screen),
 the popup must be given a container inside that shadow root - through
 `PortalContainerProvider` or `container` - or it renders outside the
 shadow root: unstyled, and an outside press closes it.

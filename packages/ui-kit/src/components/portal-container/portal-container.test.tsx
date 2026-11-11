@@ -588,10 +588,11 @@ describe('PortalContainerProvider', () => {
 
   // An explicit null is a set value, not an unset one: Base UI holds the
   // popup back until a real container arrives, and neither the provider nor
-  // <body> may catch it meanwhile. The rerender below is the positive
-  // control: one empty flush is enough for a real container to mount the
-  // popup, so the null assertions prove a held-back popup, not one that
-  // has simply not mounted yet.
+  // <body> may catch it meanwhile. The null assertions run on the initial
+  // render, so the positive control below is a fresh mount: the same tree
+  // with a real container rendered from scratch still mounts the popup
+  // under one empty flush, proving the null assertions describe a
+  // held-back popup, not one that has simply not mounted yet.
   it('lets an explicit container={null} hold a dialog popup back under a provider', async () => {
     const providerHost = createHost();
     const lateHost = createHost();
@@ -605,7 +606,7 @@ describe('PortalContainerProvider', () => {
         </Dialog>
       </PortalContainerProvider>
     );
-    const { rerender } = render(tree(null));
+    const { rerender, unmount } = render(tree(null));
 
     await act(async () => {});
     expect(byProbe(providerHost)).toBeNull();
@@ -613,14 +614,23 @@ describe('PortalContainerProvider', () => {
     rerender(tree(lateHost));
     await act(async () => {});
     expect(byProbe(lateHost)).not.toBeNull();
+
+    // Fresh mount, not the rerender above: the initial render is the path
+    // the null assertions run on.
+    unmount();
+    const freshHost = createHost();
+    render(tree(freshHost));
+    await act(async () => {});
+    expect(byProbe(freshHost)).not.toBeNull();
   });
 
   // Same hold for a menu, whose `container ?? inheritedContainer` shorthand
   // used to swallow the explicit null into the inherited (here: unset)
-  // value and so handed the popup to the provider. The rerender below is
-  // the same positive control as the dialog test above: the popup mounts
-  // under one empty flush once a real container arrives, so the null
-  // assertions prove a held-back popup, not an unmounted one.
+  // value and so handed the popup to the provider. The fresh-mount control
+  // below is the same positive control as the dialog test above: the same
+  // tree rendered from scratch with a real container mounts the popup under
+  // one empty flush, so the null assertions prove a held-back popup, not an
+  // unmounted one.
   it('lets an explicit container={null} hold a dropdown menu popup back under a provider', async () => {
     const providerHost = createHost();
     const lateHost = createHost();
@@ -634,7 +644,7 @@ describe('PortalContainerProvider', () => {
         </DropdownMenu>
       </PortalContainerProvider>
     );
-    const { rerender } = render(tree(null));
+    const { rerender, unmount } = render(tree(null));
 
     await act(async () => {});
     expect(byProbe(providerHost)).toBeNull();
@@ -642,6 +652,14 @@ describe('PortalContainerProvider', () => {
     rerender(tree(lateHost));
     await act(async () => {});
     expect(byProbe(lateHost)).not.toBeNull();
+
+    // Fresh mount, not the rerender above: the initial render is the path
+    // the null assertions run on.
+    unmount();
+    const freshHost = createHost();
+    render(tree(freshHost));
+    await act(async () => {});
+    expect(byProbe(freshHost)).not.toBeNull();
   });
 
   it('portals to a ref container under a provider', async () => {
@@ -738,8 +756,9 @@ describe('PortalContainerProvider', () => {
   /*
    * Tooltip, HoverCard and Toast portal through Base UI's FloatingPortalLite,
    * which provides no PortalContext: there is no parent portal node inside
-   * them for a nested overlay to fall back to, so they do not arm the popup
-   * scope and an overlay opened inside one resolves provider-then-body again
+   * them for a nested overlay to fall back to, so they neither arm nor reset
+   * the popup scope, and an overlay opened inside one follows whatever
+   * encloses it: provider-then-body here, where no arming popup encloses it
    * (armed, the scope would answer undefined and send the nested overlay to
    * <body>, outside a shadow-root provider).
    */
@@ -831,12 +850,14 @@ describe('PortalContainerProvider', () => {
     expect(providerHost.contains(probe)).toBe(true);
   });
 
-  // The Lite popups neither arm nor reset the popup scope: a popover nested
-  // in a tooltip that sits inside an open dialog still sees the dialog's
-  // scope from below the tooltip, so it stays in the dialog's portal node
-  // instead of falling through to the provider. The dialog carries its own
-  // container here, so "not the provider" is observable as an empty
-  // provider host.
+  // A Tooltip does not reset the popup scope: a popover nested in a tooltip
+  // that sits inside an open dialog still sees the dialog's scope from below
+  // the tooltip, so it stays in the dialog's portal node instead of falling
+  // through to the provider. HoverCard and Toast share the same shape - they
+  // wrap nothing of their own either, and the tests above already prove they
+  // do not arm the scope - so this one covers the not-resetting side. The
+  // dialog carries its own container here, so "not the provider" is
+  // observable as an empty provider host.
   it('keeps a popover nested in a tooltip inside a dialog in the dialog portal node', async () => {
     const providerHost = createHost();
     const dialogHost = createHost();
