@@ -67,8 +67,8 @@ your theme lives on a subtree (`data-theme` on a section instead of
 contract as `Dialog` and `Select`. An explicit `container={null}` holds
 the popup back for menus too, like the other overlays: Base UI waits for
 a target instead of portalling anywhere. That is a behaviour change in
-0.6.0 - before, an explicit null on menu content fell through, to
-`<body>` with no provider above (or to the provider's node under one).
+0.6.0 - before, an explicit null on menu content fell through to the
+container an enclosing menu content resolved, or to `<body>`.
 Inside a shadow root (an MFE screen),
 the popup must be given a container inside that shadow root - through
 `PortalContainerProvider` or `container` - or it renders outside the shadow

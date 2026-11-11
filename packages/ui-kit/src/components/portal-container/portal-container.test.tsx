@@ -712,12 +712,15 @@ describe('PortalContainerProvider', () => {
       return el as Element;
     });
     // The popover's portal node hangs one level down, inside the drawer's
-    // portal node - its parent is a Base UI portal node, not the provider
+    // portal node - its parent is the Base UI portal node DrawerPortal
+    // created directly in the provider container, not the provider
     // container itself (which is where an unscoped DrawerPortal sends it).
     const popoverPortalNode = portalNodeOf(probe);
     expect(popoverPortalNode).not.toBeNull();
     expect(popoverPortalNode?.parentElement).not.toBe(providerHost);
-    expect(popoverPortalNode?.parentElement?.hasAttribute('data-base-ui-portal')).toBe(true);
+    const drawerPortalNode = popoverPortalNode?.parentElement ?? null;
+    expect(drawerPortalNode?.hasAttribute('data-base-ui-portal')).toBe(true);
+    expect(drawerPortalNode?.parentElement).toBe(providerHost);
   });
 
   // A provider inside a popup is nearer than that popup: it resets the
