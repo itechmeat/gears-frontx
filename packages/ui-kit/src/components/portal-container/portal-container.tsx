@@ -51,19 +51,20 @@ const PortalContainerContext = createContext<PortalContainer>(undefined);
 const InsidePortalContext = createContext(false);
 
 /**
- * Marks everything a kit popup renders inside its Base UI Portal as
- * "inside a kit popup" for useResolvedPortalContainer. Internal building
- * block: the content part of every overlay whose Base UI portal gives
- * Base UI a parent portal node - Dialog, AlertDialog, Sheet, Drawer,
- * Popover, Select, Combobox and the menus - wraps its popup children with
- * it. It is deliberately absent from public.ts and src/index.ts so
- * consumer code can neither fake nor accidentally trip the popup scope. Tooltip, HoverCard and Toast neither
- * arm it nor reset it: their portals are FloatingPortalLite, which
- * provides no PortalContext, so armed there, step two would answer
- * undefined with nothing to fall back to and a nested overlay would land
- * on <body> instead of following the provider - an overlay nested in one
- * of them follows whatever encloses that Tooltip, HoverCard or Toast (see
- * useResolvedPortalContainer). Renders no DOM of its own.
+ * Marks everything a kit popup renders inside its Base UI Portal as "inside
+ * a kit popup" for useResolvedPortalContainer. Internal building block: the
+ * content part of every overlay whose Base UI portal gives Base UI a parent
+ * portal node - Dialog, AlertDialog, Sheet, Drawer, Popover, Select,
+ * Combobox and the menus - wraps its popup children with it. It is
+ * deliberately absent from public.ts and src/index.ts so consumer code can
+ * neither fake nor accidentally trip the popup scope. Tooltip, HoverCard
+ * and Toast neither arm it nor reset it: their portals are
+ * FloatingPortalLite, which provides no PortalContext, so armed there, step
+ * two would answer undefined with nothing to fall back to and a nested
+ * overlay would land on <body> instead of following the provider - an
+ * overlay nested in one of them follows whatever encloses that Tooltip,
+ * HoverCard or Toast (see useResolvedPortalContainer). Renders no DOM of
+ * its own.
  */
 export function PortalScope({ children }: { children?: ReactNode }) {
   return <InsidePortalContext.Provider value={true}>{children}</InsidePortalContext.Provider>;
@@ -152,13 +153,16 @@ export function usePortalContainer(): PortalContainer | undefined {
  * encloses it, steps three and four when none does.
  *
  * Menu content adds one step in front of this order, and it outranks the
- * provider and the popup step: any menu content rendered inside another
- * menu content (a submenu, or a menu opened inside a popup or provider
- * that sits in a menu) first inherits the container that enclosing menu
- * content resolved, and the menu contents pass that inheritance to this
- * hook as `container` (MenuContainerContext in dropdown-menu.tsx and
- * context-menu.tsx). PortalContainerProvider does not reset it, so the
- * inherited container outranks a provider between them too.
+ * provider and the popup step: a menu content rendered inside another
+ * menu content of the same family (a submenu, or a menu opened inside a
+ * popup or provider that sits in such a menu) first inherits the container
+ * that enclosing menu content resolved, and the menu contents pass that
+ * inheritance to this hook as `container`. The two families keep separate
+ * contexts (MenuContainerContext in dropdown-menu.tsx, which Menubar
+ * shares, and in context-menu.tsx), so a ContextMenu content inside a
+ * DropdownMenu or Menubar content, or the other way round, inherits
+ * nothing. PortalContainerProvider does not reset it, so the inherited
+ * container outranks a provider between them too.
  *
  * The NavigationMenu wraps its viewport in PortalScope, but no consumer
  * content renders under it: NavigationMenuContent arrives through a raw

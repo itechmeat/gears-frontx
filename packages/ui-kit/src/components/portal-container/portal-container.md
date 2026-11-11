@@ -30,13 +30,17 @@ order:
 3. the nearest `PortalContainerProvider`'s value,
 4. Base UI's own default, `<body>`.
 
-Menus add one step in front: any menu content rendered inside another menu
-content (a submenu, or a menu opened inside a popup or provider that sits
-in a menu) first inherits the container that enclosing menu content
-resolved (`DropdownMenuContent` hands the container it resolved to every
-menu content below it, so a theme passed to the first-level popup holds in
-its submenus). That inheritance outranks a nearer `PortalContainerProvider`
-and the popup step; what it leaves unset follows the order above.
+Menus add one step in front: a menu content rendered inside another menu
+content of the same family (a submenu, or a menu opened inside a popup or
+provider that sits in such a menu) first inherits the container that
+enclosing menu content resolved (`DropdownMenuContent` hands the container
+it resolved to every `DropdownMenuContent` below it, so a theme passed to
+the first-level popup holds in its submenus). DropdownMenu and Menubar
+form one family, ContextMenu is its own: a ContextMenu content inside a
+DropdownMenu or Menubar content, or the other way round, inherits nothing
+and follows the order above. That inheritance outranks a nearer
+`PortalContainerProvider` and the popup step; what it leaves unset follows
+the order above.
 
 Tooltip, HoverCard and Toast neither arm nor reset the popup scope: an
 overlay nested inside one of them follows whatever encloses that Tooltip,
