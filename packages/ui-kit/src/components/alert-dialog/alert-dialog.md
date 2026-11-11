@@ -51,7 +51,7 @@ in `PortalContainerProvider`, or the popup renders with the root theme - same
 contract as `Dialog`. Inside a shadow root (an MFE screen), the popup must
 be given a container inside that shadow root - through
 `PortalContainerProvider` or `container` - or it renders outside the
-shadow root: unstyled, and an outside press closes it.
+shadow root: unstyled.
 
 `AlertDialogAction` and `AlertDialogCancel` are both a Base UI
 `AlertDialog.Close` rendered as a kit `Button` (any `variant`/`size`;
