@@ -119,8 +119,7 @@ root theme: same contract as `Dialog`, `Select`, `DropdownMenu`, and
 `Tooltip`.
 Inside a shadow root (an MFE screen), the viewport must be given a
 container inside that shadow root - through `PortalContainerProvider` or
-`container` - or it renders outside the shadow root: unstyled, and an
-outside press closes a toast that carries interactive content.
+`container` - or it renders outside the shadow root: unstyled.
 
 One level down: an overlay rendered inside a toast card does not stay in
 it - the toast portal is Base UI's FloatingPortalLite, which gives Base UI

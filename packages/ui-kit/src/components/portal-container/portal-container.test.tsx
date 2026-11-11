@@ -383,6 +383,119 @@ describe('PortalContainerProvider', () => {
     expect(byProbe(portalHost)).toBeNull();
   });
 
+  // The provider between the two menus is the trap the inheritance rule
+  // exists for: PortalContainerProvider resets the popup scope and offers
+  // its own container, so a submenu that skipped the inherited-container
+  // step would answer the provider between it and the parent menu instead
+  // of the container the parent menu resolved.
+  it('keeps the inherited menu container for a submenu under a provider between the menus', async () => {
+    const menuHost = createHost();
+    const innerProviderHost = createHost();
+    render(
+      <DropdownMenu defaultOpen>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent container={menuHost}>
+          <PortalContainerProvider value={innerProviderHost}>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>More tools</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <span data-testid={PROBE_ID}>submenu content</span>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </PortalContainerProvider>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'More tools' }));
+    await waitFor(() => expect(byProbe(menuHost)).not.toBeNull());
+    expect(byProbe(innerProviderHost)).toBeNull();
+  });
+
+  // Menubar shares the DropdownMenu family context, and the inheritance
+  // outranks the popup step: a menubar menu opened inside a popover that
+  // sits in a dropdown menu content with its own container portals to that
+  // container - not into the popover's portal node the popup step would
+  // hand it, and not to the provider around the whole tree.
+  it('inherits the dropdown menu container for a menubar menu opened in a popover inside it', async () => {
+    const providerHost = createHost();
+    const menuHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <DropdownMenu defaultOpen>
+          <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+          <DropdownMenuContent container={menuHost}>
+            <Popover defaultOpen>
+              <PopoverContent>
+                <Menubar>
+                  <MenubarMenu defaultOpen>
+                    <MenubarTrigger>View</MenubarTrigger>
+                    <MenubarContent>
+                      <span data-testid={PROBE_ID}>menubar content</span>
+                    </MenubarContent>
+                  </MenubarMenu>
+                </Menubar>
+              </PopoverContent>
+            </Popover>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </PortalContainerProvider>,
+    );
+
+    const probe = await waitFor(() => {
+      const el = byProbe(menuHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    // The dropdown's own portal node is the one its popup lives in; the
+    // popover's portal node hangs inside it. The menubar's portal node
+    // landing directly in the inherited container proves the inheritance
+    // outranked both the popup step and the provider.
+    const dropdownPortalNode = portalNodeOf(getByRole(menuHost, 'menu', { name: 'Open' }));
+    expect(dropdownPortalNode).not.toBeNull();
+    expect(dropdownPortalNode?.contains(probe)).toBe(false);
+    expect(portalNodeOf(probe)?.parentElement).toBe(menuHost);
+    expect(byProbe(providerHost)).toBeNull();
+  });
+
+  // Cross-family menus keep separate contexts: a context menu opened inside
+  // a dropdown menu content inherits nothing, so the popup step sends it
+  // into the dropdown's own portal node - not into a fresh portal node
+  // beside it in the inherited container, and not to the provider.
+  it('keeps a context menu opened inside a dropdown menu in the dropdown portal node, not the inherited container', async () => {
+    const providerHost = createHost();
+    const menuHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <DropdownMenu defaultOpen>
+          <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+          <DropdownMenuContent container={menuHost}>
+            <ContextMenu>
+              <ContextMenuTrigger>Right-click area</ContextMenuTrigger>
+              <ContextMenuContent>
+                <span data-testid={PROBE_ID}>context menu content</span>
+              </ContextMenuContent>
+            </ContextMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </PortalContainerProvider>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click area'));
+
+    const probe = await waitFor(() => {
+      const el = byProbe(menuHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    // Raw text query, not a role query: with the nested context menu open,
+    // Base UI marks the enclosing dropdown popup aria-hidden, and the context
+    // menu's own popup carries no accessible name. The trigger text sits
+    // inside the dropdown's popup, so its portal node is the dropdown's.
+    const dropdownPortalNode = portalNodeOf(getByText(menuHost, 'Right-click area'));
+    expect(dropdownPortalNode).not.toBeNull();
+    expect(dropdownPortalNode?.contains(probe)).toBe(true);
+    expect(byProbe(providerHost)).toBeNull();
+  });
+
   it('usePortalContainer returns the provided value under the provider', () => {
     const portalHost = createHost();
     function HookProbe({ expected }: { expected: ParentNode }) {
