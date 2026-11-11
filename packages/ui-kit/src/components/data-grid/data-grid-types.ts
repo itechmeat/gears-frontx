@@ -150,10 +150,12 @@ export interface DataGridProps<TItem extends DataGridItem> extends Pick<
   /**
    * Where the popups the grid and its plugins open are portaled: the filter popovers and their
    * narrow-screen panel, the all-filters panel, the sort and table configuration popovers, and the
-   * actions menu. Defaults to <body>. Pass a node inside a shadow root when the kit's CSS is
-   * injected only there, or a themed container when the theme is scoped to a subtree, so the
-   * popups get the kit's styles and the theme's tokens. A popup a consumer component opens inside
-   * the grid, such as a row actions menu, takes its own `container`.
+   * actions menu. Without it they follow the kit overlay order (see PortalContainer): outside
+   * other kit popups that is the nearest PortalContainerProvider's value, else <body>. Pass a
+   * node inside a shadow root when the kit's CSS is injected only there, or a themed container
+   * when the theme is scoped to a subtree, so the popups get the kit's styles and the theme's
+   * tokens. A popup a consumer component opens inside the grid, such as a row actions menu,
+   * takes its own `container`.
    */
   portalContainer?: PopoverContentProps['container'];
   children?: ReactNode;

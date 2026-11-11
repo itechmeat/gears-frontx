@@ -45,7 +45,7 @@ default; `false`; `'trap-focus'`) — see Base UI Dialog.Root.
 | `showCloseButton` | `boolean` — renders a top-right close (X) button | `true` |
 | `showBackdrop` | `boolean` - renders the dimming backdrop (`--overlay-modal`, the same dark scrim in both themes); set `false` together with `modal={false}` on the root for a genuinely non-modal dialog | `true` |
 | `closeLabel` | `string` — accessible name for that button, the popup's only kit-authored text; same contract as `Toaster`'s `closeLabel` | `'Close'` |
-| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
@@ -54,11 +54,9 @@ touch screen reader users have out of a modal dialog (see above) — only
 do this if you compose your own `DialogClose` somewhere inside
 `DialogContent` (e.g. in the footer).
 
-Without a `container`, a popup opened inside another kit popup stays in
-that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none, so if
+Without a `container`, the popup portals where the kit overlay order puts
+it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the popup renders with the root theme.

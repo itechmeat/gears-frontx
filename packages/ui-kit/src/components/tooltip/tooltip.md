@@ -59,16 +59,14 @@ alone never starts the timer for a non-zero delay.)
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `top` |
 | `align` | `start` \| `center` \| `end` | `center` |
 | `sideOffset` / `alignOffset` | `number` | `4` / `0` |
-| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container, where absolute positioning resolves against the wrong box | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI Tooltip.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
 
-Without a `container`, a popup opened inside another kit popup stays in
-that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none, so if
+Without a `container`, the popup portals where the kit overlay order puts
+it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the popup renders with the root theme - same
@@ -79,9 +77,10 @@ outside the shadow root: unstyled, and an outside press closes it.
 
 One level down the order is shorter: an overlay opened inside a tooltip
 does not stay in it - the tooltip's Base UI portal (FloatingPortalLite)
-gives Base UI no parent portal node to fall back to - and portals to the
-nearest `PortalContainerProvider`'s value, or to `<body>` when there is
-none.
+gives Base UI no parent portal node to fall back to - so the overlay
+follows whatever encloses the tooltip: another kit popup's portal when one
+encloses it, otherwise the nearest `PortalContainerProvider`'s value, or
+to `<body>` when there is none.
 
 `TooltipContent` always renders a small caret against the popup edge
 (Base UI's `Tooltip.Arrow`) — there's no prop to hide it, matching the

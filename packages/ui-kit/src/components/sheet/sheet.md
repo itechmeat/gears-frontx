@@ -49,7 +49,7 @@ default; `false`; `'trap-focus'`) — see Base UI Dialog.Root.
 | `showCloseButton` | `boolean` — renders a top-right close (X) button | `true` |
 | `showBackdrop` | `boolean` - renders the backdrop, which is the drawn side-panel veil (`--overlay-panel`, a 10 per cent tint plus a 4px blur) rather than the modal scrim that dims; set `false` together with `modal={false}` on the root for a genuinely non-modal sheet | `true` |
 | `closeLabel` | `string` — accessible name for that button, the panel's only kit-authored text; same contract as `Dialog`'s `closeLabel` | `'Close'` |
-| `container` | DOM node to portal the panel into | nearest `PortalContainerProvider`'s value, else `<body>` |
+| `container` | DOM node to portal the panel into | where the kit overlay order puts it (see PortalContainer) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
@@ -58,11 +58,9 @@ touch screen reader users have out of a modal sheet (see above) — only do
 this if you compose your own `SheetClose` somewhere inside `SheetContent`
 (e.g. in the footer).
 
-Without a `container`, a panel opened inside another kit popup stays in
-that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none, so if
+Without a `container`, the panel portals where the kit overlay order puts
+it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the panel renders with the root theme.

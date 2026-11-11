@@ -60,15 +60,13 @@ directly — pass `side` instead.
 
 | Prop | Type | Default |
 |------|------|---------|
-| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI `Drawer.Popup` | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
-Without a `container`, a popup opened inside another kit popup stays in
-that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none. If
+Without a `container`, the popup portals where the kit overlay order puts
+it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none. If
 your theme lives on a subtree, pass it (or a node inside it) as
 `container` or wrap the subtree in `PortalContainerProvider`, or the popup
 renders with the root theme. Inside a shadow root (an MFE screen), the

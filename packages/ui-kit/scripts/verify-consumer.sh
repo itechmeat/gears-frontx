@@ -228,8 +228,8 @@ assert_exceljs_not_installed() {
 # hover-card, navigation-menu, popover, select, tooltip) do NOT call the
 # hook in their own render body: their content parts render ResolvedPortal,
 # which calls it inside the client portal-container module, so these eight
-# stay server modules and portal-container is the one entry that ships the
-# banner for portal-target resolution. Everything else only composes Base UI
+# stay server modules: for these eight, portal-container is the entry that
+# ships the banner for portal-target resolution. Everything else only composes Base UI
 # primitives as JSX, which already carry their own directive in Base UI's
 # dist, so marking them here would take server-renderability away for no
 # reason. input-group/native-select/pagination compose Button/Input/

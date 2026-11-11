@@ -22,7 +22,9 @@ export interface NavigationMenuProps<Value = unknown>
     > {
   className?: string;
   /**
-   * Where to portal the shared popup. Defaults to the nearest
+   * Where to portal the shared popup. Without a `container`, the popup
+   * portals where the kit overlay order puts it (see PortalContainer):
+   * outside other kit popups that is the nearest
    * PortalContainerProvider's value, or <body> when there is none. Pass a
    * themed container when the theme is scoped to a subtree (data-theme on a
    * container that isn't at document root) so the popup inherits its

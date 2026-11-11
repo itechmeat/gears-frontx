@@ -588,44 +588,60 @@ describe('PortalContainerProvider', () => {
 
   // An explicit null is a set value, not an unset one: Base UI holds the
   // popup back until a real container arrives, and neither the provider nor
-  // <body> may catch it meanwhile.
+  // <body> may catch it meanwhile. The rerender below is the positive
+  // control: one empty flush is enough for a real container to mount the
+  // popup, so the null assertions prove a held-back popup, not one that
+  // has simply not mounted yet.
   it('lets an explicit container={null} hold a dialog popup back under a provider', async () => {
     const providerHost = createHost();
-    render(
+    const lateHost = createHost();
+    const tree = (container: PortalContainer) => (
       <PortalContainerProvider value={providerHost}>
         <Dialog defaultOpen>
-          <DialogContent container={null}>
+          <DialogContent container={container}>
             <DialogTitle>Settings</DialogTitle>
             <span data-testid={PROBE_ID}>dialog content</span>
           </DialogContent>
         </Dialog>
-      </PortalContainerProvider>,
+      </PortalContainerProvider>
     );
+    const { rerender } = render(tree(null));
 
     await act(async () => {});
     expect(byProbe(providerHost)).toBeNull();
     expect(byProbe(document.body)).toBeNull();
+    rerender(tree(lateHost));
+    await act(async () => {});
+    expect(byProbe(lateHost)).not.toBeNull();
   });
 
   // Same hold for a menu, whose `container ?? inheritedContainer` shorthand
   // used to swallow the explicit null into the inherited (here: unset)
-  // value and so handed the popup to the provider.
+  // value and so handed the popup to the provider. The rerender below is
+  // the same positive control as the dialog test above: the popup mounts
+  // under one empty flush once a real container arrives, so the null
+  // assertions prove a held-back popup, not an unmounted one.
   it('lets an explicit container={null} hold a dropdown menu popup back under a provider', async () => {
     const providerHost = createHost();
-    render(
+    const lateHost = createHost();
+    const tree = (container: PortalContainer) => (
       <PortalContainerProvider value={providerHost}>
         <DropdownMenu defaultOpen>
           <DropdownMenuTrigger>Open</DropdownMenuTrigger>
-          <DropdownMenuContent container={null}>
+          <DropdownMenuContent container={container}>
             <span data-testid={PROBE_ID}>menu content</span>
           </DropdownMenuContent>
         </DropdownMenu>
-      </PortalContainerProvider>,
+      </PortalContainerProvider>
     );
+    const { rerender } = render(tree(null));
 
     await act(async () => {});
     expect(byProbe(providerHost)).toBeNull();
     expect(byProbe(document.body)).toBeNull();
+    rerender(tree(lateHost));
+    await act(async () => {});
+    expect(byProbe(lateHost)).not.toBeNull();
   });
 
   it('portals to a ref container under a provider', async () => {
@@ -781,8 +797,8 @@ describe('PortalContainerProvider', () => {
   });
 
   // A toast card is composed imperatively, so the nested overlay rides in
-  // through the toast object's actionProps children - the only surface a
-  // card exposes to JSX.
+  // through the toast object's actionProps children (title and description
+  // would carry it the same way - all three take React nodes).
   it('keeps a popover in a toast action in the provider container', async () => {
     const providerHost = createHost();
     const manager = createToastManager();
@@ -813,5 +829,46 @@ describe('PortalContainerProvider', () => {
     });
     expect(getByText(providerHost, 'Export finished')).not.toBeNull();
     expect(providerHost.contains(probe)).toBe(true);
+  });
+
+  // The Lite popups neither arm nor reset the popup scope: a popover nested
+  // in a tooltip that sits inside an open dialog still sees the dialog's
+  // scope from below the tooltip, so it stays in the dialog's portal node
+  // instead of falling through to the provider. The dialog carries its own
+  // container here, so "not the provider" is observable as an empty
+  // provider host.
+  it('keeps a popover nested in a tooltip inside a dialog in the dialog portal node', async () => {
+    const providerHost = createHost();
+    const dialogHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <Dialog defaultOpen>
+          <DialogContent container={dialogHost}>
+            <DialogTitle>Settings</DialogTitle>
+            <Tooltip defaultOpen>
+              <TooltipTrigger>Hover me</TooltipTrigger>
+              <TooltipContent>
+                <span data-testid="tooltip-body">Tooltip body</span>
+                <Popover defaultOpen>
+                  <PopoverContent>
+                    <span data-testid={PROBE_ID}>popover content</span>
+                  </PopoverContent>
+                </Popover>
+              </TooltipContent>
+            </Tooltip>
+          </DialogContent>
+        </Dialog>
+      </PortalContainerProvider>,
+    );
+
+    const probe = await waitFor(() => {
+      const el = byProbe(dialogHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    // Named query: the nested popover's popup carries the dialog role too.
+    const dialogPortalNode = portalNodeOf(getByRole(dialogHost, 'dialog', { name: 'Settings' }));
+    expect(dialogPortalNode?.contains(probe)).toBe(true);
+    expect(byProbe(providerHost)).toBeNull();
   });
 });

@@ -72,20 +72,18 @@ invariants:
       reports the change through `onValueChange`.
   - id: portals-to-body-unless-container
     text: >-
-      Without `container`, the shared popup portals into the portal node of
-      the kit popup it renders inside, so a nested overlay stays in the
-      popup that opened it when that popup is a Dialog, AlertDialog, Sheet,
-      Drawer, Popover, Select, Combobox or a menu (a
-      PortalContainerProvider nested inside that popup wins for the
-      overlays below it); inside a Tooltip, HoverCard or Toast, as outside
-      any kit popup, it portals to the nearest PortalContainerProvider's
-      value, then the document body when there is neither. Overlays
-      rendered inside NavigationMenuContent skip this menu's own portal
-      node: NavigationMenuContent mounts through a raw createPortal into
-      the viewport, outside the popup's React subtree, so they follow an
-      enclosing kit popup's portal when the NavigationMenu itself sits
-      inside one, and otherwise portal into the nearest
-      PortalContainerProvider's value or the document body.
+      Without `container`, the shared popup portals where the kit overlay
+      order puts it (portal-container.md states the order once,
+      useResolvedPortalContainer implements it): the portal node of the
+      kit popup it renders inside when that popup arms the popup scope,
+      else the nearest PortalContainerProvider's value, then the document
+      body when there is neither. Overlays rendered inside
+      NavigationMenuContent skip this menu's own portal node:
+      NavigationMenuContent mounts through a raw createPortal into the
+      viewport, outside the popup's React subtree, so they see the popup
+      step only from popups enclosing the whole NavigationMenu, and
+      otherwise portal into the nearest PortalContainerProvider's value or
+      the document body.
 
 anti_patterns:
   - dont: Hold the value in the caller and pass `value` without `onValueChange`

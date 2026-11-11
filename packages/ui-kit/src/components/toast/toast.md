@@ -109,11 +109,9 @@ toast twice, once per viewport. If a subtree genuinely needs its own
 viewport, give it an isolated manager via `createToastManager()` and
 pass that as its `Toaster`'s `toastManager`.
 
-Without a `container`, a viewport rendered inside another kit popup stays
-in that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none, so if
+Without a `container`, the viewport portals where the kit overlay order
+puts it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `Toaster`'s `container` or wrap the
 subtree in `PortalContainerProvider`, or toasts render with the root
@@ -126,8 +124,9 @@ outside press closes a toast that carries interactive content.
 One level down the order is shorter: an overlay rendered inside a toast
 card does not stay in it - the toast portal is Base UI's
 FloatingPortalLite, which gives Base UI no parent portal node to fall back
-to - and portals to the nearest `PortalContainerProvider`'s value, or to
-`<body>` when there is none.
+to - so the overlay follows whatever encloses the toast: another kit
+popup's portal when one encloses it, otherwise the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none.
 
 ## Examples
 
