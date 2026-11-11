@@ -57,24 +57,15 @@ export interface DropdownMenuContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Without a `container`, the popup portals
-   * where the kit overlay order puts it (see useResolvedPortalContainer):
-   * any DropdownMenuContent rendered inside another DropdownMenuContent of
-   * the same family (a submenu, or a menu opened directly inside one)
-   * first inherits the container that enclosing content resolved, and that
-   * inheritance outranks a nearer PortalContainerProvider and the popup
-   * step. The inheritance crosses menu popups only: any kit popup that arms the popup scope, other
-   * than a menu of the same family between the two menu contents ends it,
-   * so a menu inside one of those follows the kit overlay order from that
-   * popup on - its portal node, unless a nearer PortalContainerProvider
-   * sits in between - which keeps the menu out of the subtree a dialog hides when the intervening
-   * popup is a modal dialog, since the dialog marks everything outside its
-   * own popup aria-hidden while it is open. Outside kit popups that arm the
-   * popup scope, that is the nearest PortalContainerProvider's value, or
-   * <body> when there is none. Pass a themed container when the theme is
-   * scoped to a subtree (data-theme on a container that isn't at document
-   * root) so the popup inherits its tokens and font. Inherited by nested
-   * DropdownMenuSubContent unless it passes its own.
+   * Where to portal the popup, for example a themed container when the
+   * theme is scoped to a subtree (data-theme on a container that isn't at
+   * document root), so the popup inherits its tokens and font. An explicit
+   * null is kept: Base UI waits for a target instead of falling through.
+   * Without a `container`, the popup follows the kit overlay order (see
+   * useResolvedPortalContainer and portal-container.md). A nested
+   * DropdownMenuSubContent inherits the container this popup resolves unless
+   * it passes its own, under the family rule on
+   * useMenuContainerInheritance.
    */
   container?: MenuPrimitive.Portal.Props['container'];
 }
@@ -93,31 +84,13 @@ export function DropdownMenuContent({
   ...props
 }: DropdownMenuContentProps) {
   const inheritedContainer = useContext(MenuContainerContext);
-  // The menu tree's own inheritance stays nearest, and it crosses menu
-  // popups only: a container an enclosing DropdownMenuContent resolved
-  // (its own prop, or the provider it saw) outranks the provider around
-  // this submenu, or a themed first-level popup would lose its subtree to
-  // a farther provider - but another kit popup between the two menu
-  // contents ends it. PortalScope arms useMenuContainerInheritance with
-  // the popup's family token around a menu popup's children and with no
-  // family around every other arming popup's children, and the inheritance stands
-  // only when the armed token is this family's own (DROPDOWN_MENU_FAMILY):
-  // this popup's own PortalScope use passes that token, so submenus and
-  // menus nested directly in menu content keep it, while a Dialog or
-  // Popover between the menus ends it and a context menu popup's PortalScope
-  // arms the context menu token instead. Without that boundary a menu
-  // inside a modal Dialog that sits in a menu content keeps the outer
-  // menu's container, and the dialog marks that container's subtree
-  // aria-hidden while it is open - the inner menu would disappear from
-  // assistive tech. Ended, the menu follows the kit overlay order from the
-  // intervening popup on: its portal node, unless a nearer
-  // PortalContainerProvider sits in between. `container === undefined`
+  // The menu step of the kit overlay order: the inherited container stands
+  // in for an unset `container` only under the family rule on
+  // useMenuContainerInheritance, checked against DROPDOWN_MENU_FAMILY.
+  // It outranks the provider around a submenu, so a themed first-level
+  // popup keeps its theme in its submenus. `container === undefined`
   // rather than ??, so an explicit `container={null}` survives inheritance
-  // and still makes Base UI wait for a target instead of silently becoming
-  // the inherited value. Before 0.6.0 this was
-  // `container ?? inheritedContainer`, so an explicit null fell through to
-  // the container an enclosing menu content resolved, or to <body>, and
-  // did not hold the popup back.
+  // and still makes Base UI wait. Reasoning in portal-container.md.
   const inheritsMenuContainer = useMenuContainerInheritance() === DROPDOWN_MENU_FAMILY;
   const effectiveContainer = useResolvedPortalContainer(
     inheritsMenuContainer && container === undefined ? inheritedContainer : container,
@@ -136,12 +109,9 @@ export function DropdownMenuContent({
           className={styles.positioner}
         >
           <MenuPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-            {/* DROPDOWN_MENU_FAMILY: a menu popup is the one popup boundary
-                menu container inheritance crosses for its own family, so
-                this content's own submenus and the menus nested directly
-                in its content keep it - every other arming popup's PortalScope
-                ends it, and a context menu popup's PortalScope arms the
-                context menu token instead. */}
+            {/* This family's token keeps the inheritance alive for the
+                submenus and menus nested in this content, per the family
+                rule on useMenuContainerInheritance. */}
             <PortalScope inheritsMenuContainer={DROPDOWN_MENU_FAMILY}>{children}</PortalScope>
           </MenuPrimitive.Popup>
         </MenuPrimitive.Positioner>
