@@ -49,10 +49,13 @@ NavigationMenu's viewport scope and a menu popup of the other family
 included - so a menu inside one of those follows the kit overlay order
 from that popup on: its own portal node, unless a nearer
 `PortalContainerProvider` sits in between. The boundary keeps the inner
-menu reachable: a modal Dialog marks everything outside its own popup
+menu out of the subtree a dialog hides: a modal Dialog marks everything outside its own popup
 `aria-hidden` while it is open, so a container inherited across it would
 hang the inner menu in a hidden subtree; what the inheritance leaves unset
-follows the order above.
+follows the order above. This governs only where the menu portals: a modal
+menu that is still open above, such as an outer ContextMenu, hides
+everything outside its own popup on its own, as Base UI does, and the kit
+does not change that.
 
 Tooltip, HoverCard and Toast neither arm nor reset the popup scope: an
 overlay nested inside one of them follows whatever encloses that Tooltip,

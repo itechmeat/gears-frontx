@@ -77,7 +77,7 @@ Rules for generated code:
   family between the two menu contents ends it, so a menu inside one of
   those follows the kit overlay order from that popup on - its portal
   node, unless a nearer `PortalContainerProvider` sits in between - which
-  keeps the menu reachable when the intervening popup is a modal dialog -
+  keeps the menu out of the subtree a dialog hides when the intervening popup is a modal dialog -
   the dialog marks everything outside its own popup `aria-hidden` while it
   is open. A `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
   surface, not just its descendants' tokens, so it can be nested inside a

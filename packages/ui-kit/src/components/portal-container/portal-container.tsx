@@ -105,8 +105,8 @@ const InheritsMenuContainerContext = createContext<symbol | undefined>(undefined
  * HoverCard or Toast (see useResolvedPortalContainer). Renders no DOM of
  * its own.
  *
- * The default reset is what keeps menus reachable across modal
- * boundaries: a menu content inside a popup that sits in another menu
+ * The default reset is what keeps menus out of the subtree a modal
+ * popup hides: a menu content inside a popup that sits in another menu
  * content must not keep the outer menu's container, because the
  * intervening popup (a modal Dialog is the case that bites) can mark the
  * container's whole subtree aria-hidden while it is open. Ended, the menu
@@ -264,7 +264,7 @@ export function useMenuContainerInheritance(): symbol | undefined {
  * family included - and the menu inside that popup follows the kit overlay
  * order from that popup on: its portal node, unless a nearer
  * PortalContainerProvider sits in between. That boundary is
- * what keeps the inner menu reachable: a modal Dialog marks everything
+ * what keeps the inner menu out of the subtree a dialog hides: a modal Dialog marks everything
  * outside its own popup aria-hidden while it is open, so a container
  * inherited across it would hang the inner menu in a hidden subtree. Each
  * family arms PortalScope with its own token (DROPDOWN_MENU_FAMILY for
