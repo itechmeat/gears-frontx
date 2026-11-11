@@ -43,7 +43,7 @@ holds in its submenus). DropdownMenu and Menubar form one family,
 ContextMenu is its own: a ContextMenu content inside a DropdownMenu or
 Menubar content, or the other way round, inherits nothing and follows the
 order above. That inheritance outranks a nearer `PortalContainerProvider`
-and the popup step, and crosses menu popups only: any kit popup other than
+and the popup step, and crosses menu popups only: any kit popup that arms the popup scope, other than
 a menu of the same family between the two menu contents ends it - the
 NavigationMenu's viewport scope and a menu popup of the other family
 included - so a menu inside one of those follows the kit overlay order

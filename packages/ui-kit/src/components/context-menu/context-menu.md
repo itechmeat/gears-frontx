@@ -76,7 +76,7 @@ it (see PortalContainer): any `ContextMenuContent` rendered inside another
 `ContextMenuContent` (a submenu, or a menu opened directly inside one)
 first inherits the container that enclosing content resolved, and that
 inheritance outranks a nearer `PortalContainerProvider` and the popup
-step. The inheritance crosses menu popups only: any kit popup other than a
+step. The inheritance crosses menu popups only: any kit popup that arms the popup scope, other than a
 menu of the same family between the two menu contents ends it, so a menu
 inside one of those follows the kit overlay order from that popup on - its
 portal node, unless a nearer `PortalContainerProvider` sits in between -

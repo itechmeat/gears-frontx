@@ -63,7 +63,7 @@ export interface DropdownMenuContentProps
    * the same family (a submenu, or a menu opened directly inside one)
    * first inherits the container that enclosing content resolved, and that
    * inheritance outranks a nearer PortalContainerProvider and the popup
-   * step. The inheritance crosses menu popups only: any kit popup other
+   * step. The inheritance crosses menu popups only: any kit popup that arms the popup scope, other
    * than a menu of the same family between the two menu contents ends it,
    * so a menu inside one of those follows the kit overlay order from that
    * popup on - its portal node, unless a nearer PortalContainerProvider
@@ -100,7 +100,7 @@ export function DropdownMenuContent({
   // a farther provider - but another kit popup between the two menu
   // contents ends it. PortalScope arms useMenuContainerInheritance with
   // the popup's family token around a menu popup's children and with no
-  // family around every other popup's children, and the inheritance stands
+  // family around every other arming popup's children, and the inheritance stands
   // only when the armed token is this family's own (DROPDOWN_MENU_FAMILY):
   // this popup's own PortalScope use passes that token, so submenus and
   // menus nested directly in menu content keep it, while a Dialog or
@@ -139,7 +139,7 @@ export function DropdownMenuContent({
             {/* DROPDOWN_MENU_FAMILY: a menu popup is the one popup boundary
                 menu container inheritance crosses for its own family, so
                 this content's own submenus and the menus nested directly
-                in its content keep it - every other popup's PortalScope
+                in its content keep it - every other arming popup's PortalScope
                 ends it, and a context menu popup's PortalScope arms the
                 context menu token instead. */}
             <PortalScope inheritsMenuContainer={DROPDOWN_MENU_FAMILY}>{children}</PortalScope>
