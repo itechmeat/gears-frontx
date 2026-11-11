@@ -82,7 +82,12 @@ the popup scope, that is the nearest `PortalContainerProvider`'s value, or
 (`data-theme` on a section instead of `<html>`), pass that section as
 `container` or wrap the subtree in `PortalContainerProvider`, or the popup
 renders with the root theme - same
-contract as `Dialog`, `Select`, and `DropdownMenu`. Inside a shadow root
+contract as `Dialog`, `Select`, and `DropdownMenu`. An explicit
+`container={null}` holds the popup back for menus too, like the other
+overlays: Base UI waits for a target instead of portalling anywhere. That
+is a behaviour change in 0.6.0 - before, an explicit null on menu content
+fell through, to `<body>` with no provider above (or to the provider's
+node under one). Inside a shadow root
 (an MFE screen), the popup must be given a container inside that shadow
 root - through `PortalContainerProvider` or `container` - or it renders
 outside the shadow root: unstyled, and an outside press closes it.

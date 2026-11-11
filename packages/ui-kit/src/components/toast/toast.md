@@ -43,8 +43,10 @@ default `5000`), `limit` (max toasts shown at once, default `3`;
 overflow toasts stay mounted with `data-limited` rather than being
 removed, so they can reappear as space frees up), `toastManager`
 (defaults to the shared `toast` manager below), `container` (DOM node to
-portal the toast viewport into; default: the nearest
-`PortalContainerProvider`'s value, else `<body>`), `closeLabel`
+portal the toast viewport into; default: where the kit overlay order puts
+it (see PortalContainer): outside kit popups that arm the popup scope,
+that is the nearest `PortalContainerProvider`'s value, or `<body>` when
+there is none), `closeLabel`
 (accessible name for each toast's close (X) button, default
 `'Close toast'`), `label` (accessible name for the toast region landmark,
 default `'Notifications'`) — `closeLabel` and `label` are the two strings

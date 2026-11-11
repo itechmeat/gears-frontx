@@ -114,9 +114,20 @@ export function DrawerTrigger({ className, ...props }: DrawerTriggerProps) {
 
 export type DrawerPortalProps = Omit<DrawerPrimitive.Portal.Props, 'className'>;
 
-export function DrawerPortal({ container, ...props }: DrawerPortalProps) {
+export function DrawerPortal({ container, children, ...props }: DrawerPortalProps) {
   const resolvedContainer = useResolvedPortalContainer(container);
-  return <DrawerPrimitive.Portal container={resolvedContainer} {...props} />;
+  // PortalScope arms the popup scope for everything composed into this
+  // portal, DrawerContent's popup children included (its own wrap inside
+  // the Content stays; nesting the provider is harmless). DrawerPortal is
+  // the one kit Portal part that is public and takes caller children, so
+  // without this an overlay composed directly into it - beside the panel,
+  // not inside it - would skip the popup step and land on the provider's
+  // container or <body> instead of in this portal's node beside the panel.
+  return (
+    <DrawerPrimitive.Portal container={resolvedContainer} {...props}>
+      <PortalScope>{children}</PortalScope>
+    </DrawerPrimitive.Portal>
+  );
 }
 
 export interface DrawerCloseProps extends Omit<DrawerPrimitive.Close.Props, 'className'> {
