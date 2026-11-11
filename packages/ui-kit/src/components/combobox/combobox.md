@@ -76,8 +76,8 @@ Every other prop is Base UI's `Combobox.Trigger` (`render`, `nativeButton`,
 `transform`/`filter` container: `positionMethod="fixed"`,
 `collisionBoundary`, `collisionPadding`) and `container` - without a
 `container` the popup portals where the kit overlay order puts it (see
-PortalContainer): outside other kit popups that is the nearest
-`PortalContainerProvider`'s value, or to `<body>`
+PortalContainer): outside kit popups that arm the popup scope, that is the
+nearest `PortalContainerProvider`'s value, or `<body>`
 when there is none, so if your theme lives on a subtree
 (`data-theme` on a section instead of `<html>`), pass that section as
 `container` or wrap the subtree in `PortalContainerProvider`, or the popup

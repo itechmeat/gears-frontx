@@ -41,8 +41,9 @@ invariants:
       puts it (portal-container.md states the order once,
       useResolvedPortalContainer implements it): inside another kit popup
       that arms the popup scope it stays in that popup's portal node,
-      outside them to the nearest PortalContainerProvider's value, then
-      the document body; its own `container` wins when given.
+      unless a PortalContainerProvider between them wins, outside them to
+      the nearest PortalContainerProvider's value, then the document body;
+      its own `container` wins when given.
   - id: sized-to-its-content
     text: >-
       context-menu.module.css sizes the submenu popup to its own content

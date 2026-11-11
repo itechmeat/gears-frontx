@@ -11,8 +11,8 @@ type PortalContainer = PopoverContentProps['container'];
  * loads, persists or writes it from a second place.
  *
  * `undefined` is what a grid without the prop provides, and the popups then follow the kit overlay
- * order (see PortalContainer): outside other kit popups that is the nearest PortalContainerProvider's
- * value, else <body>.
+ * order (see useResolvedPortalContainer): outside kit popups that arm the popup scope, that is the
+ * nearest PortalContainerProvider's value, else <body>.
  */
 const DataGridPortalContainerContext = createContext<PortalContainer>(undefined);
 

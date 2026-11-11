@@ -96,10 +96,10 @@ one — unlike the classic Radix indicator, this is not one shared
 list-level element with computed `left`/`width` math.
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside other kit popups that is the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
-your theme lives on a subtree (`data-theme` on a section instead of
-`<html>`), pass that section as `container` on `NavigationMenu` or wrap the
+it (see PortalContainer): outside kit popups that arm the popup scope, that
+is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
+none, so if your theme lives on a subtree (`data-theme` on a section
+instead of `<html>`), pass that section as `container` on `NavigationMenu` or wrap the
 subtree in `PortalContainerProvider` - same contract as `Dialog`/`Select`/
 `DropdownMenu`. Inside a shadow root (an MFE screen), the popup must be
 given a container inside that shadow root - through

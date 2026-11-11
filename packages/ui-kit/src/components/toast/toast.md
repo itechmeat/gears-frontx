@@ -110,23 +110,25 @@ viewport, give it an isolated manager via `createToastManager()` and
 pass that as its `Toaster`'s `toastManager`.
 
 Without a `container`, the viewport portals where the kit overlay order
-puts it (see PortalContainer): outside other kit popups that is the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
-your theme lives on a subtree (`data-theme` on a section instead of
-`<html>`), pass that section as `Toaster`'s `container` or wrap the
-subtree in `PortalContainerProvider`, or toasts render with the root
-theme: same contract as `Dialog`, `Select`, `DropdownMenu`, and `Tooltip`.
+puts it (see PortalContainer): outside kit popups that arm the popup scope,
+that is the nearest `PortalContainerProvider`'s value, or `<body>` when
+there is none, so if your theme lives on a subtree (`data-theme` on a
+section instead of `<html>`), pass that section as `Toaster`'s `container`
+or wrap the subtree in `PortalContainerProvider`, or toasts render with the
+root theme: same contract as `Dialog`, `Select`, `DropdownMenu`, and
+`Tooltip`.
 Inside a shadow root (an MFE screen), the viewport must be given a
 container inside that shadow root - through `PortalContainerProvider` or
 `container` - or it renders outside the shadow root: unstyled, and an
 outside press closes a toast that carries interactive content.
 
-One level down the order is shorter: an overlay rendered inside a toast
-card does not stay in it - the toast portal is Base UI's
-FloatingPortalLite, which gives Base UI no parent portal node to fall back
-to - so the overlay follows whatever encloses the toast: another kit
-popup's portal when one encloses it, otherwise the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none.
+One level down: an overlay rendered inside a toast card does not stay in
+it - the toast portal is Base UI's FloatingPortalLite, which gives Base UI
+no parent portal node to fall back to - so the overlay follows whatever
+encloses the toast: the portal of a kit popup that arms the popup scope,
+with no `PortalContainerProvider` in between, when one encloses it,
+otherwise the nearest `PortalContainerProvider`'s value, or `<body>` when
+there is none.
 
 ## Examples
 

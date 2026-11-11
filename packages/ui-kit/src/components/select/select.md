@@ -51,9 +51,9 @@ props (`side`, `sideOffset`, `align`, `alignOffset`, plus the escape
 hatch for triggers inside a `transform`/`filter` container:
 `positionMethod="fixed"`, `collisionBoundary`, `collisionPadding`) and
 `container` - without a `container` the popup portals where the kit
-overlay order puts it (see PortalContainer): outside other kit popups that
-is the nearest `PortalContainerProvider`'s value, or to `<body>`
-when there is none, so if your theme lives on a
+overlay order puts it (see PortalContainer): outside kit popups that arm
+the popup scope, that is the nearest `PortalContainerProvider`'s value, or
+`<body>` when there is none, so if your theme lives on a
 subtree (`data-theme` on a section instead of `<html>`), pass that section
 as `container` or wrap the subtree in `PortalContainerProvider`, or the
 popup renders with the root theme. Inside a shadow root (an MFE screen),

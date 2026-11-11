@@ -55,11 +55,11 @@ do this if you compose your own `DialogClose` somewhere inside
 `DialogContent` (e.g. in the footer).
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside other kit popups that is the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
-your theme lives on a subtree (`data-theme` on a section instead of
-`<html>`), pass that section as `container` or wrap the subtree in
-`PortalContainerProvider`, or the popup renders with the root theme.
+it (see PortalContainer): outside kit popups that arm the popup scope, that
+is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
+none, so if your theme lives on a subtree (`data-theme` on a section
+instead of `<html>`), pass that section as `container` or wrap the subtree
+in `PortalContainerProvider`, or the popup renders with the root theme.
 Inside a shadow root (an MFE screen), the popup must be given a container
 inside that shadow root, through `PortalContainerProvider` or `container`,
 or it renders outside the shadow root: unstyled, and an outside press
