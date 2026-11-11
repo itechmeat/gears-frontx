@@ -358,9 +358,13 @@ describe('PortalContainerProvider', () => {
   });
 
   // The menu tree's own inheritance stays nearest: a first-level popup's
-  // container outranks a provider around the submenu, or a themed
-  // first-level popup would lose its subtree to a farther provider.
-  it('keeps the first-level menu container nearest over a provider for a submenu', async () => {
+  // container outranks the provider around the menu AND the popup step for
+  // its submenu. The popup step alone would hang the submenu's portal node
+  // one level deeper, inside the first-level menu's own portal node (where a
+  // cross-family menu lands - see the sibling test below); inheritance puts
+  // it directly in the container the first-level content resolved. The
+  // parentElement assertion is the load-bearing one.
+  it('portals a submenu directly into the first-level menu container, past the popup step and the provider', async () => {
     const portalHost = createHost();
     const menuHost = createHost();
     render(
@@ -379,8 +383,16 @@ describe('PortalContainerProvider', () => {
       </PortalContainerProvider>,
     );
     fireEvent.click(screen.getByRole('menuitem', { name: 'More tools' }));
-    await waitFor(() => expect(byProbe(menuHost)).not.toBeNull());
+
+    const probe = await waitFor(() => {
+      const el = byProbe(menuHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
     expect(byProbe(portalHost)).toBeNull();
+    // Not nested inside the first-level menu's own portal node: the
+    // submenu's portal node hangs directly under menuHost.
+    expect(portalNodeOf(probe)?.parentElement).toBe(menuHost);
   });
 
   // The provider between the two menus is the trap the inheritance rule
@@ -669,6 +681,45 @@ describe('PortalContainerProvider', () => {
     expect(dialogPortalNode?.contains(probe)).toBe(true);
   });
 
+  // DrawerPortal is public and takes children of its own, so what a caller
+  // composes directly into it rides in the drawer's portal without ever
+  // passing through DrawerContent. It is armed like DrawerContent's popup
+  // children are: an overlay composed directly into the portal lands in the
+  // drawer's own portal node (the popup step), not loose in the provider
+  // container the unscoped portal would answer.
+  it('keeps a popover composed directly into DrawerPortal in the drawer portal node', async () => {
+    const providerHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <Drawer defaultOpen>
+          <DrawerPortal>
+            <Popover defaultOpen>
+              <PopoverContent>
+                <span data-testid={PROBE_ID}>popover content</span>
+              </PopoverContent>
+            </Popover>
+          </DrawerPortal>
+          <DrawerContent>
+            <DrawerTitle>Panel</DrawerTitle>
+          </DrawerContent>
+        </Drawer>
+      </PortalContainerProvider>,
+    );
+
+    const probe = await waitFor(() => {
+      const el = byProbe(providerHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    // The popover's portal node hangs one level down, inside the drawer's
+    // portal node - its parent is a Base UI portal node, not the provider
+    // container itself (which is where an unscoped DrawerPortal sends it).
+    const popoverPortalNode = portalNodeOf(probe);
+    expect(popoverPortalNode).not.toBeNull();
+    expect(popoverPortalNode?.parentElement).not.toBe(providerHost);
+    expect(popoverPortalNode?.parentElement?.hasAttribute('data-base-ui-portal')).toBe(true);
+  });
+
   // A provider inside a popup is nearer than that popup: it resets the
   // popup scope, so overlays below it answer its value again.
   it('lets a provider nested inside a dialog popup win for overlays below it', async () => {
@@ -771,6 +822,71 @@ describe('PortalContainerProvider', () => {
     unmount();
     const freshHost = createHost();
     render(tree(freshHost));
+    await act(async () => {});
+    expect(byProbe(freshHost)).not.toBeNull();
+  });
+
+  // Same hold with no provider anywhere: the menus' old
+  // `container ?? inheritedContainer` shorthand swallowed an explicit null
+  // into the inherited (here: unset) value and handed the popup to Base UI's
+  // <body> default. The fresh-mount positive control below is the same one
+  // the null tests above use: the same tree rendered from scratch with a
+  // real container mounts the popup under one empty flush, so the null
+  // assertion proves a held-back popup, not an unmounted one.
+  it('lets an explicit container={null} hold a dropdown menu popup back with no provider at all', async () => {
+    const lateHost = createHost();
+    const tree = (container: PortalContainer) => (
+      <DropdownMenu defaultOpen>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent container={container}>
+          <span data-testid={PROBE_ID}>menu content</span>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+    const { rerender, unmount } = render(tree(null));
+
+    await act(async () => {});
+    expect(byProbe(document.body)).toBeNull();
+    rerender(tree(lateHost));
+    await act(async () => {});
+    expect(byProbe(lateHost)).not.toBeNull();
+
+    // Fresh mount, not the rerender above: the initial render is the path
+    // the null assertions run on.
+    unmount();
+    const freshHost = createHost();
+    render(tree(freshHost));
+    await act(async () => {});
+    expect(byProbe(freshHost)).not.toBeNull();
+  });
+
+  // The context menu's own MenuContainerContext had the same shorthand, so
+  // the same explicit null held its popup back only from 0.6.0 on.
+  it('lets an explicit container={null} hold a context menu popup back with no provider at all', async () => {
+    const lateHost = createHost();
+    const tree = (container: PortalContainer) => (
+      <ContextMenu>
+        <ContextMenuTrigger>Right-click area</ContextMenuTrigger>
+        <ContextMenuContent container={container}>
+          <span data-testid={PROBE_ID}>context menu content</span>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+    const { rerender, unmount } = render(tree(null));
+    fireEvent.contextMenu(getByText(document.body, 'Right-click area'));
+
+    await act(async () => {});
+    expect(byProbe(document.body)).toBeNull();
+    rerender(tree(lateHost));
+    await act(async () => {});
+    expect(byProbe(lateHost)).not.toBeNull();
+
+    // Fresh mount, not the rerender above: the initial render is the path
+    // the null assertions run on.
+    unmount();
+    const freshHost = createHost();
+    render(tree(freshHost));
+    fireEvent.contextMenu(getByText(document.body, 'Right-click area'));
     await act(async () => {});
     expect(byProbe(freshHost)).not.toBeNull();
   });

@@ -17,14 +17,18 @@ order:
 
 1. the overlay's own `container` prop, when the caller passed one (an
    explicit `null` counts: the caller set it on purpose, and Base UI then
-   waits for a target instead of falling through),
+   waits for a target instead of falling through - a behaviour menus
+   gained in 0.6.0: before, an explicit null on menu content fell through
+   to `<body>`),
 2. Base UI's parent portal, when the overlay renders, at any depth, inside
    a kit popup that gives Base UI one, so a nested overlay stays in the
    popup that opened it. A popup arms this step by wrapping its popup
    children in `PortalScope`, with no `PortalContainerProvider` in
    between: the arming overlays are Dialog, AlertDialog, Sheet, Drawer,
    Popover, Select, Combobox and the menus (DropdownMenu, ContextMenu,
-   Menubar, submenus included). A `PortalContainerProvider` nested inside
+   Menubar, submenus included), and DrawerPortal - the one Portal part the
+   kit publishes - arms it the same way for overlays composed directly
+   into it, beside the panel. A `PortalContainerProvider` nested inside
    a popup resets the step, so that provider wins again for the overlays
    below it - menu content keeps the inheritance described below,
 3. the nearest `PortalContainerProvider`'s value,

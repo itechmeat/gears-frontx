@@ -35,6 +35,10 @@
     {
       "id": "adds-the-blocking-layer-while-modal",
       "text": "While the drawer is mounted and the root's `modal` is exactly `true`, the portal renders the primitive's transparent blocking backdrop before its children."
+    },
+    {
+      "id": "keeps-composed-overlays-in-its-portal-node",
+      "text": "Overlays composed directly into the portal stay inside its portal node: the portal wraps its children in PortalScope the way DrawerContent wraps the panel's children, so a kit overlay that passes no `container` of its own follows Base UI's parent-portal fallback instead of portalling to the nearest PortalContainerProvider's value or the document body."
     }
   ],
   "anti_patterns": [],

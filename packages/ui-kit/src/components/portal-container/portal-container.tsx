@@ -55,7 +55,10 @@ const InsidePortalContext = createContext(false);
  * a kit popup" for useResolvedPortalContainer. Internal building block: the
  * content part of every overlay whose Base UI portal gives Base UI a parent
  * portal node - Dialog, AlertDialog, Sheet, Drawer, Popover, Select,
- * Combobox and the menus - wraps its popup children with it. It is
+ * Combobox and the menus - wraps its popup children with it, and the
+ * drawer's DrawerPortal, the one Portal part the kit publishes, wraps the
+ * children composed directly into it the same way so overlays beside the
+ * panel stay in the drawer's portal node. It is
  * deliberately absent from public.ts and src/index.ts so consumer code can
  * neither fake nor accidentally trip the popup scope. Tooltip, HoverCard
  * and Toast neither arm it nor reset it: their portals are

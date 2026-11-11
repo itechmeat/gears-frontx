@@ -86,7 +86,11 @@ below.
 
 `DrawerTrigger`, `DrawerClose`, and `DrawerPortal` are unstyled pass-throughs
 — compose `DrawerTrigger`/`DrawerClose` with `Button` via their `render`
-prop for a styled trigger or close action.
+prop for a styled trigger or close action. `DrawerPortal` takes children of
+its own, and overlays composed directly into it portal into its node the
+way overlays inside `DrawerContent` do: the portal arms the popup scope for
+its children, so a popover beside the panel stays beside it instead of
+falling to the `PortalContainerProvider`'s container or `<body>`.
 
 ## Swipe mechanics
 
