@@ -121,20 +121,24 @@ two unset shapes stay distinct: with no provider above the caller the
 value is `undefined` and the example falls back to `<body>`, the same
 default the overlays use; an explicit `null` is a set value whose target
 is not there yet, so the popup waits instead - no popup until the target
-exists, never `<body>`:
+exists, never `<body>`. The popup renders only after mount, so the server
+render never touches `document` and the first client render matches it:
 
 ```tsx
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { usePortalContainer } from '@gears-frontx/ui-kit';
 
 function ExternalPopup({ children }: { children: React.ReactNode }) {
   const container = usePortalContainer();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || container === null) {
+    return null;
+  }
   if (container === undefined) {
     return createPortal(children, document.body);
-  }
-  if (container === null) {
-    return null;
   }
   const target = 'current' in container ? container.current : container;
   return target === null ? null : createPortal(children, target);
