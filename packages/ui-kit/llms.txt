@@ -64,9 +64,9 @@ Rules for generated code:
   preference, `data-theme` go on `<html>`/`<body>`, not on an inner
   container: overlay components (Select, Dialog, DropdownMenu, Tooltip,
   Toaster) portal their popup into an enclosing kit popup's portal when
-  that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover, Select,
-  Combobox or a menu - inside a Tooltip, HoverCard or Toast the popup skips
-  that step - else the nearest `PortalContainerProvider`'s value, or to
+  that popup arms the kit's portal order - a Tooltip, HoverCard or Toast
+  neither arms nor resets it, so the popup then follows whatever encloses
+  it - else the nearest `PortalContainerProvider`'s value, or to
   `<body>` when there is none, and inherit theme tokens and font from
   there. A
   `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
@@ -414,10 +414,10 @@ Rules for generated code:
   container for every kit overlay, provided as React context
   (PortalContainerProvider/usePortalContainer); an overlay's own
   `container` prop wins, then the portal of the kit popup it renders
-  inside (Dialog, AlertDialog, Sheet, Drawer, Popover, Select, Combobox
-  and the menus; inside a Tooltip, HoverCard or Toast the overlay follows
-  the nearest provider instead), then the nearest
-  `PortalContainerProvider`'s value, then `<body>`. How an MFE
+  inside, then the nearest `PortalContainerProvider`'s value, then
+  `<body>` - which popups arm the popup step, and where an overlay nested
+  in a Tooltip, HoverCard, Toast or NavigationMenu content lands, the
+  linked doc states exactly. How an MFE
   screen inside a shadow root keeps its popups
   inside that shadow root.
 - [Progress](dist/docs/progress.md): completion bar (Progress/

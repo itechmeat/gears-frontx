@@ -83,10 +83,12 @@ export interface SelectContentProps
     > {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to the nearest
-   * PortalContainerProvider's value, or <body> when there is none. Pass a
-   * themed container when the theme is scoped to a subtree (data-theme on a
-   * section rather than <html>) so the popup inherits its tokens and font.
+   * Where to portal the popup. Without a `container`, the popup portals
+   * where the kit overlay order puts it (see PortalContainer): outside
+   * other kit popups that is the nearest PortalContainerProvider's value,
+   * or <body> when there is none. Pass a themed container when the theme
+   * is scoped to a subtree (data-theme on a section rather than <html>) so
+   * the popup inherits its tokens and font.
    */
   container?: SelectPrimitive.Portal.Props['container'];
 }

@@ -4,7 +4,7 @@
   "metamodel": "2.0.0",
   "component": "drawer-portal",
   "forwards_to": "gts.frontx.uikit.element.dom_div.v1~",
-  "intent": "The primitive's portal, which moves what it holds out of the page's DOM tree into a given container or, without one, into the portal node of the kit popup it renders inside when that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover, Select, Combobox or a menu, the nearest PortalContainerProvider's value, or the document body while its Drawer is mounted.",
+  "intent": "The primitive's portal, which moves what it holds out of the page's DOM tree into a given container or, without one, where the kit overlay order puts it (the order stated once in portal-container.md) - the portal node of the kit popup it renders inside when that popup arms the popup scope, else the nearest PortalContainerProvider's value, else the document body - while its Drawer is mounted.",
   "typical_uses": [
     "A layer a caller must portal beside the drawer's panel, outside it"
   ],

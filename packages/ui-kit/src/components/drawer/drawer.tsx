@@ -164,10 +164,11 @@ const drawerPopupVariants = cva(styles.popup, {
 export interface DrawerContentProps extends Omit<DrawerPrimitive.Popup.Props, 'className'> {
   className?: string;
   /**
-   * Where to portal the popup. Defaults to the nearest
-   * PortalContainerProvider's value, or <body> when there is none. Pass a
-   * themed container when the theme is scoped to a subtree - same contract
-   * as DialogContent/SheetContent.
+   * Where to portal the popup. Without a `container`, the popup portals
+   * where the kit overlay order puts it (see PortalContainer): outside
+   * other kit popups that is the nearest PortalContainerProvider's value,
+   * or <body> when there is none. Pass a themed container when the theme
+   * is scoped to a subtree - same contract as DialogContent/SheetContent.
    */
   container?: DrawerPrimitive.Portal.Props['container'];
 }

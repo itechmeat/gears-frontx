@@ -38,15 +38,13 @@ is no `modal={false}` escape hatch (unlike `Dialog`).
 |------|------|---------|
 | `size` | `'default' \| 'sm'` — `sm` narrows the max width and stacks `AlertDialogCancel`/`AlertDialogAction` into two equal columns instead of a row | `'default'` |
 | `showBackdrop` | `boolean` - renders the dimming backdrop (`--overlay-modal`, the same dark scrim in both themes) | `true` |
-| `container` | DOM node to portal the popup into | nearest `PortalContainerProvider`'s value, else `<body>` |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
-Without a `container`, a popup opened inside another kit popup stays in
-that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
-Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
-or Toast it portals to the nearest `PortalContainerProvider`'s value, or
-to `<body>` when there is none, so if
+Without a `container`, the popup portals where the kit overlay order puts
+it (see PortalContainer): outside other kit popups that is the nearest
+`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the popup renders with the root theme - same

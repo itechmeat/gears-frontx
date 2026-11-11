@@ -133,7 +133,9 @@ export const createToastManager = ToastPrimitive.createToastManager;
 
 export interface ToasterProps extends ToastPrimitive.Provider.Props {
   /**
-   * Where to portal the toast viewport. Defaults to the nearest
+   * Where to portal the toast viewport. Without a `container`, the
+   * viewport portals where the kit overlay order puts it (see
+   * PortalContainer): outside other kit popups that is the nearest
    * PortalContainerProvider's value, or <body> when there is none. Pass a
    * themed container when the theme is scoped to a subtree (data-theme on a
    * container that isn't at document root) so toasts inherit its tokens

@@ -48,10 +48,11 @@ export interface SheetContentProps
     VariantProps<typeof sheetContentVariants> {
   className?: string;
   /**
-   * Where to portal the panel. Defaults to the nearest
-   * PortalContainerProvider's value, or <body> when there is none. Pass a
-   * themed container when the theme is scoped to a subtree - same contract
-   * as DialogContent.
+   * Where to portal the panel. Without a `container`, the panel portals
+   * where the kit overlay order puts it (see PortalContainer): outside
+   * other kit popups that is the nearest PortalContainerProvider's value,
+   * or <body> when there is none. Pass a themed container when the theme
+   * is scoped to a subtree - same contract as DialogContent.
    */
   container?: DialogPrimitive.Portal.Props['container'];
   /** Renders a top-right close (X) button inside the panel. @default true */
