@@ -65,8 +65,10 @@ alone never starts the timer for a non-zero delay.)
 | `className` | `string` — merged after the kit class | — |
 
 Without a `container`, a popup opened inside another kit popup stays in
-that popup's portal; otherwise it portals to the nearest
-`PortalContainerProvider`'s value, or to `<body>` when there is none, so if
+that popup's portal when that popup is a Dialog, AlertDialog, Sheet,
+Drawer, Popover, Select, Combobox or a menu; inside a Tooltip, HoverCard
+or Toast it portals to the nearest `PortalContainerProvider`'s value, or
+to `<body>` when there is none, so if
 your theme lives on a subtree (`data-theme` on a section instead of
 `<html>`), pass that section as `container` or wrap the subtree in
 `PortalContainerProvider`, or the popup renders with the root theme - same
@@ -74,6 +76,12 @@ contract as `Dialog`, `Select`, and `DropdownMenu`. Inside a shadow root
 (an MFE screen), the popup must be given a container inside that shadow
 root - through `PortalContainerProvider` or `container` - or it renders
 outside the shadow root: unstyled, and an outside press closes it.
+
+One level down the order is shorter: an overlay opened inside a tooltip
+does not stay in it - the tooltip's Base UI portal (FloatingPortalLite)
+gives Base UI no parent portal node to fall back to - and portals to the
+nearest `PortalContainerProvider`'s value, or to `<body>` when there is
+none.
 
 `TooltipContent` always renders a small caret against the popup edge
 (Base UI's `Tooltip.Arrow`) — there's no prop to hide it, matching the

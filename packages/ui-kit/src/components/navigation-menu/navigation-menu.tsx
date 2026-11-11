@@ -71,7 +71,9 @@ export function NavigationMenu<Value = unknown>({
           <NavigationMenuPrimitive.Popup className={styles.popup}>
             {/* PortalScope covers only content composed directly into this portal
               * subtree; NavigationMenuContent mounts through a raw createPortal into
-              * the viewport, so overlays inside it resolve provider-then-body. */}
+              * the viewport, so overlays inside it skip this menu's own portal node
+              * and follow an enclosing kit popup's portal when the NavigationMenu
+              * sits inside one, else provider-then-body. */}
             <PortalScope>
               <NavigationMenuViewport />
             </PortalScope>

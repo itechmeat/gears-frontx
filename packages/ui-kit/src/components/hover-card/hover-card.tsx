@@ -1,7 +1,7 @@
 import { PreviewCard as PreviewCardPrimitive } from '@base-ui/react/preview-card';
 import { cx } from 'class-variance-authority';
 
-import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
+import { ResolvedPortal } from '../portal-container/portal-container';
 import styles from './hover-card.module.css';
 
 /**
@@ -82,7 +82,7 @@ export function HoverCardContent({
         className={styles.positioner}
       >
         <PreviewCardPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          <PortalScope>{children}</PortalScope>
+          {children}
         </PreviewCardPrimitive.Popup>
       </PreviewCardPrimitive.Positioner>
     </ResolvedPortal>

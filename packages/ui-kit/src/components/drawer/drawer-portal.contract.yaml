@@ -4,7 +4,7 @@
 # Dialog.Portal); DrawerContent renders one around the panel itself.
 component: drawer-portal
 
-intent: The primitive's portal, which moves what it holds out of the page's DOM tree into a given container or, without one, into the portal node of the kit popup it renders inside, the nearest PortalContainerProvider's value, or the document body while its Drawer is mounted.
+intent: The primitive's portal, which moves what it holds out of the page's DOM tree into a given container or, without one, into the portal node of the kit popup it renders inside when that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover, Select, Combobox or a menu, the nearest PortalContainerProvider's value, or the document body while its Drawer is mounted.
 
 typical_uses:
   - A layer a caller must portal beside the drawer's panel, outside it

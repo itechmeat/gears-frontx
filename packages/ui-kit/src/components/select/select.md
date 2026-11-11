@@ -51,8 +51,10 @@ props (`side`, `sideOffset`, `align`, `alignOffset`, plus the escape
 hatch for triggers inside a `transform`/`filter` container:
 `positionMethod="fixed"`, `collisionBoundary`, `collisionPadding`) and
 `container` - inside another kit popup the popup stays in that popup's
-portal; otherwise it portals to the nearest `PortalContainerProvider`'s
-value, or to `<body>` when there is none, so if your theme lives on a
+portal when that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover,
+Select, Combobox or a menu, and inside a Tooltip, HoverCard or Toast it
+portals to the nearest `PortalContainerProvider`'s value, or to `<body>`
+when there is none, so if your theme lives on a
 subtree (`data-theme` on a section instead of `<html>`), pass that section
 as `container` or wrap the subtree in `PortalContainerProvider`, or the
 popup renders with the root theme. Inside a shadow root (an MFE screen),

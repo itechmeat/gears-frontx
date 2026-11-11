@@ -33,19 +33,30 @@ const PortalContainerContext = createContext<PortalContainer>(undefined);
  * hand a nested overlay to Base UI's own parent-portal fallback (step two
  * of the resolution order documented on that hook) instead of answering the
  * provider's container, which would pull the nested overlay out of the
- * popup that opened it. PortalContainerProvider arms the context to false
- * around its children, so a provider placed inside a popup - nearer than
- * that popup - wins again for the overlays below it.
+ * popup that opened it. Only the overlays whose Base UI portal gives Base
+ * UI a parent portal node arm it - Dialog, AlertDialog, Sheet, Drawer,
+ * Popover, Select, Combobox and the menus. Tooltip, HoverCard and Toast
+ * portal through FloatingPortalLite, which provides no PortalContext, so
+ * arming it there would answer undefined with no portal node to fall back
+ * to and send the nested overlay to <body>. PortalContainerProvider arms
+ * the context to false around its children, so a provider placed inside a
+ * popup - nearer than that popup - wins again for the overlays below it.
  */
 const InsidePortalContext = createContext(false);
 
 /**
  * Marks everything a kit popup renders inside its Base UI Portal as
  * "inside a kit popup" for useResolvedPortalContainer. Internal building
- * block: every kit overlay's content part wraps its popup children with it,
- * and it is deliberately absent from public.ts and src/index.ts so consumer
- * code can neither fake nor accidentally trip the popup scope. Renders no
- * DOM of its own.
+ * block: the content part of every overlay whose Base UI portal gives
+ * Base UI a parent portal node - Dialog, AlertDialog, Sheet, Drawer,
+ * Popover, Select, Combobox and the menus - wraps its popup children with
+ * it, and it is deliberately absent from public.ts and src/index.ts so
+ * consumer code can neither fake nor accidentally trip the popup scope.
+ * Tooltip, HoverCard and Toast do not arm it: their portals are
+ * FloatingPortalLite, which provides no PortalContext, so step two would
+ * answer undefined with nothing to fall back to and a nested overlay would
+ * land on <body> instead of following the provider. Renders no DOM of its
+ * own.
  */
 export function PortalScope({ children }: { children?: ReactNode }) {
   return <InsidePortalContext.Provider value={true}>{children}</InsidePortalContext.Provider>;
@@ -74,11 +85,13 @@ export interface PortalContainerProviderProps {
  * inside the tree the kit's styles are delivered to.
  *
  * An overlay resolves its target as: its own `container` prop, then the
- * portal of the kit popup it renders inside (so a nested overlay stays in
- * the popup that opened it), then this value, then <body>. The provider
- * also resets the popup scope around its children, so a provider nested
- * inside a popup is nearer than that popup and wins again for the overlays
- * below it.
+ * portal of the kit popup it renders inside, then this value, then <body>.
+ * The popup step holds inside Dialog, AlertDialog, Sheet, Drawer, Popover,
+ * Select, Combobox and the menus; inside a Tooltip, HoverCard or Toast a
+ * nested overlay follows this value, then <body> - see
+ * useResolvedPortalContainer for why. The provider also resets the popup
+ * scope around its children, so a provider nested inside a popup is nearer
+ * than that popup and wins again for the overlays below it.
  */
 export function PortalContainerProvider({ value, children }: PortalContainerProviderProps) {
   return (
@@ -107,20 +120,28 @@ export function usePortalContainer(): PortalContainer | undefined {
  * 2. undefined when the overlay renders inside another kit popup's portal:
  *    Base UI then portals the overlay into that popup's own portal node
  *    (FloatingPortal's parentPortalNode), so a nested overlay stays in the
- *    popup that opened it;
+ *    popup that opened it - only the popups that arm the scope take this
+ *    step (see below);
  * 3. the nearest PortalContainerProvider's value;
  * 4. undefined, which leaves Base UI's own default (the document body) in
  *    force.
  *
- * The popup scope read in step two is armed by every kit overlay's Portal
- * (PortalScope around its popup children) and reset by every
- * PortalContainerProvider, so a provider placed inside a popup is nearer
- * than that popup and wins again. usePortalContainer stays scope-blind: it
- * always answers the provider value, so app code portalling its own content
- * keeps working inside popups too. Every kit component that renders a Base
- * UI Portal resolves its target through this hook - either by calling it in
- * its own render body (which makes that module a client module) or, for the
- * overlays below that stay server modules, through ResolvedPortal.
+ * The popup scope read in step two is armed only by the overlays whose Base
+ * UI portal gives Base UI a parent portal node - Dialog, AlertDialog, Sheet,
+ * Drawer, Popover, Select, Combobox and the menus (PortalScope around their
+ * popup children) - and reset by every PortalContainerProvider, so a
+ * provider placed inside a popup is nearer than that popup and wins again.
+ * Tooltip, HoverCard and Toast portal through FloatingPortalLite, which
+ * provides no PortalContext: armed there, step two would answer undefined
+ * with no portal node to fall back to and the nested overlay would land on
+ * <body> instead of the provider, so those three do not arm it and an
+ * overlay nested in them follows steps three and four.
+ * usePortalContainer stays scope-blind: it always answers the provider
+ * value, so app code portalling its own content keeps working inside popups
+ * too. Every kit component that renders a Base UI Portal resolves its
+ * target through this hook - either by calling it in its own render body
+ * (which makes that module a client module) or, for the overlays below that
+ * stay server modules, through ResolvedPortal.
  */
 export function useResolvedPortalContainer(container: PortalContainer): PortalContainer {
   const provided = useContext(PortalContainerContext);

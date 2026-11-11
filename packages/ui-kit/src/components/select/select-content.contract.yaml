@@ -52,10 +52,12 @@ invariants:
     text: >-
       Without `container`, the popup portals into the portal node of the
       kit popup it renders inside, so a nested overlay stays in the popup
-      that opened it (a PortalContainerProvider nested inside that popup
-      wins for the overlays below it), then the nearest
-      PortalContainerProvider's value, then the document body when there
-      is neither.
+      that opened it when that popup is a Dialog, AlertDialog, Sheet,
+      Drawer, Popover, Select, Combobox or a menu (a
+      PortalContainerProvider nested inside that popup wins for the
+      overlays below it); inside a Tooltip, HoverCard or Toast, as outside
+      any kit popup, it portals to the nearest PortalContainerProvider's
+      value, then the document body when there is neither.
   - id: as-wide-as-the-trigger
     text: >-
       select.module.css sets the popup's width to the trigger's width

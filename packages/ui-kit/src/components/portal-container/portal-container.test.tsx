@@ -686,4 +686,132 @@ describe('PortalContainerProvider', () => {
     const dialogPortalNode = portalNodeOf(getByRole(dialogHost, 'dialog'));
     expect(dialogPortalNode?.contains(probe)).toBe(true);
   });
+
+  // Step one outranks the popup scope: an explicit `container` on an overlay
+  // inside a kit popup is that overlay's own decision, so the scope defers
+  // only overlays that carry no container of their own.
+  it('lets an explicit select container win inside a dialog popup', async () => {
+    const providerHost = createHost();
+    const selectHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <Dialog defaultOpen>
+          <DialogContent>
+            <DialogTitle>Settings</DialogTitle>
+            <Select items={[{ value: 'eu', label: 'Europe' }]} defaultOpen>
+              <SelectTrigger aria-label="Region">
+                <SelectValue placeholder="Pick a region" />
+              </SelectTrigger>
+              <SelectContent container={selectHost}>
+                <SelectItem value="eu">Europe</SelectItem>
+                <span data-testid={PROBE_ID}>select popup content</span>
+              </SelectContent>
+            </Select>
+          </DialogContent>
+        </Dialog>
+      </PortalContainerProvider>,
+    );
+
+    // Raw querySelector, not getByRole: the modal dialog marks hosts outside
+    // its popup aria-hidden, which hides them from the role queries.
+    await waitFor(() => expect(byProbe(selectHost)).not.toBeNull());
+    const dialogPortalNode = portalNodeOf(getByRole(providerHost, 'dialog'));
+    expect(dialogPortalNode?.querySelector(`[data-testid="${PROBE_ID}"]`)).toBeNull();
+  });
+
+  /*
+   * Tooltip, HoverCard and Toast portal through Base UI's FloatingPortalLite,
+   * which provides no PortalContext: there is no parent portal node inside
+   * them for a nested overlay to fall back to, so they do not arm the popup
+   * scope and an overlay opened inside one resolves provider-then-body again
+   * (armed, the scope would answer undefined and send the nested overlay to
+   * <body>, outside a shadow-root provider).
+   */
+  it('keeps a popover inside a hover card popup in the provider container', async () => {
+    const providerHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <HoverCard defaultOpen>
+          <HoverCardContent>
+            <span data-testid="hover-card-body">Hover card body</span>
+            <Popover defaultOpen>
+              <PopoverContent>
+                <span data-testid={PROBE_ID}>popover content</span>
+              </PopoverContent>
+            </Popover>
+          </HoverCardContent>
+        </HoverCard>
+      </PortalContainerProvider>,
+    );
+
+    const probe = await waitFor(() => {
+      const el = byProbe(document.body);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    expect(providerHost.querySelector('[data-testid="hover-card-body"]')).not.toBeNull();
+    expect(providerHost.contains(probe)).toBe(true);
+  });
+
+  it('keeps a popover inside a tooltip popup in the provider container', async () => {
+    const providerHost = createHost();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <Tooltip defaultOpen>
+          <TooltipTrigger>Hover me</TooltipTrigger>
+          <TooltipContent>
+            <span data-testid="tooltip-body">Tooltip body</span>
+            <Popover defaultOpen>
+              <PopoverContent>
+                <span data-testid={PROBE_ID}>popover content</span>
+              </PopoverContent>
+            </Popover>
+          </TooltipContent>
+        </Tooltip>
+      </PortalContainerProvider>,
+    );
+
+    const probe = await waitFor(() => {
+      const el = byProbe(document.body);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    expect(providerHost.querySelector('[data-testid="tooltip-body"]')).not.toBeNull();
+    expect(providerHost.contains(probe)).toBe(true);
+  });
+
+  // A toast card is composed imperatively, so the nested overlay rides in
+  // through the toast object's actionProps children - the only surface a
+  // card exposes to JSX.
+  it('keeps a popover in a toast action in the provider container', async () => {
+    const providerHost = createHost();
+    const manager = createToastManager();
+    render(
+      <PortalContainerProvider value={providerHost}>
+        <Toaster toastManager={manager} />
+      </PortalContainerProvider>,
+    );
+    act(() => {
+      manager.add({
+        title: 'Export finished',
+        actionProps: {
+          children: (
+            <Popover defaultOpen>
+              <PopoverContent>
+                <span data-testid={PROBE_ID}>popover content</span>
+              </PopoverContent>
+            </Popover>
+          ),
+        },
+      });
+    });
+
+    const probe = await waitFor(() => {
+      const el = byProbe(document.body);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    expect(getByText(providerHost, 'Export finished')).not.toBeNull();
+    expect(providerHost.contains(probe)).toBe(true);
+  });
 });

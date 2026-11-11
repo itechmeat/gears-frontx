@@ -19,10 +19,16 @@ order:
    explicit `null` counts: the caller set it on purpose, and Base UI then
    waits for a target instead of falling through),
 2. Base UI's parent portal, when the overlay renders inside another kit
-   popup, so a nested overlay stays in the popup that opened it. Every kit
-   popup wraps its children in `PortalScope` to arm this step, and a
-   `PortalContainerProvider` nested inside that popup resets it, so that
-   provider wins again for the overlays below it,
+   popup that gives Base UI one, so a nested overlay stays in the popup
+   that opened it. The overlays that arm this step by wrapping their popup
+   children in `PortalScope` are Dialog, AlertDialog, Sheet, Drawer,
+   Popover, Select, Combobox and the menus (DropdownMenu, ContextMenu,
+   Menubar, submenus included). Tooltip, HoverCard and Toast portal through
+   Base UI's FloatingPortalLite, which provides no parent portal node, so
+   they do not arm it: an overlay nested inside one skips this step and
+   follows steps three and four. A `PortalContainerProvider` nested inside
+   a popup resets the step, so that provider wins again for the overlays
+   below it,
 3. the nearest `PortalContainerProvider`'s value,
 4. Base UI's own default, `<body>`.
 
@@ -32,7 +38,9 @@ resolved to every `DropdownMenuSubContent` below it, so a theme passed to
 the first-level popup holds in its submenus), then follows the order
 above. One known limit: `NavigationMenuContent` mounts through a raw
 `createPortal` into the viewport, outside the popup's React subtree, so
-overlays inside `NavigationMenuContent` skip step 2 and go
+overlays inside `NavigationMenuContent` skip the NavigationMenu's own
+portal: they follow an enclosing kit popup's portal when the
+NavigationMenu itself sits inside one that arms step 2, and otherwise go
 provider-then-body.
 
 `usePortalContainer()` returns the provided value, or `undefined` with no
