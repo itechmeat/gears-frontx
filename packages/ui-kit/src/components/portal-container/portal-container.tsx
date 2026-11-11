@@ -114,7 +114,7 @@ const InheritsMenuContainerContext = createContext<symbol | undefined>(undefined
  * unless a nearer PortalContainerProvider sits in between. The menus pass
  * their own family token, so a menu popup keeps the inheritance alive for
  * the menu contents of its family below it (submenus, or menus opened
- * directly in the content), while every other popup ends it for every
+ * directly in the content), while every other arming popup ends it for every
  * family and a menu popup of one family ends it for the other; see
  * useResolvedPortalContainer for the full menu step.
  */
@@ -258,7 +258,7 @@ export function useMenuContainerInheritance(): symbol | undefined {
  * content of its own family (a submenu, or a menu opened directly inside
  * such a menu) first inherits the container that enclosing menu content
  * resolved, and the menu contents pass that inheritance to this hook as
- * `container`. The inheritance crosses menu popups only: any kit popup
+ * `container`. The inheritance crosses menu popups only: any kit popup that arms the popup scope,
  * other than a menu of the same family between the two menu contents ends
  * it - the NavigationMenu's viewport scope and a menu popup of the other
  * family included - and the menu inside that popup follows the kit overlay
