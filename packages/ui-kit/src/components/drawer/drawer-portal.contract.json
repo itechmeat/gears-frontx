@@ -38,7 +38,7 @@
     },
     {
       "id": "keeps-composed-overlays-in-its-portal-node",
-      "text": "Overlays composed directly into the portal stay inside its portal node: the portal wraps its children in PortalScope the way DrawerContent wraps the panel's children, so a kit overlay that passes no `container` of its own follows Base UI's parent-portal fallback instead of portalling to the nearest PortalContainerProvider's value or the document body. The kit overlay order still applies (portal-container.md): a PortalContainerProvider between the portal and the overlay wins again, and menu content inside another menu content of its family first inherits the container that content resolved."
+      "text": "Overlays composed directly into the portal stay inside its portal node: the portal wraps its children in PortalScope the way DrawerContent wraps the panel's children, so a kit overlay that passes no `container` of its own follows Base UI's parent-portal fallback instead of portalling to the nearest PortalContainerProvider's value or the document body. The kit overlay order still applies (portal-container.md): a PortalContainerProvider between the portal and the overlay wins again, and menu content inside another menu content of its family first inherits the container that content resolved - the portal itself is one of the popup boundaries that end that inheritance, so a menu composed directly into it from inside a menu content above the drawer does not inherit that content's container and takes the popup step instead."
     }
   ],
   "anti_patterns": [],

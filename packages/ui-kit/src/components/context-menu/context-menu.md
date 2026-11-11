@@ -73,15 +73,21 @@ shortcut.
 
 Without a `container`, the popup portals where the kit overlay order puts
 it (see PortalContainer): any `ContextMenuContent` rendered inside another
-`ContextMenuContent` (a submenu, or a menu opened inside a popup or
-provider that sits in a menu) first inherits the container that enclosing
-content resolved, and that inheritance outranks a nearer
-`PortalContainerProvider` and the popup step; outside kit popups that arm
-the popup scope, that is the nearest `PortalContainerProvider`'s value, or
-`<body>` when there is none, so if your theme lives on a subtree
-(`data-theme` on a section instead of `<html>`), pass that section as
-`container` or wrap the subtree in `PortalContainerProvider`, or the popup
-renders with the root theme - same
+`ContextMenuContent` (a submenu, or a menu opened directly inside one)
+first inherits the container that enclosing content resolved, and that
+inheritance outranks a nearer `PortalContainerProvider` and the popup
+step. The inheritance crosses menu popups only: another kit popup that
+arms the popup scope between the two menu contents (Dialog, AlertDialog,
+Sheet, Drawer, Popover, Select, Combobox, DrawerPortal) ends it, so a menu
+inside one of those portals into that popup's own portal node instead -
+which keeps the menu reachable when the intervening popup is a modal
+dialog, since the dialog marks everything outside its own popup
+`aria-hidden` while it is open. Outside kit popups that arm the popup
+scope, that is the nearest `PortalContainerProvider`'s value, or `<body>`
+when there is none, so if your theme lives on a subtree (`data-theme` on a
+section instead of `<html>`), pass that section as `container` or wrap the
+subtree in `PortalContainerProvider`, or the popup renders with the root
+theme - same
 contract as `Dialog`, `Select`, and `DropdownMenu`. An explicit
 `container={null}` holds the popup back for menus too, like the other
 overlays: Base UI waits for a target instead of portalling anywhere. That

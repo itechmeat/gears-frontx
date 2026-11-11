@@ -35,16 +35,23 @@ order:
 4. Base UI's own default, `<body>`.
 
 Menus add one step in front: a menu content rendered inside another menu
-content of the same family (a submenu, or a menu opened inside a popup or
-provider that sits in such a menu) first inherits the container that
-enclosing menu content resolved (`DropdownMenuContent` hands the container
-it resolved to every `DropdownMenuContent` below it, so a theme passed to
-the first-level popup holds in its submenus). DropdownMenu and Menubar
-form one family, ContextMenu is its own: a ContextMenu content inside a
-DropdownMenu or Menubar content, or the other way round, inherits nothing
-and follows the order above. That inheritance outranks a nearer
-`PortalContainerProvider` and the popup step; what it leaves unset follows
-the order above.
+content of its own family (a submenu, or a menu opened directly inside
+such a menu) first inherits the container that enclosing menu content
+resolved (`DropdownMenuContent` hands the container it resolved to every
+`DropdownMenuContent` below it, so a theme passed to the first-level popup
+holds in its submenus). DropdownMenu and Menubar form one family,
+ContextMenu is its own: a ContextMenu content inside a DropdownMenu or
+Menubar content, or the other way round, inherits nothing and follows the
+order above. That inheritance outranks a nearer `PortalContainerProvider`
+and the popup step, and crosses menu popups only: another kit popup that
+arms the popup scope between the two menu contents (Dialog, AlertDialog,
+Sheet, Drawer, Popover, Select, Combobox, DrawerPortal) ends it, so a menu
+inside one of those takes the popup step instead and lands in the
+intervening popup's own portal node. The boundary keeps the inner menu
+reachable: a modal Dialog marks everything outside its own popup
+`aria-hidden` while it is open, so a container inherited across it would
+hang the inner menu in a hidden subtree; what the inheritance leaves unset
+follows the order above.
 
 Tooltip, HoverCard and Toast neither arm nor reset the popup scope: an
 overlay nested inside one of them follows whatever encloses that Tooltip,
@@ -102,7 +109,12 @@ function Screen({ portalHost }: { portalHost: HTMLElement }) {
 }
 ```
 
-Read the value to portal something the kit does not own the same way:
+Read the value to portal something the kit does not own the same way. The
+two unset shapes stay distinct: with no provider above the caller the
+value is `undefined` and the example falls back to `<body>`, the same
+default the overlays use; an explicit `null` is a set value whose target
+is not there yet, so the popup waits instead - no popup until the target
+exists, never `<body>`:
 
 ```tsx
 import { createPortal } from 'react-dom';
@@ -111,8 +123,11 @@ import { usePortalContainer } from '@gears-frontx/ui-kit';
 
 function ExternalPopup({ children }: { children: React.ReactNode }) {
   const container = usePortalContainer();
-  const target = container && 'current' in container ? container.current : container;
-  return createPortal(children, target ?? document.body);
+  if (container === undefined) {
+    return createPortal(children, document.body);
+  }
+  const target = container === null ? null : 'current' in container ? container.current : container;
+  return target === null ? null : createPortal(children, target);
 }
 ```
 
