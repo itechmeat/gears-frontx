@@ -648,6 +648,136 @@ describe('PortalContainerProvider', () => {
     expect(menuHost.getAttribute('aria-hidden')).toBe('true');
   });
 
+  // #765, round two: the inheritance flag used to be one boolean shared by
+  // both menu families, while each family keeps its own container context.
+  // ContextMenuContent > Dialog > DropdownMenuContent > ContextMenuContent:
+  // the dialog ends the inheritance for both families, but the dropdown
+  // popup's PortalScope armed the shared flag again for everything below
+  // it, and nothing between reset the context menu family's container - so
+  // the inner context menu inherited the OUTER context menu's host, the
+  // subtree the modal dialog marks aria-hidden. Each family now carries its
+  // own token: the dropdown popup arms the dropdown family only, and the
+  // context menu inside it follows the dropdown, whose portal node hangs
+  // inside the dialog's.
+  it('keeps a context menu opened inside a dropdown menu inside a dialog out of the hidden outer menu subtree', async () => {
+    const menuHost = createHost();
+    const dialogHost = createHost();
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger>Right-click area</ContextMenuTrigger>
+        <ContextMenuContent container={menuHost}>
+          <Dialog defaultOpen>
+            <DialogContent container={dialogHost}>
+              <DialogTitle>Settings</DialogTitle>
+              <DropdownMenu defaultOpen>
+                <DropdownMenuTrigger>Inner open</DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <ContextMenu>
+                    <ContextMenuTrigger>Inner right-click area</ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <span data-testid={PROBE_ID}>innermost context menu content</span>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </DialogContent>
+          </Dialog>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+    // The outer menu first: nothing inside its content exists until it
+    // opens. Exact text matches keep the two triggers apart.
+    fireEvent.contextMenu(screen.getByText('Right-click area'));
+    const innerTrigger = await waitFor(() => screen.getByText('Inner right-click area'));
+    fireEvent.contextMenu(innerTrigger);
+
+    const probe = await waitFor(() => {
+      const el = byProbe(dialogHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    expect(byProbe(menuHost)).toBeNull();
+    // The inner menu's portal node hangs inside the dialog's own portal
+    // node (through the dropdown's), never inside the outer context menu's
+    // host.
+    const dialogPortalNode = dialogHost.querySelector('[data-base-ui-portal]');
+    expect(dialogPortalNode).not.toBeNull();
+    const innerPortalNode = portalNodeOf(probe);
+    expect(innerPortalNode).not.toBeNull();
+    expect(menuHost.contains(innerPortalNode)).toBe(false);
+    expect(dialogPortalNode).toContainElement(innerPortalNode as HTMLElement);
+    // No hidden marker on the chain from the inner menu up to and including
+    // the dialog's portal node. The walk stops there on purpose: the outer
+    // context menu marks the dialog's whole host aria-hidden the moment it
+    // opens (recorded in the round one reproduction), so nodes above the
+    // dialog's portal node are outside this fix's control.
+    for (
+      let node: Element | null = probe;
+      node !== null && node !== dialogPortalNode?.parentElement;
+      node = node.parentElement
+    ) {
+      expect(node?.getAttribute('aria-hidden')).not.toBe('true');
+      expect(node?.hasAttribute('inert')).toBe(false);
+    }
+    // The trap the shared boolean walked into: the outer menu's host is
+    // marked aria-hidden while the dialog is open, so the inherited
+    // container really was a hidden subtree.
+    expect(menuHost.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  // The shared-boolean bug without a dialog in between:
+  // DropdownMenuContent A > ContextMenuContent B > DropdownMenuContent C.
+  // B's popup armed the shared flag, and B provides no dropdown container
+  // context, so C read A's resolved container across B's popup boundary and
+  // skipped the popup step into B's portal node. With the family tokens, C
+  // reads B's context menu token, does not inherit, and lands in B's own
+  // portal node.
+  it('keeps a dropdown menu opened inside a context menu inside a dropdown menu in the inner context menu portal node', async () => {
+    const menuHost = createHost();
+    render(
+      <DropdownMenu defaultOpen>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent container={menuHost}>
+          <ContextMenu>
+            <ContextMenuTrigger>Right-click area</ContextMenuTrigger>
+            <ContextMenuContent>
+              <DropdownMenu defaultOpen>
+                <DropdownMenuTrigger>Inner open</DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <span data-testid={PROBE_ID}>inner dropdown content</span>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </ContextMenuContent>
+          </ContextMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click area'));
+
+    const probe = await waitFor(() => {
+      const el = document.querySelector(`[data-testid="${PROBE_ID}"]`);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    const innerPortalNode = portalNodeOf(probe);
+    expect(innerPortalNode).not.toBeNull();
+    // Raw text query, not a role query: with the inner dropdown open, Base
+    // UI can mark the enclosing context menu popup aria-hidden. The trigger
+    // text sits inside the context menu's popup, so its portal node is the
+    // context menu's own.
+    const ctxPortalNode = portalNodeOf(getByText(document.body, 'Inner open'));
+    expect(ctxPortalNode).not.toBeNull();
+    // The inner dropdown's portal node hangs directly under the context
+    // menu's portal node - the popup step into the menu it opened inside -
+    // not directly in the container the outer dropdown content resolved.
+    // The probe is a DOM descendant of that container either way: what
+    // changed is one level, the one the shared boolean let the inheritance
+    // skip.
+    expect(innerPortalNode?.parentElement).toBe(ctxPortalNode);
+    expect(innerPortalNode?.parentElement).not.toBe(menuHost);
+    expect(menuHost.contains(innerPortalNode)).toBe(true);
+  });
+
   it('usePortalContainer returns the provided value under the provider', () => {
     const portalHost = createHost();
     function HookProbe({ expected }: { expected: ParentNode }) {

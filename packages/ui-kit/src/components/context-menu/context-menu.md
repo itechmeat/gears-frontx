@@ -76,10 +76,10 @@ it (see PortalContainer): any `ContextMenuContent` rendered inside another
 `ContextMenuContent` (a submenu, or a menu opened directly inside one)
 first inherits the container that enclosing content resolved, and that
 inheritance outranks a nearer `PortalContainerProvider` and the popup
-step. The inheritance crosses menu popups only: another kit popup that
-arms the popup scope between the two menu contents (Dialog, AlertDialog,
-Sheet, Drawer, Popover, Select, Combobox, DrawerPortal) ends it, so a menu
-inside one of those portals into that popup's own portal node instead -
+step. The inheritance crosses menu popups only: any kit popup other than a
+menu of the same family between the two menu contents ends it, so a menu
+inside one of those follows the kit overlay order from that popup on - its
+portal node, unless a nearer `PortalContainerProvider` sits in between -
 which keeps the menu reachable when the intervening popup is a modal
 dialog, since the dialog marks everything outside its own popup
 `aria-hidden` while it is open. Outside kit popups that arm the popup

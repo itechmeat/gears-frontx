@@ -50,22 +50,40 @@ const PortalContainerContext = createContext<PortalContainer>(undefined);
  */
 const InsidePortalContext = createContext(false);
 
-/*
- * Whether menu container inheritance may cross the nearest popup boundary.
- * PortalScope arms it to false around a non-menu popup's children (the
- * default), so a menu content inside a Dialog, Popover, Select and the rest
- * does not inherit the container of a menu content the popup sits in: the
- * menu takes the popup step instead and lands in that popup's own portal
- * node. An inherited container across the boundary would hang the inner
- * menu outside the popup that is open on top of it - a modal Dialog marks
- * everything outside its own popup aria-hidden while it is open, so the
- * inner menu would disappear from assistive tech. The menus' own PortalScope
- * use passes inheritsMenuContainer, so submenus and menus nested directly
- * in menu content keep the inheritance. PortalContainerProvider provides
- * no value for this context: a provider between the two menus is not a
- * popup boundary, and the inherited container outranks it.
+/**
+ * The menu family tokens PortalScope arms menu container inheritance with.
+ * DropdownMenu and Menubar share DROPDOWN_MENU_FAMILY (MenubarContent
+ * renders through DropdownMenuContent), ContextMenu carries
+ * CONTEXT_MENU_FAMILY. A menu content inherits an enclosing menu content's
+ * container only when the PortalScope above it carries its own family's
+ * token, so the two families never inherit across each other, and any
+ * popup that wraps its children in PortalScope without a menu token ends
+ * the inheritance for both. Internal building blocks, like PortalScope:
+ * deliberately absent from public.ts and src/index.ts.
  */
-const InheritsMenuContainerContext = createContext(false);
+export const DROPDOWN_MENU_FAMILY = Symbol('dropdown-menu');
+export const CONTEXT_MENU_FAMILY = Symbol('context-menu');
+
+/*
+ * Which menu family may cross the nearest popup boundary: the family token
+ * of the menu popup above the caller, or undefined - the "no family" value
+ * - when no menu popup sits above it or a popup without a menu token sits
+ * between. PortalScope arms it to undefined around a non-menu popup's
+ * children (the default) and to a menu popup's own family token around that
+ * popup's children, so a menu content inherits the container of an
+ * enclosing menu content only when the armed token is its own family's: a
+ * menu inside a Dialog, Popover, Select and the rest does not inherit the
+ * container of a menu content the popup sits in, and a menu inside another
+ * family's menu popup does not inherit it either - each family keeps its
+ * own container context, and only the matching token arms the stand-in.
+ * An inherited container across the boundary would hang the inner menu
+ * outside the popup that is open on top of it - a modal Dialog marks
+ * everything outside its own popup aria-hidden while it is open, so the
+ * inner menu would disappear from assistive tech. PortalContainerProvider
+ * provides no value for this context: a provider between the two menus is
+ * not a popup boundary, and the inherited container outranks it.
+ */
+const InheritsMenuContainerContext = createContext<symbol | undefined>(undefined);
 
 /**
  * Marks everything a kit popup renders inside its Base UI Portal as "inside
@@ -92,24 +110,30 @@ const InheritsMenuContainerContext = createContext(false);
  * content must not keep the outer menu's container, because the
  * intervening popup (a modal Dialog is the case that bites) can mark the
  * container's whole subtree aria-hidden while it is open. Ended, the menu
- * takes the popup step and lands in the intervening popup's own portal
- * node. The menus pass `inheritsMenuContainer`, so their own PortalScope
- * use keeps the inheritance for submenus and for menus nested directly in
- * menu content; see useResolvedPortalContainer for the full menu step.
+ * follows the kit overlay order from that popup on: its portal node,
+ * unless a nearer PortalContainerProvider sits in between. The menus pass
+ * their own family token, so a menu popup keeps the inheritance alive for
+ * the menu contents of its family below it (submenus, or menus opened
+ * directly in the content), while every other popup ends it for every
+ * family and a menu popup of one family ends it for the other; see
+ * useResolvedPortalContainer for the full menu step.
  */
 export function PortalScope({
   children,
-  inheritsMenuContainer = false,
+  inheritsMenuContainer,
 }: {
   children?: ReactNode;
   /**
-   * Whether menu container inheritance may cross this popup boundary.
-   * False (the default) ends it: a menu content below this popup follows
-   * the popup step instead of inheriting a menu container from above it.
-   * Only the menus pass true, so a menu popup keeps the inheritance alive
-   * for the menu contents below it while every other popup ends it.
+   * The menu family token that may cross this popup boundary; leave it
+   * unset (the default) to end menu container inheritance here: a menu
+   * content below this popup follows the kit overlay order from this popup
+   * on instead of inheriting a menu container from above it. Only the menus
+   * pass a token - their own family's - so a menu popup keeps the
+   * inheritance alive for its family's menu contents below it, while every
+   * other popup ends it for every family and a menu popup of one family
+   * ends it for the other.
    */
-  inheritsMenuContainer?: boolean;
+  inheritsMenuContainer?: symbol;
 }) {
   return (
     <InsidePortalContext.Provider value={true}>
@@ -181,18 +205,22 @@ export function usePortalContainer(): PortalContainer | undefined {
 }
 
 /**
- * Whether a menu content rendered at the caller may inherit the container
- * of an enclosing menu content of its own family. True directly inside a
- * menu popup - the menus arm PortalScope with `inheritsMenuContainer` - and
- * everywhere else no popup that arms the scope sits above the caller;
- * false below any other kit popup, which is what ends the inheritance at a
- * non-menu popup boundary. Internal menu building block, like
- * useResolvedPortalContainer: DropdownMenuContent and ContextMenuContent
- * read it to decide whether the inherited container stands in for their
- * own. Stays scope-blind to PortalContainerProvider: a provider between
- * the two menus is not a popup boundary, and the inheritance outranks it.
+ * Which menu family's container inheritance may cross the nearest popup
+ * boundary above the caller: the family token of the nearest menu popup
+ * above it, or undefined - the "no family" value - outside any menu popup,
+ * or when a popup without a menu token sits between the caller and the
+ * nearest menu popup above it. Every popup that arms the popup scope
+ * without a menu token resets the value to undefined, and a menu popup of
+ * the other family carries that family's token, which ends the inheritance
+ * for this family all the same. Stays scope-blind to
+ * PortalContainerProvider: a provider between the menu popup and the
+ * caller is not a popup boundary, and the inheritance outranks it.
+ * Internal menu building block, like useResolvedPortalContainer:
+ * DropdownMenuContent and ContextMenuContent compare the answer with their
+ * own family token to decide whether the inherited container stands in for
+ * their own.
  */
-export function useMenuContainerInheritance(): boolean {
+export function useMenuContainerInheritance(): symbol | undefined {
   return useContext(InheritsMenuContainerContext);
 }
 
@@ -230,20 +258,23 @@ export function useMenuContainerInheritance(): boolean {
  * content of its own family (a submenu, or a menu opened directly inside
  * such a menu) first inherits the container that enclosing menu content
  * resolved, and the menu contents pass that inheritance to this hook as
- * `container`. The inheritance crosses menu popups only: another kit popup
- * that arms the popup scope between the two menu contents - Dialog,
- * AlertDialog, Sheet, Drawer, Popover, Select, Combobox, DrawerPortal -
- * ends it, and the menu inside that popup takes the popup step instead,
- * landing in the intervening popup's own portal node. That boundary is
+ * `container`. The inheritance crosses menu popups only: any kit popup
+ * other than a menu of the same family between the two menu contents ends
+ * it - the NavigationMenu's viewport scope and a menu popup of the other
+ * family included - and the menu inside that popup follows the kit overlay
+ * order from that popup on: its portal node, unless a nearer
+ * PortalContainerProvider sits in between. That boundary is
  * what keeps the inner menu reachable: a modal Dialog marks everything
  * outside its own popup aria-hidden while it is open, so a container
- * inherited across it would hang the inner menu in a hidden subtree. The
- * menus arm PortalScope with `inheritsMenuContainer`, so a menu popup is
- * the one popup boundary the inheritance crosses. The two families keep
- * separate contexts (MenuContainerContext in dropdown-menu.tsx, which
- * Menubar shares, and in context-menu.tsx), so a ContextMenu content
- * inside a DropdownMenu or Menubar content, or the other way round,
- * inherits nothing. PortalContainerProvider is not a popup boundary and
+ * inherited across it would hang the inner menu in a hidden subtree. Each
+ * family arms PortalScope with its own token (DROPDOWN_MENU_FAMILY for
+ * DropdownMenu and Menubar, CONTEXT_MENU_FAMILY for ContextMenu), so a
+ * menu popup is the one popup boundary the inheritance crosses for its own
+ * family, and the two families keep separate container contexts
+ * (MenuContainerContext in dropdown-menu.tsx, which Menubar shares, and in
+ * context-menu.tsx) on top of that: a ContextMenu content inside a
+ * DropdownMenu or Menubar content, or the other way round, inherits
+ * nothing. PortalContainerProvider is not a popup boundary and
  * does not reset the inheritance, so the inherited container outranks a
  * provider between the two menus too.
  *
