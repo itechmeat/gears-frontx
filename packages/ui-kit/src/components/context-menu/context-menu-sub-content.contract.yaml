@@ -38,8 +38,11 @@ invariants:
       enclosing ContextMenuContent or ContextMenuSubContent resolved, so a
       theme passed to the first-level popup holds in the submenu; when the
       menu tree resolved none, into the portal node of the kit popup it
-      renders inside, the nearest PortalContainerProvider's value, or the
-      document body; its own `container` wins when given.
+      renders inside when that popup is a Dialog, AlertDialog, Sheet,
+      Drawer, Popover, Select, Combobox or a menu, the nearest
+      PortalContainerProvider's value, or the document body (inside a
+      Tooltip, HoverCard or Toast there is no parent portal node to fall
+      back to); its own `container` wins when given.
   - id: sized-to-its-content
     text: >-
       context-menu.module.css sizes the submenu popup to its own content
@@ -87,14 +90,16 @@ prop_statements:
       `React.ReactNode` is a union of elements, strings, numbers, fragments
       and more; the compiler emits one JSON type per property.
   container:
-    states: container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the parent menu's resolved container, then the portal node of the enclosing kit popup, the nearest PortalContainerProvider's value, and the document body; an explicit null is kept, so Base UI waits for a target
+    states: container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the parent menu's resolved container, then the portal node of the enclosing kit popup when that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover, Select, Combobox or a menu, the nearest PortalContainerProvider's value, and the document body; an explicit null is kept, so Base UI waits for a target
     because: >-
       `HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null`
       - live DOM nodes and ref objects, which no JSON Schema type covers. The
       kit resolves it as the caller's own `container` when given (an
       explicit null included), otherwise the parent menu's resolved
-      container, otherwise the portal node of the enclosing kit popup, the
-      nearest PortalContainerProvider's value, and the document body, so an
+      container, otherwise the portal node of the enclosing kit popup when
+      that popup is a Dialog, AlertDialog, Sheet, Drawer, Popover, Select,
+      Combobox or a menu, the nearest PortalContainerProvider's value, and
+      the document body, so an
       explicit null survives inheritance instead of falling through like an
       absent prop.
   sideOffset:

@@ -1,7 +1,7 @@
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip';
 import { cx } from 'class-variance-authority';
 
-import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
+import { ResolvedPortal } from '../portal-container/portal-container';
 import styles from './tooltip.module.css';
 
 export const Tooltip = TooltipPrimitive.Root;
@@ -87,7 +87,7 @@ export function TooltipContent({
         className={styles.positioner}
       >
         <TooltipPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-          <PortalScope>{children}</PortalScope>
+          {children}
           <TooltipPrimitive.Arrow className={styles.arrow} />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>

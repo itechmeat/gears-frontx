@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '../button/button';
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import { useResolvedPortalContainer } from '../portal-container/portal-container';
 import styles from './toast.module.css';
 
 /* One icon per toast `type`; an unset/unrecognized type renders no icon,
@@ -180,9 +180,7 @@ export function Toaster({
       {children}
       <ToastPrimitive.Portal container={resolvedContainer}>
         <ToastPrimitive.Viewport aria-label={label} className={styles.viewport}>
-          <PortalScope>
-            <ToastList closeLabel={closeLabel} />
-          </PortalScope>
+          <ToastList closeLabel={closeLabel} />
         </ToastPrimitive.Viewport>
       </ToastPrimitive.Portal>
     </ToastPrimitive.Provider>
