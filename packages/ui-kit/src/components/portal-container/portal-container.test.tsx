@@ -423,12 +423,19 @@ describe('PortalContainerProvider', () => {
     expect(byProbe(innerProviderHost)).toBeNull();
   });
 
-  // Menubar shares the DropdownMenu family context, and the inheritance
-  // outranks the popup step: a menubar menu opened inside a popover that
-  // sits in a dropdown menu content with its own container portals to that
-  // container - not into the popover's portal node the popup step would
-  // hand it, and not to the provider around the whole tree.
-  it('inherits the dropdown menu container for a menubar menu opened in a popover inside it', async () => {
+  // Menubar shares the DropdownMenu family context, but the inheritance
+  // crosses menu popups only: a menubar menu opened inside a popover that
+  // sits in a dropdown menu content ends the inheritance at the popover
+  // (PortalScope resets menu container inheritance around every non-menu
+  // popup's children), so the menubar menu takes the popup step and lands
+  // in the popover's own portal node - not in the container the dropdown
+  // content resolved, and not to the provider around the whole tree. The
+  // wave-7 version of this test asserted the old rule, where the
+  // inheritance outranked the popup step here too; the modal-dialog
+  // boundary in #765 changed the rule, because an inherited container
+  // across a non-menu popup can hang the inner menu in a subtree the
+  // intervening modal marks aria-hidden.
+  it('portals a menubar menu opened in a popover inside a dropdown menu content into the popover portal node', async () => {
     const providerHost = createHost();
     const menuHost = createHost();
     render(
@@ -453,20 +460,28 @@ describe('PortalContainerProvider', () => {
       </PortalContainerProvider>,
     );
 
+    // Raw querySelector, not a role or text query: with the menubar menu
+    // open, Base UI can mark the enclosing popups aria-hidden, which hides
+    // them from those queries.
     const probe = await waitFor(() => {
-      const el = byProbe(menuHost);
+      const el = document.querySelector(`[data-testid="${PROBE_ID}"]`);
       expect(el).not.toBeNull();
       return el as Element;
     });
-    // The dropdown's own portal node is the one its popup lives in; the
-    // popover's portal node hangs inside it. The menubar's portal node
-    // landing directly in the inherited container proves the inheritance
-    // outranked both the popup step and the provider.
-    const dropdownPortalNode = portalNodeOf(getByRole(menuHost, 'menu', { name: 'Open' }));
-    expect(dropdownPortalNode).not.toBeNull();
-    expect(dropdownPortalNode?.contains(probe)).toBe(false);
-    expect(portalNodeOf(probe)?.parentElement).toBe(menuHost);
     expect(byProbe(providerHost)).toBeNull();
+    // The menubar's portal node hangs directly under the popover's own
+    // portal node - the popup step, not the inherited container. The
+    // popover has no container of its own, so its portal node follows the
+    // dropdown popup's portal (the kit order), which is why the probe is
+    // still a DOM descendant of the dropdown's container: what changed is
+    // one level, the one the old rule let the inheritance skip.
+    const menubarPortalNode = portalNodeOf(probe);
+    expect(menubarPortalNode).not.toBeNull();
+    const popoverPortalNode = menubarPortalNode?.parentElement ?? null;
+    const dropdownPortalNode = popoverPortalNode?.parentElement ?? null;
+    expect(popoverPortalNode?.hasAttribute('data-base-ui-portal')).toBe(true);
+    expect(dropdownPortalNode?.hasAttribute('data-base-ui-portal')).toBe(true);
+    expect(dropdownPortalNode?.parentElement).toBe(menuHost);
   });
 
   // Cross-family menus keep separate contexts: a context menu opened inside
@@ -506,6 +521,131 @@ describe('PortalContainerProvider', () => {
     expect(dropdownPortalNode).not.toBeNull();
     expect(dropdownPortalNode?.contains(probe)).toBe(true);
     expect(byProbe(providerHost)).toBeNull();
+  });
+
+  // #765: an outer menu open, a modal Dialog with its own portal host
+  // opened inside it, and a menu inside the dialog. Inheriting the outer
+  // menu's container across the dialog hangs the inner menu in that
+  // container - and the modal dialog marks everything outside its own
+  // popup aria-hidden while it is open, so the inner menu would sit under
+  // an aria-hidden subtree and disappear from assistive tech. The
+  // inheritance ends at the dialog (PortalScope resets menu container
+  // inheritance around every non-menu popup's children), so the inner menu
+  // takes the popup step and lands in the dialog's own portal node, whose
+  // chain carries no hidden marker.
+  it('keeps a dropdown menu opened inside a dialog in the dialog portal node, out of the hidden outer menu subtree', async () => {
+    const menuHost = createHost();
+    const dialogHost = createHost();
+    render(
+      <DropdownMenu defaultOpen>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent container={menuHost}>
+          <Dialog defaultOpen>
+            <DialogContent container={dialogHost}>
+              <DialogTitle>Settings</DialogTitle>
+              <DropdownMenu defaultOpen>
+                <DropdownMenuTrigger>Inner open</DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <span data-testid={PROBE_ID}>inner menu content</span>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </DialogContent>
+          </Dialog>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    // Raw querySelector, not a role query: the modal dialog marks hosts
+    // outside its popup aria-hidden, which hides them from the role
+    // queries - the trap the inherited container used to walk into.
+    const probe = await waitFor(() => {
+      const el = byProbe(dialogHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    expect(byProbe(menuHost)).toBeNull();
+    // In the dialog's own portal node - the popup step - not loose in the
+    // dialog container and not in the inherited menu container.
+    const dialogPortalNode = dialogHost.querySelector('[data-base-ui-portal]');
+    expect(dialogPortalNode).not.toBeNull();
+    expect(dialogPortalNode).toContainElement(probe as HTMLElement);
+    // The proof the fix is about: no ancestor of the inner menu popup
+    // carries the modal dialog's hidden marker, up to and including
+    // <body>.
+    for (let node: Element | null = probe; node !== null; node = node.parentElement) {
+      expect(node.getAttribute('aria-hidden')).not.toBe('true');
+      expect(node.hasAttribute('inert')).toBe(false);
+    }
+    // The modal did its work outside: the outer menu's host is marked
+    // aria-hidden while the dialog is open, so the inherited container
+    // really was a hidden subtree.
+    expect(menuHost.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  // Same boundary for the second family: a context menu inside a modal
+  // dialog inside a context menu content takes the popup step into the
+  // dialog's portal node instead of inheriting the outer menu's container
+  // into the dialog's aria-hidden subtree.
+  //
+  // The walk here stops at the dialog's portal node on purpose. Base UI's
+  // context menu hides everything outside its own popup from assistive
+  // tech while it is open, so the outer context menu marks the dialog's
+  // whole host aria-hidden the moment it opens - recorded in the
+  // reproduction for #765: the marker is already on the host before the
+  // inner menu exists, with or without this fix, and lifts when the outer
+  // menu closes. The dropdown variant above carries the full walk to
+  // <body>, where that transient outer-menu marking does not apply.
+  it('keeps a context menu opened inside a dialog in the dialog portal node, out of the hidden outer menu subtree', async () => {
+    const menuHost = createHost();
+    const dialogHost = createHost();
+    render(
+      <ContextMenu>
+        <ContextMenuTrigger>Right-click area</ContextMenuTrigger>
+        <ContextMenuContent container={menuHost}>
+          <Dialog defaultOpen>
+            <DialogContent container={dialogHost}>
+              <DialogTitle>Settings</DialogTitle>
+              <ContextMenu>
+                <ContextMenuTrigger>Inner right-click area</ContextMenuTrigger>
+                <ContextMenuContent>
+                  <span data-testid={PROBE_ID}>inner context menu content</span>
+                </ContextMenuContent>
+              </ContextMenu>
+            </DialogContent>
+          </Dialog>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+    // The outer menu first: nothing inside its content exists until it
+    // opens. Exact text match, so 'Right-click area' cannot hit the inner
+    // trigger's 'Inner right-click area'.
+    fireEvent.contextMenu(screen.getByText('Right-click area'));
+    fireEvent.contextMenu(screen.getByText('Inner right-click area'));
+
+    const probe = await waitFor(() => {
+      const el = byProbe(dialogHost);
+      expect(el).not.toBeNull();
+      return el as Element;
+    });
+    // Not in the inherited container: the menu followed the dialog, whose
+    // own portal node is the parent of the menu's portal node.
+    const dialogPortalNode = dialogHost.querySelector('[data-base-ui-portal]');
+    expect(dialogPortalNode).not.toBeNull();
+    expect(dialogPortalNode).toContainElement(probe as HTMLElement);
+    // The chain the fix controls, from the popup up through the dialog's
+    // portal node, carries no hidden marker.
+    for (
+      let node: Element | null = probe;
+      node !== null && node !== dialogPortalNode?.parentElement;
+      node = node.parentElement
+    ) {
+      expect(node?.getAttribute('aria-hidden')).not.toBe('true');
+      expect(node?.hasAttribute('inert')).toBe(false);
+    }
+    // The modal dialog did its work outside: the inherited container is
+    // marked aria-hidden while the dialog is open, so on the old rule the
+    // inner menu landed in a hidden subtree.
+    expect(menuHost.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('usePortalContainer returns the provided value under the provider', () => {

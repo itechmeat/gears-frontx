@@ -8,7 +8,11 @@ import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { CheckIcon, ChevronRightIcon } from 'lucide-react';
 import { type ComponentProps, createContext, useContext } from 'react';
 
-import { PortalScope, useResolvedPortalContainer } from '../portal-container/portal-container';
+import {
+  PortalScope,
+  useMenuContainerInheritance,
+  useResolvedPortalContainer,
+} from '../portal-container/portal-container';
 import styles from './context-menu.module.css';
 
 /*
@@ -63,11 +67,18 @@ export interface ContextMenuContentProps
   /**
    * Where to portal the popup. Without a `container`, the popup portals
    * where the kit overlay order puts it (see useResolvedPortalContainer):
-   * any ContextMenuContent rendered inside another ContextMenuContent (a
-   * submenu, or a menu opened inside a popup or provider that sits in a
-   * menu) first inherits the container that enclosing content resolved,
-   * and that inheritance outranks a nearer PortalContainerProvider and the
-   * popup step; outside kit popups that arm the popup scope, that is the
+   * any ContextMenuContent rendered inside another ContextMenuContent of
+   * the same family (a submenu, or a menu opened directly inside one)
+   * first inherits the container that enclosing content resolved, and that
+   * inheritance outranks a nearer PortalContainerProvider and the popup
+   * step. The inheritance crosses menu popups only: another kit popup that
+   * arms the popup scope between the two menu contents (Dialog,
+   * AlertDialog, Sheet, Drawer, Popover, Select, Combobox, DrawerPortal)
+   * ends it, so a menu inside one of those takes the popup step and
+   * portals into that popup's own portal node - which keeps the menu
+   * reachable when the intervening popup is a modal dialog, since the
+   * dialog marks everything outside its own popup aria-hidden while it is
+   * open. Outside kit popups that arm the popup scope, that is the
    * nearest PortalContainerProvider's value, or <body> when there is none.
    * Pass a themed container when the theme is scoped to a subtree
    * (data-theme on a container that isn't at document root) so the popup
@@ -91,17 +102,29 @@ export function ContextMenuContent({
   ...props
 }: ContextMenuContentProps) {
   const inheritedContainer = useContext(MenuContainerContext);
-  // The menu tree's own inheritance stays nearest: a container an enclosing
-  // ContextMenuContent resolved (its own prop, or the provider it saw)
-  // outranks the provider around this submenu, or a themed first-level popup
-  // would lose its subtree to a farther provider. `!== undefined` rather
-  // than ??, so an explicit `container={null}` survives inheritance and
-  // still makes Base UI wait for a target instead of silently becoming the
-  // inherited value. Before 0.6.0 this was `container ?? inheritedContainer`,
-  // so an explicit null fell through to the container an enclosing menu
-  // content resolved, or to <body>, and did not hold the popup back.
+  // The menu tree's own inheritance stays nearest, and it crosses menu
+  // popups only: a container an enclosing ContextMenuContent resolved
+  // (its own prop, or the provider it saw) outranks the provider around
+  // this submenu, or a themed first-level popup would lose its subtree to
+  // a farther provider - but another kit popup between the two menu
+  // contents ends it, because PortalScope arms
+  // useMenuContainerInheritance to false around a non-menu popup's
+  // children (this popup's own PortalScope use passes
+  // inheritsMenuContainer, so submenus and menus nested directly in menu
+  // content keep it). Without that boundary a menu inside a modal Dialog
+  // that sits in a menu content keeps the outer menu's container, and the
+  // dialog marks that container's subtree aria-hidden while it is open -
+  // the inner menu would disappear from assistive tech. Ended, the menu
+  // takes the popup step and lands in the intervening popup's own portal
+  // node. `container === undefined` rather than ??, so an explicit
+  // `container={null}` survives inheritance and still makes Base UI wait
+  // for a target instead of silently becoming the inherited value. Before
+  // 0.6.0 this was `container ?? inheritedContainer`, so an explicit null
+  // fell through to the container an enclosing menu content resolved, or
+  // to <body>, and did not hold the popup back.
+  const inheritsMenuContainer = useMenuContainerInheritance();
   const effectiveContainer = useResolvedPortalContainer(
-    container !== undefined ? container : inheritedContainer,
+    inheritsMenuContainer && container === undefined ? inheritedContainer : container,
   );
   return (
     <MenuContainerContext.Provider value={effectiveContainer}>
@@ -117,7 +140,11 @@ export function ContextMenuContent({
           className={styles.positioner}
         >
           <ContextMenuPrimitive.Popup className={cx(styles.popup, className)} {...props}>
-            <PortalScope>{children}</PortalScope>
+            {/* inheritsMenuContainer: a menu popup is the one popup boundary
+                menu container inheritance crosses, so this content's own
+                submenus and the menus nested directly in its content keep
+                it - every other popup's PortalScope ends it. */}
+            <PortalScope inheritsMenuContainer>{children}</PortalScope>
           </ContextMenuPrimitive.Popup>
         </ContextMenuPrimitive.Positioner>
       </ContextMenuPrimitive.Portal>

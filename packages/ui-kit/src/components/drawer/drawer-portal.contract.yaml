@@ -42,7 +42,11 @@ invariants:
       overlay order still applies (portal-container.md): a
       PortalContainerProvider between the portal and the overlay wins
       again, and menu content inside another menu content of its family
-      first inherits the container that content resolved.
+      first inherits the container that content resolved - the portal
+      itself is one of the popup boundaries that end that inheritance, so
+      a menu composed directly into it from inside a menu content above
+      the drawer does not inherit that content's container and takes the
+      popup step instead.
 
 anti_patterns: []
 
