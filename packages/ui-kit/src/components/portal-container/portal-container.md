@@ -43,12 +43,13 @@ holds in its submenus). DropdownMenu and Menubar form one family,
 ContextMenu is its own: a ContextMenu content inside a DropdownMenu or
 Menubar content, or the other way round, inherits nothing and follows the
 order above. That inheritance outranks a nearer `PortalContainerProvider`
-and the popup step, and crosses menu popups only: another kit popup that
-arms the popup scope between the two menu contents (Dialog, AlertDialog,
-Sheet, Drawer, Popover, Select, Combobox, DrawerPortal) ends it, so a menu
-inside one of those takes the popup step instead and lands in the
-intervening popup's own portal node. The boundary keeps the inner menu
-reachable: a modal Dialog marks everything outside its own popup
+and the popup step, and crosses menu popups only: any kit popup other than
+a menu of the same family between the two menu contents ends it - the
+NavigationMenu's viewport scope and a menu popup of the other family
+included - so a menu inside one of those follows the kit overlay order
+from that popup on: its own portal node, unless a nearer
+`PortalContainerProvider` sits in between. The boundary keeps the inner
+menu reachable: a modal Dialog marks everything outside its own popup
 `aria-hidden` while it is open, so a container inherited across it would
 hang the inner menu in a hidden subtree; what the inheritance leaves unset
 follows the order above.
@@ -56,7 +57,10 @@ follows the order above.
 Tooltip, HoverCard and Toast neither arm nor reset the popup scope: an
 overlay nested inside one of them follows whatever encloses that Tooltip,
 HoverCard or Toast - step two when a popup that arms the scope encloses it
-(at any depth), steps three and four when none does. One known limit: the
+(at any depth), steps three and four when none does - and they end no menu
+inheritance either: a menu nested inside one of them still follows the
+menu content around it, exactly as if the Tooltip were not there. One
+known limit: the
 NavigationMenu wraps its viewport in `PortalScope`, but no consumer content
 renders under it, because `NavigationMenuContent` arrives through a raw
 `createPortal` into the viewport, outside that popup's React subtree. The
@@ -126,7 +130,10 @@ function ExternalPopup({ children }: { children: React.ReactNode }) {
   if (container === undefined) {
     return createPortal(children, document.body);
   }
-  const target = container === null ? null : 'current' in container ? container.current : container;
+  if (container === null) {
+    return null;
+  }
+  const target = 'current' in container ? container.current : container;
   return target === null ? null : createPortal(children, target);
 }
 ```
