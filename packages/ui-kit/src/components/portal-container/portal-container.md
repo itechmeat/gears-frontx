@@ -83,9 +83,11 @@ new ref holding the same element never remounts an open popup. An overlay
 opened while the ref is empty follows Base UI's fallback: the parent
 popup's portal, else `<body>`. An always-mounted portal, such as the
 `Toaster`, picks the host up only when the provider next reads the ref -
-in a commit that renders the provider, including the one that renders
-the host below it. A host a descendant mounts through its own state, with
-the provider not rendering, is not seen by such a portal until then. To
+in a commit that hands the provider a new ref or new children, including
+the one that renders the host below it. A host mounted or swapped while
+the provider keeps the same ref and children - by a descendant's own
+state, or beside memoized children - is not seen by such a portal until
+then. To
 avoid both, pass the element itself, kept in
 state through a callback ref, or the `ShadowRoot`:
 

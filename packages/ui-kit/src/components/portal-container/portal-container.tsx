@@ -142,9 +142,11 @@ export interface PortalContainerProviderProps {
  * overlay opened while the ref is empty follows Base UI's fallback: the
  * parent popup's portal, else <body>. An always-mounted portal, such as
  * the Toaster, picks the host up only when the provider next reads the
- * ref: in a commit that renders the provider, including the one that
- * renders a host below it. A host a descendant mounts through its own
- * state is not seen by such a portal until then. To avoid both, pass the element kept
+ * ref: in a commit that hands the provider a new ref or new children,
+ * including the one that renders a host below it. A host mounted or
+ * swapped while the provider keeps the same ref and children (by a
+ * descendant's own state, or beside memoized children) is not seen by
+ * such a portal until then. To avoid both, pass the element kept
  * in state (a callback ref into useState) or the ShadowRoot instead of a
  * ref.
  *
