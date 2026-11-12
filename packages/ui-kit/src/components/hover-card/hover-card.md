@@ -57,11 +57,11 @@ it; [PortalContainer](portal-container.md) states that order once, and how
 a theme scoped to a subtree or a shadow root sets the target for every
 overlay below it.
 
-One level down: an overlay opened inside a hover card does not stay in it
-- the hover card's Base UI portal (FloatingPortalLite) gives Base UI no
+One level down: an overlay opened inside a hover card does not stay in it -
+the hover card's Base UI portal (FloatingPortalLite) gives Base UI no
 parent portal node to fall back to - so the overlay follows whatever
-encloses the hover card, as [PortalContainer](portal-container.md)
-describes.
+encloses the hover card, as
+[PortalContainer](portal-container.md) describes.
 
 ## Examples
 
