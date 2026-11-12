@@ -9,7 +9,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ReactElement } from 'react';
+import { useRef, useState, type ReactElement, type RefObject } from 'react';
 
 import { AlertDialog, AlertDialogContent } from '../alert-dialog/alert-dialog';
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxList } from '../combobox/combobox';
@@ -34,7 +34,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '../navigation-menu/navigation-menu';
-import { Popover, PopoverContent } from '../popover/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../popover/popover';
 import { PortalContainerProvider, usePortalContainer, type PortalContainer } from './portal-container';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select/select';
 import { Sheet, SheetContent } from '../sheet/sheet';
@@ -1181,6 +1181,263 @@ describe('PortalContainerProvider', () => {
 
     await waitFor(() => expect(byProbe(refHost)).not.toBeNull());
     expect(byProbe(providerHost)).toBeNull();
+  });
+
+  // A provider ref that is still empty when an always-mounted portal first
+  // commits: the host div fills hostRef in the same commit that mounts the
+  // Toaster inside it, and Base UI reads `ref.current` only when the
+  // container identity changes, so a ref handed straight through sends the
+  // toast viewport to <body> for good.
+  it('portals a toaster into an ancestor ref host that fills in the same commit', async () => {
+    const manager = createToastManager();
+    function Screen() {
+      const hostRef = useRef<HTMLDivElement>(null);
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <div data-testid="ref-host" ref={hostRef}>
+            <Toaster toastManager={manager} />
+          </div>
+        </PortalContainerProvider>
+      );
+    }
+    render(<Screen />);
+
+    act(() => {
+      manager.add({ title: 'Export finished' });
+    });
+
+    const toast = await waitFor(() => screen.getByText('Export finished'));
+    expect(screen.getByTestId('ref-host').contains(toast)).toBe(true);
+  });
+
+  // A provider ref whose host the owner mounts only later: an overlay open
+  // while the ref is empty follows Base UI's own fallback, <body> with no
+  // enclosing popup, and the owner's re-render that mounts the host hands
+  // the provider new children, so it re-reads the ref and the open portal
+  // moves into the host.
+  it('lets a dialog opened while the provider ref is empty fall back to <body>, then moves it into the host the owner mounts', async () => {
+    function Screen() {
+      const hostRef = useRef<HTMLDivElement>(null);
+      const [hostShown, setHostShown] = useState(false);
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <button type="button" onClick={() => setHostShown(true)}>
+            Show host
+          </button>
+          <Dialog defaultOpen>
+            <DialogContent>
+              <DialogTitle>Settings</DialogTitle>
+              <span data-testid={PROBE_ID}>dialog content</span>
+            </DialogContent>
+          </Dialog>
+          {hostShown ? <div data-testid="ref-host" ref={hostRef} /> : null}
+        </PortalContainerProvider>
+      );
+    }
+    render(<Screen />);
+
+    await waitFor(() => expect(byProbe(document.body)).not.toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Show host', hidden: true }));
+
+    await waitFor(() => expect(byProbe(screen.getByTestId('ref-host'))).not.toBeNull());
+  });
+
+  // A descendant that mounts the host through its own state never re-renders
+  // the provider: the overlay's portal reads the provider's forwarding ref
+  // itself when it mounts, so a popover opened once the host is there lands
+  // in it.
+  it('portals a popover opened after a descendant mounts the provider ref host', async () => {
+    function Layout({ hostRef }: { hostRef: RefObject<HTMLDivElement | null> }) {
+      const [loaded, setLoaded] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setLoaded(true)}>
+            Load
+          </button>
+          {loaded ? <div data-testid="ref-host" ref={hostRef} /> : null}
+        </>
+      );
+    }
+    function Screen() {
+      const hostRef = useRef<HTMLDivElement>(null);
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <Layout hostRef={hostRef} />
+          <Popover>
+            <PopoverTrigger>Open</PopoverTrigger>
+            <PopoverContent>
+              <Probe />
+            </PopoverContent>
+          </Popover>
+        </PortalContainerProvider>
+      );
+    }
+    render(<Screen />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+    await waitFor(() => expect(byProbe(screen.getByTestId('ref-host'))).not.toBeNull());
+  });
+
+  // A descendant that swaps the host for another leaves any earlier read
+  // pointing at a detached node: an overlay opened afterwards follows the
+  // current host.
+  it('portals a popover opened after a descendant swaps the provider ref host into the new host', async () => {
+    function Layout({ hostRef }: { hostRef: RefObject<HTMLDivElement | null> }) {
+      const [host, setHost] = useState<'first' | 'second'>('first');
+      return (
+        <>
+          <button type="button" onClick={() => setHost('second')}>
+            Swap
+          </button>
+          <div key={host} data-testid={`${host}-host`} ref={hostRef} />
+        </>
+      );
+    }
+    function Screen() {
+      const hostRef = useRef<HTMLDivElement>(null);
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <Layout hostRef={hostRef} />
+          <Popover>
+            <PopoverTrigger>Open</PopoverTrigger>
+            <PopoverContent>
+              <Probe />
+            </PopoverContent>
+          </Popover>
+        </PortalContainerProvider>
+      );
+    }
+    render(<Screen />);
+    const firstHost = screen.getByTestId('first-host');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Swap' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+    await waitFor(() => expect(byProbe(screen.getByTestId('second-host'))).not.toBeNull());
+    expect(byProbe(firstHost)).toBeNull();
+  });
+
+  // Two refs holding the same element are the same target: swapping the
+  // provider value from one to the other while a dialog is open keeps the
+  // popup mounted, with what the user typed into it.
+  it('keeps an open dialog mounted when the provider value changes to another ref holding the same host', async () => {
+    const host = createHost();
+    const refA: PortalContainer = { current: host };
+    const refB: PortalContainer = { current: host };
+    function Screen({ value }: { value: PortalContainer }) {
+      return (
+        <PortalContainerProvider value={value}>
+          <Dialog defaultOpen>
+            <DialogContent>
+              <DialogTitle>Settings</DialogTitle>
+              <input aria-label="Name" />
+            </DialogContent>
+          </Dialog>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen value={refA} />);
+    const input = await waitFor(() => getByRole(host, 'textbox', { name: 'Name' }));
+    fireEvent.change(input, { target: { value: 'Ada' } });
+
+    rerender(<Screen value={refB} />);
+    await act(async () => {});
+
+    expect(Object.is(getByRole(host, 'textbox', { name: 'Name' }), input)).toBe(true);
+    expect(input).toHaveProperty('value', 'Ada');
+  });
+
+  // The host keeps its node but moves to another ref in the same update
+  // that mounts a Toaster: React detaches the old ref before the Toaster's
+  // portal reads the forwarder, so that first read is empty. The new ref
+  // alone has to give the forwarder a new identity, or the toast viewport
+  // stays on <body> although its host exists.
+  it('portals a toaster mounted while the host moves to another ref into that host', async () => {
+    const manager = createToastManager();
+    function Screen({ useB, withToaster }: { useB: boolean; withToaster: boolean }) {
+      const refA = useRef<HTMLDivElement>(null);
+      const refB = useRef<HTMLDivElement>(null);
+      const hostRef = useB ? refB : refA;
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <div data-testid="moving-host" ref={hostRef}>
+            {withToaster ? <Toaster toastManager={manager} /> : null}
+          </div>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen useB={false} withToaster={false} />);
+    rerender(<Screen useB withToaster />);
+
+    act(() => {
+      manager.add({ title: 'Saved' });
+    });
+
+    const toast = await waitFor(() => screen.getByText('Saved'));
+    expect(screen.getByTestId('moving-host').contains(toast)).toBe(true);
+  });
+
+  // An inline `{ current: el }` is a new ref on every owner render; the open
+  // popup stays mounted through those renders.
+  it('keeps an open dialog mounted while the owner re-renders an inline ref value', async () => {
+    const host = createHost();
+    function Screen({ title }: { title: string }) {
+      return (
+        <PortalContainerProvider value={{ current: host }}>
+          <Dialog defaultOpen>
+            <DialogContent>
+              <DialogTitle>{title}</DialogTitle>
+              <input aria-label="Name" />
+            </DialogContent>
+          </Dialog>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen title="Settings" />);
+    const input = await waitFor(() => getByRole(host, 'textbox', { name: 'Name' }));
+    fireEvent.change(input, { target: { value: 'Ada' } });
+
+    rerender(<Screen title="Profile" />);
+    await act(async () => {});
+
+    expect(getByText(host, 'Profile')).not.toBeNull();
+    expect(Object.is(getByRole(host, 'textbox', { name: 'Name' }), input)).toBe(true);
+    expect(input).toHaveProperty('value', 'Ada');
+  });
+
+  // A defaultOpen dialog inside the host its provider ref points to: its
+  // portal's first read comes before React attaches the host's ref, the
+  // provider's read then moves it into the host, and later owner renders
+  // keep it mounted there with what the user typed.
+  it('portals a defaultOpen dialog into an ancestor ref host and keeps its state across owner renders', async () => {
+    function Screen({ title }: { title: string }) {
+      const hostRef = useRef<HTMLDivElement>(null);
+      return (
+        <PortalContainerProvider value={hostRef}>
+          <div data-testid="ref-host" ref={hostRef}>
+            <Dialog defaultOpen>
+              <DialogContent>
+                <DialogTitle>{title}</DialogTitle>
+                <input aria-label="Name" />
+              </DialogContent>
+            </Dialog>
+          </div>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen title="Settings" />);
+    const host = screen.getByTestId('ref-host');
+    const input = await waitFor(() => getByRole(host, 'textbox', { name: 'Name' }));
+    fireEvent.change(input, { target: { value: 'Ada' } });
+
+    rerender(<Screen title="Profile" />);
+    await act(async () => {});
+
+    expect(getByText(host, 'Profile')).not.toBeNull();
+    expect(Object.is(getByRole(host, 'textbox', { name: 'Name' }), input)).toBe(true);
+    expect(input).toHaveProperty('value', 'Ada');
   });
 
   // Menu inheritance still holds together with the popup scope: with no
