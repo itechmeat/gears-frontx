@@ -1349,6 +1349,63 @@ describe('PortalContainerProvider', () => {
     expect(input).toHaveProperty('value', 'Ada');
   });
 
+  // An element and a ref holding it are the same target: the first render
+  // with the ref already hands down a forwarder that reads it, so the open
+  // popup never resolves an empty container and stays mounted.
+  it('keeps an open dialog mounted when the provider value changes from an element to a ref holding it', async () => {
+    const host = createHost();
+    const hostRef: PortalContainer = { current: host };
+    function Screen({ value }: { value: PortalContainer }) {
+      return (
+        <PortalContainerProvider value={value}>
+          <Dialog defaultOpen>
+            <DialogContent>
+              <DialogTitle>Settings</DialogTitle>
+              <input aria-label="Name" />
+            </DialogContent>
+          </Dialog>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen value={host} />);
+    const input = await waitFor(() => getByRole(host, 'textbox', { name: 'Name' }));
+    fireEvent.change(input, { target: { value: 'Ada' } });
+
+    rerender(<Screen value={hostRef} />);
+    await act(async () => {});
+
+    expect(Object.is(getByRole(host, 'textbox', { name: 'Name' }), input)).toBe(true);
+    expect(input).toHaveProperty('value', 'Ada');
+  });
+
+  // The reverse swap: a ref value replaced by the element it holds keeps the
+  // open popup mounted with what the user typed.
+  it('keeps an open dialog mounted when the provider value changes from a ref to the element it holds', async () => {
+    const host = createHost();
+    const hostRef: PortalContainer = { current: host };
+    function Screen({ value }: { value: PortalContainer }) {
+      return (
+        <PortalContainerProvider value={value}>
+          <Dialog defaultOpen>
+            <DialogContent>
+              <DialogTitle>Settings</DialogTitle>
+              <input aria-label="Name" />
+            </DialogContent>
+          </Dialog>
+        </PortalContainerProvider>
+      );
+    }
+    const { rerender } = render(<Screen value={hostRef} />);
+    const input = await waitFor(() => getByRole(host, 'textbox', { name: 'Name' }));
+    fireEvent.change(input, { target: { value: 'Ada' } });
+
+    rerender(<Screen value={host} />);
+    await act(async () => {});
+
+    expect(Object.is(getByRole(host, 'textbox', { name: 'Name' }), input)).toBe(true);
+    expect(input).toHaveProperty('value', 'Ada');
+  });
+
   // The host keeps its node but moves to another ref in the same update
   // that mounts a Toaster: React detaches the old ref before the Toaster's
   // portal reads the forwarder, so that first read is empty. The new ref
