@@ -2,7 +2,7 @@ import { NavigationMenu as NavigationMenuPrimitive } from '@base-ui/react/naviga
 import { cva, cx, type VariantProps } from 'class-variance-authority';
 import { ChevronDownIcon } from 'lucide-react';
 
-import { PortalScope, ResolvedPortal } from '../portal-container/portal-container';
+import { ResolvedPortal } from '../portal-container/portal-container';
 import styles from './navigation-menu.module.css';
 
 export interface NavigationMenuProps<Value = unknown>
@@ -72,14 +72,7 @@ export function NavigationMenu<Value = unknown>({
           className={styles.positioner}
         >
           <NavigationMenuPrimitive.Popup className={styles.popup}>
-            {/* PortalScope covers only content composed directly into this portal
-              * subtree; NavigationMenuContent mounts through a raw createPortal into
-              * the viewport, so overlays inside it skip this menu's own portal node
-              * and follow an enclosing kit popup's portal when the NavigationMenu
-              * sits inside one, else provider-then-body. */}
-            <PortalScope>
-              <NavigationMenuViewport />
-            </PortalScope>
+            <NavigationMenuViewport />
           </NavigationMenuPrimitive.Popup>
         </NavigationMenuPrimitive.Positioner>
       </ResolvedPortal>

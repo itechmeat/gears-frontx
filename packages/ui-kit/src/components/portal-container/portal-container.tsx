@@ -35,9 +35,8 @@ const PortalContainerContext = createContext<PortalContainer>(undefined);
  * provider's container, which would pull the nested overlay out of the
  * popup that opened it. Only the overlays whose Base UI portal gives Base
  * UI a parent portal node arm it - Dialog, AlertDialog, Sheet, Drawer,
- * Popover, Select, Combobox and the menus. The NavigationMenu wraps its
- * viewport in PortalScope, but no consumer content renders under it, so it
- * arms nothing for consumer overlays (see useResolvedPortalContainer).
+ * Popover, Select, Combobox and the menus. The NavigationMenu arms
+ * nothing (see useResolvedPortalContainer).
  * Tooltip, HoverCard and Toast portal through FloatingPortalLite, which
  * provides no PortalContext, so arming it there would answer undefined with
  * no portal node to fall back to and send the nested overlay to <body>:
@@ -191,9 +190,9 @@ export function useMenuContainerInheritance(): symbol | undefined {
  * on useMenuContainerInheritance. That step outranks the popup step and
  * the provider.
  *
- * The NavigationMenu arms nothing for consumer overlays, because
- * NavigationMenuContent arrives through a raw createPortal outside its
- * PortalScope. usePortalContainer ignores the scope and always answers the
+ * The NavigationMenu arms nothing: NavigationMenuContent arrives through a
+ * raw createPortal into the viewport, outside the popup's React subtree,
+ * so no scope placed there would reach consumer content. usePortalContainer ignores the scope and always answers the
  * provider value. Every kit component that renders a Base UI Portal
  * resolves through this hook: by calling it, which makes it a client
  * module, or through ResolvedPortal. Reasoning in portal-container.md.
