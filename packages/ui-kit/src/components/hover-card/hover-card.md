@@ -47,29 +47,21 @@ without pausing won't open it. (In tests, dispatch a `mousemove` after
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `bottom` |
 | `align` | `start` \| `center` \| `end` | `center` |
 | `sideOffset` / `alignOffset` | `number` | `4` / `4` |
-| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see [PortalContainer](portal-container.md)) |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI PreviewCard.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside kit popups that arm the popup scope, that
-is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
-none, so if your theme lives on a subtree (`data-theme` on a section
-instead of `<html>`), pass that section as `container` or wrap the subtree
-in `PortalContainerProvider`, or the popup renders with the root theme - same
-contract as `Dialog`/`Tooltip`/`Popover`/`DropdownMenu`. Inside a shadow
-root (an MFE screen), the popup must be given a container inside that
-shadow root - through `PortalContainerProvider` or `container` - or it
-renders outside the shadow root: unstyled, and an outside press closes it.
+it; [PortalContainer](portal-container.md) states that order once, and how
+a theme scoped to a subtree or a shadow root sets the target for every
+overlay below it.
 
-One level down: an overlay opened inside a hover card does not stay in it -
-the hover card's Base UI portal (FloatingPortalLite) gives Base UI no
+One level down: an overlay opened inside a hover card does not stay in it
+- the hover card's Base UI portal (FloatingPortalLite) gives Base UI no
 parent portal node to fall back to - so the overlay follows whatever
-encloses the hover card: the portal of a kit popup that arms the popup
-scope, with no `PortalContainerProvider` in between, when one encloses it,
-otherwise the nearest `PortalContainerProvider`'s value, or `<body>` when
-there is none.
+encloses the hover card, as [PortalContainer](portal-container.md)
+describes.
 
 ## Examples
 

@@ -38,20 +38,14 @@ is no `modal={false}` escape hatch (unlike `Dialog`).
 |------|------|---------|
 | `size` | `'default' \| 'sm'` — `sm` narrows the max width and stacks `AlertDialogCancel`/`AlertDialogAction` into two equal columns instead of a row | `'default'` |
 | `showBackdrop` | `boolean` - renders the dimming backdrop (`--overlay-modal`, the same dark scrim in both themes) | `true` |
-| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see [PortalContainer](portal-container.md)) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI Dialog.Popup | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside kit popups that arm the popup scope, that
-is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
-none, so if your theme lives on a subtree (`data-theme` on a section
-instead of `<html>`), pass that section as `container` or wrap the subtree
-in `PortalContainerProvider`, or the popup renders with the root theme - same
-contract as `Dialog`. Inside a shadow root (an MFE screen), the popup must
-be given a container inside that shadow root - through
-`PortalContainerProvider` or `container` - or it renders outside the
-shadow root: unstyled.
+it; [PortalContainer](portal-container.md) states that order once, and how
+a theme scoped to a subtree or a shadow root sets the target for every
+overlay below it.
 
 `AlertDialogAction` and `AlertDialogCancel` are both a Base UI
 `AlertDialog.Close` rendered as a kit `Button` (any `variant`/`size`;

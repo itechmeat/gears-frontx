@@ -63,23 +63,11 @@ Rules for generated code:
 - Font overrides AND, for explicit control instead of following the OS
   preference, `data-theme` go on `<html>`/`<body>`, not on an inner
   container: overlay components (Select, Dialog, DropdownMenu, Tooltip,
-  Toaster) portal their popup into an enclosing kit popup's portal when
-  that popup arms the popup scope - a Tooltip, HoverCard or Toast neither
-  arms nor resets it, so the popup then follows whatever encloses it -
-  else the nearest `PortalContainerProvider`'s value, or `<body>` when
-  there is none, and inherit theme tokens and font from there. A menu
-  content rendered inside another menu content of its own family (a
-  submenu, or a menu opened directly inside such a menu; DropdownMenu and
-  Menubar are one family, ContextMenu its own) first inherits the
-  container that enclosing menu content resolved, and that inheritance
-  outranks a nearer `PortalContainerProvider` and the popup step, but
-  crosses menu popups only: any kit popup that arms the popup scope, other than a menu of the same
-  family between the two menu contents ends it, so a menu inside one of
-  those follows the kit overlay order from that popup on - its portal
-  node, unless a nearer `PortalContainerProvider` sits in between - which
-  keeps the menu out of the subtree a dialog hides when the intervening popup is a modal dialog -
-  the dialog marks everything outside its own popup `aria-hidden` while it
-  is open. A `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
+  Toaster) portal their popup where the kit overlay order puts it -
+  `<body>` unless a `PortalContainerProvider` or an enclosing kit popup says
+  otherwise; [PortalContainer](dist/docs/portal-container.md) states the
+  order once - and inherit theme tokens and font from there. A
+  `data-theme` subtree (anywhere, not just `<html>`/`<body>`) paints its own
   surface, not just its descendants' tokens, so it can be nested inside a
   page carrying the opposite theme. If a subtree must carry its own theme,
   pass that element as `container` to `SelectContent` / `DialogContent` /
@@ -422,14 +410,10 @@ Rules for generated code:
   hover-open.
 - [PortalContainer](dist/docs/portal-container.md): the default portal
   container for every kit overlay, provided as React context
-  (PortalContainerProvider/usePortalContainer); an overlay's own
-  `container` prop wins, then the portal of the kit popup it renders
-  inside, then the nearest `PortalContainerProvider`'s value, then
-  `<body>` - which popups arm the popup step, and where an overlay nested
-  in a Tooltip, HoverCard, Toast or NavigationMenu content lands, the
-  linked doc states exactly. How an MFE
-  screen inside a shadow root keeps its popups
-  inside that shadow root.
+  (PortalContainerProvider/usePortalContainer), and the one place the
+  kit overlay order is stated: which target each overlay picks, which
+  popups keep nested overlays, how menus inherit a container. How an MFE
+  screen inside a shadow root keeps its popups inside that shadow root.
 - [Progress](dist/docs/progress.md): completion bar (Progress/
   ProgressTrack/ProgressIndicator/ProgressLabel/ProgressValue); `value`
   required, `null` for indeterminate; reports `role="progressbar"` with

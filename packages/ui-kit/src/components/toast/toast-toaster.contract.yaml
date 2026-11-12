@@ -43,21 +43,14 @@ invariants:
   - id: region-portals-regardless-of-position
     text: >-
       The notification region portals into `container`, then where the kit
-      overlay order puts it (portal-container.md states the order once,
-      useResolvedPortalContainer implements it): the portal node of the
-      kit popup the region renders inside when that popup arms the popup
-      scope, else the nearest PortalContainerProvider's value, then the
-      document body, wherever Toaster sits in the tree. Tooltip, HoverCard
-      and Toast portal through FloatingPortalLite and neither arm nor
-      reset the popup scope, so inside one of them the region follows
-      whatever encloses that Tooltip, HoverCard or Toast: the portal of a
-      kit popup that arms the popup scope when one encloses it, else the
-      provider and the document body directly. Its children are rendered
-      in place. An overlay rendered inside a toast
-      card does not stay in it either, for the same reason: it follows
-      whatever encloses the toast, not the card - the portal of a kit
-      popup that arms the popup scope when one encloses it, else the
-      nearest PortalContainerProvider's value, then the document body.
+      overlay order puts it, wherever Toaster sits in the tree;
+      portal-container.md states that order once and
+      useResolvedPortalContainer implements it, including how a region
+      inside a Tooltip, HoverCard or Toast follows whatever encloses it. Its
+      children are rendered in place. An overlay rendered inside a toast
+      card does not stay in it: the toast portal is Base UI's
+      FloatingPortalLite and provides no parent portal node, so that overlay
+      follows whatever encloses the toast, by the same order.
   - id: shared-manager-by-default
     text: >-
       Without `toastManager`, Toaster renders the shared `toast` manager's
@@ -99,7 +92,7 @@ prop_statements:
       `React.ReactNode` is a union of elements, strings, numbers, fragments
       and more; the compiler emits one JSON type per property.
   container:
-    states: container is the node the notification region portals into; absent, the region follows the kit overlay order stated once in portal-container.md - the portal node of the kit popup it renders inside when that popup arms the popup scope, then the nearest PortalContainerProvider's value, else the document body
+    states: container is the node the notification region portals into; absent, the region follows the kit overlay order stated once in portal-container.md
     because: >-
       Base UI types it `HTMLElement | ShadowRoot | null` or a React ref
       object holding one, and the compiler emits one JSON type per

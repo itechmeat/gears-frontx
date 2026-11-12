@@ -51,7 +51,7 @@ DropdownMenu/Select sit here instead:
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `bottom` |
 | `align` | `start` \| `center` \| `end` | `start` |
 | `sideOffset` / `alignOffset` | `number` | `8` / `0` |
-| `container` | DOM node to portal the shared popup into | where the kit overlay order puts it (see PortalContainer) |
+| `container` | DOM node to portal the shared popup into | where the kit overlay order puts it (see [PortalContainer](portal-container.md)) |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the menu sits inside a `transform`/`filter` container | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI NavigationMenu.Positioner | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
@@ -96,15 +96,10 @@ one — unlike the classic Radix indicator, this is not one shared
 list-level element with computed `left`/`width` math.
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside kit popups that arm the popup scope, that
-is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
-none, so if your theme lives on a subtree (`data-theme` on a section
-instead of `<html>`), pass that section as `container` on `NavigationMenu` or wrap the
-subtree in `PortalContainerProvider` - same contract as `Dialog`/`Select`/
-`DropdownMenu`. Inside a shadow root (an MFE screen), the popup must be
-given a container inside that shadow root - through
-`PortalContainerProvider` or `container` - or it renders outside the
-shadow root: unstyled, and an outside press closes it.
+it; [PortalContainer](portal-container.md) states that order once, and how
+a theme scoped to a subtree or a shadow root sets the target for every
+overlay below it. The `container` goes on `NavigationMenu` itself, which
+renders the one shared popup.
 
 ## Visual states (no variant/size props)
 

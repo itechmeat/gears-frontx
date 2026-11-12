@@ -44,17 +44,11 @@ invariants:
   - id: portals-to-body-unless-container
     text: >-
       Without `container`, the popup portals where the kit overlay order
-      puts it (portal-container.md states the order once,
-      useResolvedPortalContainer implements it): a container an enclosing
-      menu content of its family resolved stands in for the popup's own,
-      unless any kit popup that arms the popup scope, other than a menu of the same family sits
-      between the two menu contents - that ends the inheritance, so a menu
-      inside a modal dialog follows the kit overlay order from that popup
-      on instead of landing in a subtree the dialog marks aria-hidden -
-      and a submenu of this menu starts from the container this popup
-      resolved; what neither sets runs from the enclosing kit popup that
-      arms the popup scope to the nearest PortalContainerProvider's value
-      and the document body.
+      puts it; portal-container.md states that order once and
+      useResolvedPortalContainer implements it. Its menu step comes first: a
+      container an enclosing menu content of its family resolved stands in
+      for the popup's own, under the family rule stated there, and a submenu
+      of this menu starts from the container this popup resolved.
   - id: anchored-at-the-opening-point
     text: >-
       The popup is placed against the point where the menu was opened, not
@@ -109,20 +103,16 @@ prop_statements:
       `React.ReactNode` is a union of elements, strings, numbers, fragments
       and more; the compiler emits one JSON type per property.
   container:
-    states: container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the popup follows the kit overlay order stated once in portal-container.md - the resolved container of an enclosing menu content of its family first, ended by any kit popup that arms the popup scope, other than a menu of the same family between the two menu contents, then the portal node of the enclosing kit popup when that popup arms the popup scope, then the nearest PortalContainerProvider's value, then the document body; an explicit null is kept, so Base UI waits for a target
+    states: container is the DOM node, shadow root or ref to one that the popup portals into; when undefined, the popup follows the kit overlay order stated once in portal-container.md, its menu step first; an explicit null is kept, so Base UI waits for a target
     because: >-
-      `HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null> | null`
-      - live DOM nodes and ref objects, which no JSON Schema type covers. The
-      kit resolves it as the caller's own `container` when given (an
-      explicit null included), otherwise the container an enclosing menu
-      content of its family resolved - unless any kit popup that arms the popup scope, other than a
-      menu of the same family sits between the two menu contents, which
-      ends the inheritance - otherwise where the kit overlay order puts the
-      popup - the portal node of the enclosing kit popup when that popup
-      arms the popup scope, else the nearest PortalContainerProvider's
-      value, else the document body - so an
-      explicit null survives inheritance instead of falling through like an
-      absent prop.
+      `HTMLElement | ShadowRoot | RefObject<HTMLElement | ShadowRoot | null>
+      | null` - live DOM nodes and ref objects, which no JSON Schema type
+      covers. The kit resolves it as the caller's own `container` when given
+      (an explicit null included), otherwise the container an enclosing menu
+      content of its family resolved, under the family rule in
+      portal-container.md, otherwise where the kit overlay order puts the
+      popup - so an explicit null survives inheritance instead of falling
+      through like an absent prop.
   sideOffset:
     states: sideOffset is the gap in pixels between the anchor and the popup, as a number or a function of side, align and both boxes' sizes
     because: >-

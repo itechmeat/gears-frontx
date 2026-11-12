@@ -43,12 +43,9 @@ invariants:
   - id: portals-to-body-unless-container
     text: >-
       Without `container`, the popup portals where the kit overlay order
-      puts it (portal-container.md states the order once,
-      useResolvedPortalContainer implements it): inside another kit popup
-      that arms the popup scope it stays in that popup's portal node,
-      unless a PortalContainerProvider between them wins; outside them it
-      portals to the nearest PortalContainerProvider's value, then the
-      document body when there is neither.
+      puts it; portal-container.md states that order once and
+      useResolvedPortalContainer implements it. With no enclosing kit popup
+      and no PortalContainerProvider, that is the document body.
   - id: named-by-its-title-described-by-its-description
     text: >-
       The popup has the dialog role and takes its accessible name from the
