@@ -68,9 +68,44 @@ viewport, outside that popup's React subtree: overlays inside
 `NavigationMenuContent` see the popup step only from popups enclosing the
 whole NavigationMenu, and otherwise follow steps three and four.
 
-`usePortalContainer()` returns the provided value, or `undefined` with no
-provider above the caller - also inside popups, where it ignores the
-popup scope - so app code can hand the same target to a non-kit portal.
+`usePortalContainer()` returns the provided value (a ref value as a ref
+whose `current` reads the provider's ref when it is read), or `undefined`
+with no provider above the caller - also inside popups, where it ignores
+the popup scope - so app code can hand the same target to a non-kit
+portal.
+
+## A ref value
+
+A ref value may fill in the same commit as the provider or later. Each
+overlay reads it when it opens, so an overlay opened after the host
+mounts lands in it, wherever in the subtree the host is rendered, and a
+new ref holding the same element never remounts an open popup. An overlay
+opened while the ref is empty follows Base UI's fallback: the parent
+popup's portal, else `<body>`. An always-mounted portal, such as the
+`Toaster`, picks the host up only when the provider next reads the ref -
+in a commit that renders the provider, including the one that renders
+the host below it. A host a descendant mounts through its own state, with
+the provider not rendering, is not seen by such a portal until then. To
+avoid both, pass the element itself, kept in
+state through a callback ref, or the `ShadowRoot`:
+
+```tsx
+import { useState } from 'react';
+
+import { PortalContainerProvider } from '@gears-frontx/ui-kit';
+
+function Screen({ children }: { children: React.ReactNode }) {
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  return (
+    <PortalContainerProvider value={host}>
+      <div ref={setHost}>{children}</div>
+    </PortalContainerProvider>
+  );
+}
+```
+
+While `host` is still `null` the value is an explicit `null`, so the
+overlays wait for it instead of falling back.
 
 ## When to use
 
@@ -88,7 +123,7 @@ popup scope - so app code can hand the same target to a non-kit portal.
 
 | Prop | Type | Default |
 |------|------|---------|
-| `value` | `PortalContainer` - the same union the overlays' `container` props take: an `HTMLElement`, a `ShadowRoot`, a ref to either, or `null` | - |
+| `value` | `PortalContainer` - the same union the overlays' `container` props take: an `HTMLElement`, a `ShadowRoot`, a ref to either, or `null`. A ref may fill in the same commit or later; each overlay reads it when it opens (see [A ref value](#a-ref-value)) | - |
 | `children` | `ReactNode` | - |
 
 ## Examples
@@ -117,8 +152,12 @@ two unset shapes stay distinct: with no provider above the caller the
 value is `undefined` and the example falls back to `<body>`, the same
 default the overlays use; an explicit `null` is a set value whose target
 is not there yet, so the popup waits instead - no popup until the target
-exists, never `<body>`. The popup renders only after mount, so the server
-render never touches `document` and the first client render matches it:
+exists, never `<body>`. A ref value is read when the popup renders; the
+example renders nothing while that ref is empty, and like an
+always-mounted portal it sees a host that fills later only when it
+renders again. Keep the element in state when that matters. The popup renders only
+after mount, so the server render never touches `document` and the first
+client render matches it:
 
 ```tsx
 import { useEffect, useState } from 'react';

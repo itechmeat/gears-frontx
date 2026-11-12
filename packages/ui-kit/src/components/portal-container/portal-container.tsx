@@ -8,8 +8,12 @@ import type { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import {
   createContext,
   useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
   type ComponentType,
   type ReactNode,
+  type RefObject,
 } from 'react';
 
 /**
@@ -21,8 +25,16 @@ import {
  */
 export type PortalContainer = DialogPrimitive.Portal.Props['container'];
 
+/** The node a PortalContainer points to: an element or a ShadowRoot. */
+type PortalTarget = HTMLElement | ShadowRoot;
+
+function isPortalRef(value: PortalContainer): value is RefObject<PortalTarget | null> {
+  return value !== null && value !== undefined && 'current' in value;
+}
+
 /*
- * The default portal target for every kit overlay below the provider.
+ * The default portal target for every kit overlay below the provider, with
+ * a ref value handed down as the provider's forwarding ref.
  * Defaults to undefined: without a provider, each overlay falls through to
  * Base UI's own default, the document body.
  */
@@ -105,9 +117,13 @@ export function PortalScope({
 
 export interface PortalContainerProviderProps {
   /**
-   * The default portal target for every kit overlay below this provider.
-   * It is step three of the order on useResolvedPortalContainer, after the
-   * overlay's own `container` and the portal of an enclosing kit popup.
+   * The default portal target for every kit overlay below this provider:
+   * an element, a ShadowRoot, or a ref to either. A ref may fill in the
+   * same commit or later; each overlay reads it when it opens, and one
+   * opened while it is empty follows Base UI's fallback (the parent popup's
+   * portal, else <body>). It is step three of the order
+   * on useResolvedPortalContainer, after the overlay's own `container` and
+   * the portal of an enclosing kit popup.
    */
   value: PortalContainer;
   children?: ReactNode;
@@ -120,14 +136,77 @@ export interface PortalContainerProviderProps {
  * ShadowRoot is one. A micro-frontend screen in a shadow root passes a node
  * inside it, so its popups land where the kit's styles are delivered.
  *
+ * A ref value may fill in the same commit as the provider or later. Each
+ * overlay reads it when it opens, so an overlay opened after the host
+ * mounts lands in it, wherever in the subtree the host is rendered. An
+ * overlay opened while the ref is empty follows Base UI's fallback: the
+ * parent popup's portal, else <body>. An always-mounted portal, such as
+ * the Toaster, picks the host up only when the provider next reads the
+ * ref: in a commit that renders the provider, including the one that
+ * renders a host below it. A host a descendant mounts through its own
+ * state is not seen by such a portal until then. To avoid both, pass the element kept
+ * in state (a callback ref into useState) or the ShadowRoot instead of a
+ * ref.
+ *
  * The provider resets the popup scope around its children, so a provider
  * nested inside a popup wins again for the overlays below it. An inherited
  * menu container still outranks it. The full order is on
  * useResolvedPortalContainer, the reasoning in portal-container.md.
  */
 export function PortalContainerProvider({ value, children }: PortalContainerProviderProps) {
+  const ref = isPortalRef(value) ? value : undefined;
+  /*
+   * A ref value is handed down as a forwarding ref whose `current` reads the
+   * latest ref this provider was given, so Base UI reads the live host each
+   * time an overlay's portal mounts - an overlay opened by an uncontrolled
+   * trigger, after a descendant mounted or swapped the host, finds it there.
+   * Base UI 1.6.0 reads `ref.current` once per container identity, so the
+   * forwarder gets a new identity whenever the ref or the element this
+   * provider reads changes: an always-mounted portal (the Toaster) whose
+   * first read came up empty, or read a ref being replaced in the same
+   * commit, reads again and moves into the host. A new identity never
+   * remounts an open popup on its own: Base UI moves a portal only when the
+   * element it resolves changes. The layout effect runs after the layout effects
+   * and ref attachments below it, so it sees a host rendered anywhere in
+   * the subtree. `children` is a dependency on purpose: every render of the
+   * owner that hands this provider new children re-reads the ref, so a host
+   * the owner mounts or swaps later moves the always-mounted portals in
+   * that commit.
+   */
+  const latestRef = useRef(ref);
+  const [forwarding, setForwarding] = useState<{
+    ref: RefObject<PortalTarget | null> | undefined;
+    target: PortalTarget | null;
+    forwarder: RefObject<PortalTarget | null>;
+  }>(() => ({
+    ref: undefined,
+    target: null,
+    forwarder: {
+      get current() {
+        return latestRef.current?.current ?? null;
+      },
+    },
+  }));
+  useLayoutEffect(() => {
+    latestRef.current = ref;
+    const target = ref?.current ?? null;
+    setForwarding((previous) => {
+      if (previous.ref === ref && previous.target === target) {
+        return previous;
+      }
+      return {
+        ref,
+        target,
+        forwarder: {
+          get current() {
+            return latestRef.current?.current ?? null;
+          },
+        },
+      };
+    });
+  }, [ref, children]);
   return (
-    <PortalContainerContext.Provider value={value}>
+    <PortalContainerContext.Provider value={ref === undefined ? value : forwarding.forwarder}>
       <InsidePortalContext.Provider value={false}>{children}</InsidePortalContext.Provider>
     </PortalContainerContext.Provider>
   );
@@ -136,17 +215,19 @@ export function PortalContainerProvider({ value, children }: PortalContainerProv
 /**
  * The default portal container provided by the nearest
  * PortalContainerProvider, or undefined when no provider encloses the
- * caller. App code portals its own overlays with it: pass the result as the
+ * caller. An element or ShadowRoot value comes back as it is, an explicit
+ * null as null, and a ref value as a ref whose `current` reads the
+ * provider's ref at the moment it is read - null while that ref is empty.
+ * App code portals its own overlays with it: pass the result as the
  * `container` of a non-kit portal so it lands where the kit's overlays do.
  * The two unset shapes stay distinct there, as they do for the kit's own
  * overlays: undefined (no provider value) leaves the caller its own
  * fallback, the document body - the same default the overlays fall back
  * to - while an explicit null is a set value whose target is not there
  * yet, so the caller renders no popup until the target exists instead of
- * substituting <body> for it (the overlays hold the popup back the same
- * way).
+ * substituting <body> for it.
  */
-export function usePortalContainer(): PortalContainer | undefined {
+export function usePortalContainer(): PortalContainer {
   return useContext(PortalContainerContext);
 }
 
