@@ -9,7 +9,6 @@ import {
   createContext,
   useContext,
   useLayoutEffect,
-  useRef,
   useState,
   type ComponentType,
   type ReactNode,
@@ -30,6 +29,22 @@ type PortalTarget = HTMLElement | ShadowRoot;
 
 function isPortalRef(value: PortalContainer): value is RefObject<PortalTarget | null> {
   return value !== null && value !== undefined && 'current' in value;
+}
+
+/*
+ * A provider's forwarding ref for `ref`, with the element the provider last
+ * read from it (null until the provider's layout effect reads it).
+ */
+function forwardingTo(ref: RefObject<PortalTarget | null> | undefined, target: PortalTarget | null) {
+  return {
+    ref,
+    target,
+    forwarder: {
+      get current() {
+        return ref?.current ?? null;
+      },
+    },
+  };
 }
 
 /*
@@ -159,53 +174,34 @@ export function PortalContainerProvider({ value, children }: PortalContainerProv
   const ref = isPortalRef(value) ? value : undefined;
   /*
    * A ref value is handed down as a forwarding ref whose `current` reads the
-   * latest ref this provider was given, so Base UI reads the live host each
-   * time an overlay's portal mounts - an overlay opened by an uncontrolled
-   * trigger, after a descendant mounted or swapped the host, finds it there.
-   * Base UI 1.6.0 reads `ref.current` once per container identity, so the
-   * forwarder gets a new identity whenever the ref or the element this
-   * provider reads changes: an always-mounted portal (the Toaster) whose
-   * first read came up empty, or read a ref being replaced in the same
-   * commit, reads again and moves into the host. A new identity never
-   * remounts an open popup on its own: Base UI moves a portal only when the
-   * element it resolves changes. The layout effect runs after the layout effects
-   * and ref attachments below it, so it sees a host rendered anywhere in
-   * the subtree. `children` is a dependency on purpose: every render of the
-   * owner that hands this provider new children re-reads the ref, so a host
-   * the owner mounts or swaps later moves the always-mounted portals in
-   * that commit.
+   * ref it was built for, so Base UI reads the live host each time an
+   * overlay's portal mounts - an overlay opened by an uncontrolled trigger,
+   * after a descendant mounted or swapped the host, finds it there. A new
+   * ref gets its forwarder during render, never after commit: a forwarder
+   * still reading the previous value would resolve to nothing in the commit
+   * that hands down the ref, and an open popup would leave its host and
+   * come back remounted. Base UI 1.6.0 reads `ref.current` once per
+   * container identity, so the forwarder also gets a new identity whenever
+   * the element this provider reads after commit changes: an always-mounted
+   * portal (the Toaster) whose first read came up empty, or read a ref being
+   * replaced in the same commit, reads again and moves into the host. A new
+   * identity never remounts an open popup on its own: Base UI moves a portal
+   * only when the element it resolves changes. The layout effect runs after
+   * the layout effects and ref attachments below it, so it sees a host
+   * rendered anywhere in the subtree. `children` is a dependency on purpose:
+   * every render of the owner that hands this provider new children
+   * re-reads the ref, so a host the owner mounts or swaps later moves the
+   * always-mounted portals in that commit.
    */
-  const latestRef = useRef(ref);
-  const [forwarding, setForwarding] = useState<{
-    ref: RefObject<PortalTarget | null> | undefined;
-    target: PortalTarget | null;
-    forwarder: RefObject<PortalTarget | null>;
-  }>(() => ({
-    ref: undefined,
-    target: null,
-    forwarder: {
-      get current() {
-        return latestRef.current?.current ?? null;
-      },
-    },
-  }));
+  const [forwarding, setForwarding] = useState(() => forwardingTo(ref, null));
+  if (forwarding.ref !== ref) {
+    setForwarding(forwardingTo(ref, null));
+  }
   useLayoutEffect(() => {
-    latestRef.current = ref;
     const target = ref?.current ?? null;
-    setForwarding((previous) => {
-      if (previous.ref === ref && previous.target === target) {
-        return previous;
-      }
-      return {
-        ref,
-        target,
-        forwarder: {
-          get current() {
-            return latestRef.current?.current ?? null;
-          },
-        },
-      };
-    });
+    setForwarding((previous) =>
+      previous.ref === ref && previous.target === target ? previous : forwardingTo(ref, target),
+    );
   }, [ref, children]);
   return (
     <PortalContainerContext.Provider value={ref === undefined ? value : forwarding.forwarder}>
