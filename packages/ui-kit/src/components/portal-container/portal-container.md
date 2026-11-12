@@ -44,10 +44,9 @@ ContextMenu is its own: a ContextMenu content inside a DropdownMenu or
 Menubar content, or the other way round, inherits nothing and follows the
 order above. That inheritance outranks a nearer `PortalContainerProvider`
 and the popup step, and crosses menu popups only: any kit popup that arms the popup scope, other than
-a menu of the same family between the two menu contents ends it - the
-NavigationMenu's viewport scope and a menu popup of the other family
-included - so a menu inside one of those follows the kit overlay order
-from that popup on: its own portal node, unless a nearer
+a menu of the same family between the two menu contents ends it - a
+menu popup of the other family included - so a menu inside one of those
+follows the kit overlay order from that popup on: its own portal node, unless a nearer
 `PortalContainerProvider` sits in between. The boundary keeps the inner
 menu out of the subtree a dialog hides: a modal Dialog marks everything outside its own popup
 `aria-hidden` while it is open, so a container inherited across it would
@@ -63,14 +62,11 @@ HoverCard or Toast - step two when a popup that arms the scope encloses it
 (at any depth), steps three and four when none does - and they end no menu
 inheritance either: a menu nested inside one of them still follows the
 menu content around it, exactly as if the Tooltip were not there. One
-known limit: the
-NavigationMenu wraps its viewport in `PortalScope`, but no consumer content
-renders under it, because `NavigationMenuContent` arrives through a raw
-`createPortal` into the viewport, outside that popup's React subtree. The
-NavigationMenu therefore arms nothing for consumer overlays: overlays
-inside `NavigationMenuContent` see the popup step only from popups
-enclosing the whole NavigationMenu, and otherwise follow steps three and
-four.
+known limit: the NavigationMenu arms nothing, because
+`NavigationMenuContent` arrives through a raw `createPortal` into the
+viewport, outside that popup's React subtree: overlays inside
+`NavigationMenuContent` see the popup step only from popups enclosing the
+whole NavigationMenu, and otherwise follow steps three and four.
 
 `usePortalContainer()` returns the provided value, or `undefined` with no
 provider above the caller - also inside popups, where it ignores the
