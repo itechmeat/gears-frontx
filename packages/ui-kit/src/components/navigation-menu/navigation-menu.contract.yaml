@@ -73,17 +73,13 @@ invariants:
   - id: portals-to-body-unless-container
     text: >-
       Without `container`, the shared popup portals where the kit overlay
-      order puts it (portal-container.md states the order once,
-      useResolvedPortalContainer implements it): the portal node of the
-      kit popup it renders inside when that popup arms the popup scope,
-      else the nearest PortalContainerProvider's value, then the document
-      body when there is neither. Overlays rendered inside
-      NavigationMenuContent skip this menu's own portal node:
-      NavigationMenuContent mounts through a raw createPortal into the
-      viewport, outside the popup's React subtree, so they see the popup
-      step only from popups enclosing the whole NavigationMenu, and
-      otherwise portal into the nearest PortalContainerProvider's value or
-      the document body.
+      order puts it; portal-container.md states that order once and
+      useResolvedPortalContainer implements it. With no enclosing kit popup
+      and no PortalContainerProvider, that is the document body. Overlays
+      rendered inside NavigationMenuContent skip this menu's own portal
+      node: NavigationMenuContent mounts through a raw createPortal into the
+      viewport, outside the popup's React subtree, so the NavigationMenu
+      arms no popup step for them.
 
 anti_patterns:
   - dont: Hold the value in the caller and pass `value` without `onValueChange`

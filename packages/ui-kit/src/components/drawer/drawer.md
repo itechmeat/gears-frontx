@@ -60,19 +60,14 @@ directly — pass `side` instead.
 
 | Prop | Type | Default |
 |------|------|---------|
-| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see PortalContainer) |
+| `container` | DOM node to portal the popup into | where the kit overlay order puts it (see [PortalContainer](portal-container.md)) |
 | `initialFocus` / `finalFocus` | `boolean \| RefObject \| function` — see Base UI `Drawer.Popup` | default focus behavior |
 | `className` | `string` — merged after the kit class | — |
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): outside kit popups that arm the popup scope, that
-is the nearest `PortalContainerProvider`'s value, or `<body>` when there is
-none. If your theme lives on a subtree, pass it (or a node inside it) as
-`container` or wrap the subtree in `PortalContainerProvider`, or the popup
-renders with the root theme. Inside a shadow root (an MFE screen), the
-popup must be given a container inside that shadow root - through
-`PortalContainerProvider` or `container` - or it renders outside the
-shadow root: unstyled, and an outside press closes it.
+it; [PortalContainer](portal-container.md) states that order once, and how
+a theme scoped to a subtree or a shadow root sets the target for every
+overlay below it.
 
 `side` and `showSwipeHandle` are read from the ancestor `Drawer`, not passed
 to `DrawerContent` directly — same context-based handoff upstream's own

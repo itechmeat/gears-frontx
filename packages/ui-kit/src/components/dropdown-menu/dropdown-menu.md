@@ -42,7 +42,7 @@ Menu.Root.
 | `side` | `top` \| `bottom` \| `left` \| `right` \| `inline-start` \| `inline-end` | `bottom` (Content), `right` (SubContent) |
 | `align` | `start` \| `center` \| `end` | `start` |
 | `sideOffset` / `alignOffset` | `number` | `4` / `0` (Content), `0` / `-3` (SubContent) |
-| `container` | DOM node to portal the popup into; `DropdownMenuSubContent` inherits the nearest Content's unless given its own | where the kit overlay order puts it (see PortalContainer) |
+| `container` | DOM node to portal the popup into; `DropdownMenuSubContent` inherits the nearest Content's unless given its own | where the kit overlay order puts it (see [PortalContainer](portal-container.md)) |
 | `positionMethod` | `absolute` \| `fixed` — pass `fixed` when the trigger sits inside a `transform`/`filter` container (an animated panel), where absolute positioning resolves against the wrong box | `absolute` |
 | `collisionBoundary` / `collisionPadding` | see Base UI Menu.Positioner — bound and pad the flip/shift collision logic | viewport / `5` |
 | `className` | `string` — merged after the kit class | — |
@@ -54,31 +54,16 @@ sizes to its own content instead, since a submenu's anchor is its own
 trigger.
 
 Without a `container`, the popup portals where the kit overlay order puts
-it (see PortalContainer): any `DropdownMenuContent` (`MenubarContent`
-included) rendered inside another `DropdownMenuContent` (a submenu, or a
-menu opened directly inside one) first inherits the container that
-enclosing content resolved, and that inheritance outranks a nearer
-`PortalContainerProvider` and the popup step. The inheritance crosses menu
-popups only: any kit popup that arms the popup scope, other than a menu of the same family between
-the two menu contents ends it, so a menu inside one of those follows the
-kit overlay order from that popup on - its portal node, unless a nearer
-`PortalContainerProvider` sits in between - which keeps the menu out of the subtree a dialog hides
-when the intervening popup is a modal dialog, since the dialog marks
-everything outside its own popup `aria-hidden` while it is open. Outside
-kit popups that arm the popup scope, that is the nearest
-`PortalContainerProvider`'s value, or `<body>` when there is none, so if
-your theme lives on a subtree (`data-theme` on a section instead of
-`<html>`), pass that section as `container` or wrap the subtree in
-`PortalContainerProvider`, or the popup renders with the root theme - same
-contract as `Dialog` and `Select`. An explicit `container={null}` holds
-the popup back for menus too, like the other overlays: Base UI waits for
-a target instead of portalling anywhere. That is a behaviour change in
-0.6.0 - before, an explicit null on menu content fell through to the
-container an enclosing menu content resolved, or to `<body>`.
-Inside a shadow root (an MFE screen),
-the popup must be given a container inside that shadow root - through
-`PortalContainerProvider` or `container` - or it renders outside the shadow
-root: unstyled, and an outside press closes it.
+it; [PortalContainer](portal-container.md) states that order once, and how
+a theme scoped to a subtree or a shadow root sets the target for every
+overlay below it. One menu step comes first: a `DropdownMenuContent`
+rendered inside another `DropdownMenuContent`, `MenubarContent` included
+(a submenu, or a menu opened directly inside one), inherits the container
+that enclosing content resolved; that page states the family rule and
+where the inheritance ends. An explicit `container={null}` holds the popup
+back for menus too, a behaviour change in 0.6.0 - before, an explicit null
+on menu content fell through to the container an enclosing menu content
+resolved, or to `<body>`.
 
 `DropdownMenuItem`: `variant` — `default` | `destructive`, `disabled`,
 `closeOnClick` (`true` by default — Base UI closes the menu on

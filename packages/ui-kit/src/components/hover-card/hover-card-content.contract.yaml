@@ -31,18 +31,14 @@ invariants:
       card renders nothing.
   - id: portals-to-body-unless-container
     text: >-
-      Without `container`, the card portals where the kit overlay order
-      puts it (portal-container.md states the order once,
-      useResolvedPortalContainer implements it): inside another kit popup
-      that arms the popup scope it stays in that popup's portal node,
-      unless a PortalContainerProvider between them wins; outside them it
-      portals to the nearest PortalContainerProvider's value, then the
-      document body when there is neither. An overlay rendered inside this
-      card does not stay in it: the hover card portal is Base UI's
-      FloatingPortalLite and provides no parent portal node, so that
-      overlay follows whatever encloses the hover card - the portal of a
-      kit popup that arms the popup scope when one encloses it, else the
-      nearest PortalContainerProvider's value, then the document body.
+      Without `container`, the card portals where the kit overlay order puts
+      it; portal-container.md states that order once and
+      useResolvedPortalContainer implements it. With no enclosing kit popup
+      and no PortalContainerProvider, that is the document body. An overlay
+      rendered inside this hover card does not stay in it: the hover card
+      portal is Base UI's FloatingPortalLite and provides no parent portal
+      node, so that overlay follows whatever encloses the hover card, by the
+      same order.
   - id: stays-open-while-the-pointer-is-on-it
     text: >-
       The pointer can travel from the trigger onto the card without closing

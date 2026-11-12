@@ -53,12 +53,10 @@ export interface TooltipContentProps
   className?: string;
   /**
    * Where to portal the popup. Without a `container`, the popup portals
-   * where the kit overlay order puts it (see useResolvedPortalContainer):
-   * outside kit popups that arm the popup scope, that is the nearest
-   * PortalContainerProvider's value, or <body> when there is none. Pass a
-   * themed container when the theme is scoped to a subtree (data-theme on
-   * a container that isn't at document root) so the popup inherits its
-   * tokens and font.
+   * where the kit overlay order puts it (the order is in
+   * portal-container.md). Pass a themed container when the theme is
+   * scoped to a subtree (data-theme on a container that isn't at document
+   * root) so the popup inherits its tokens and font.
    */
   container?: TooltipPrimitive.Portal.Props['container'];
 }
